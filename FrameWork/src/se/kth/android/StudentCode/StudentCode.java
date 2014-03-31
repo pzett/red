@@ -101,13 +101,13 @@ public class StudentCode extends StudentCodeBase {
 		
 		
 		// If you want a text on screen before start is pressed put it here
-		introText = "This is the empty version of FrameWork";
+		introText = "Group Red 2014";
 	  
 		// Stuff for the playing of sound example
 		init_done=true;
 		buffer=new short[1024]; // 1024 samples sent to codec at a time
 		
-		userInputString=true;
+		userInputString=false;
 	}
  
 	// This is called when the user presses start in the menu, reinitialize any data if needed

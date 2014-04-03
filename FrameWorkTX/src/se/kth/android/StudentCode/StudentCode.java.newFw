@@ -56,8 +56,7 @@ public class StudentCode extends StudentCodeBase {
     byte[] the_sound_file_contents=null;
     ByteBuffer the_sound_file_contents_bb=null; 
 	short buffer[]; 
-	boolean repeat = true;
-	short voice[];
+	String d_filename=null;
     
 	// This is called before any other functions are initialized so that parameters for these can be set
 	public void init()
@@ -66,7 +65,7 @@ public class StudentCode extends StudentCodeBase {
 		projectName = "DemoProject";
 	
 		// Add sensors your project will use
-		useSensors =   SOUND_OUT|SOUND_IN;// CAMERA;//CAMERA_RGB;//WIFI_SCAN | SOUND_OUT; //GYROSCOPE;//SOUND_IN|SOUND_OUT;//WIFI_SCAN | ACCELEROMETER | MAGNETIC_FIELD | PROXIMITY | LIGHT;//TIME_SYNC|SOUND_IN;//TIME_SYNC | ACCELEROMETER | MAGNETIC_FIELD | PROXIMITY | LIGHT | SOUND_IN;
+		useSensors =  SOUND_OUT;// CAMERA;//CAMERA_RGB;//WIFI_SCAN | SOUND_OUT; //GYROSCOPE;//SOUND_IN|SOUND_OUT;//WIFI_SCAN | ACCELEROMETER | MAGNETIC_FIELD | PROXIMITY | LIGHT;//TIME_SYNC|SOUND_IN;//TIME_SYNC | ACCELEROMETER | MAGNETIC_FIELD | PROXIMITY | LIGHT | SOUND_IN;
 								
 		
 		// Set sample rate for sound in/out, 8000 for emulator, 8000, 11025, 22050 or 44100 for target device
@@ -102,32 +101,23 @@ public class StudentCode extends StudentCodeBase {
 		
 		
 		// If you want a text on screen before start is pressed put it here
-		introText = "This is the TX Client \n test_signal.dat will be played if you press Start button";
-		
+		introText = "Group Red 2014";
 	  
 		// Stuff for the playing of sound example
 		init_done=true;
 		buffer=new short[1024]; // 1024 samples sent to codec at a time
 		
-		userInputString=true;
+		userInputString=false;
 	}
  
 	// This is called when the user presses start in the menu, reinitialize any data if needed
 	public void start()
 	{	
-		//load_sound_file("mod_signal.wav");
-		//play_sound_file(1);
-		playsoundexample();
-		
-		
-		
-		
 	}
         
 	// This is called when the user presses stop in the menu, do any post processing here
 	public void stop()	
 	{
-		//stop_sound_file();
 	}
 	  
 	// Place your local field variables here
@@ -149,9 +139,9 @@ public class StudentCode extends StudentCodeBase {
 		//set_output_text(wifi_ap);
 		
 		
-		// Sound example. Uncomment to play sound from the file data/lga.dat formatted as described in the slides.	
-	
+		// Sound example. Uncomment to play sound from the file data/lga.dat formatted as described in the slides.		
 		//playsoundexample();
+		
 	};       
 	  
 	
@@ -188,9 +178,6 @@ public class StudentCode extends StudentCodeBase {
 	public void sound_in(long time, short[] samples, int length)
 	{			
 		set_output_text("length="+length);
-		 
-		
-		
 	}
 	
 	
@@ -221,6 +208,11 @@ public class StudentCode extends StudentCodeBase {
 		set_output_text(user_input);
 	}
   
+	
+	public void stringFromBrowseForFile(String filename) {
+		d_filename=filename;
+		set_output_text(d_filename);
+	}
 	
 	// Implement wifi ap analysis here
 	public void wifi_ap(long time, List<ScanResult> wifi_list)
@@ -367,16 +359,15 @@ public class StudentCode extends StudentCodeBase {
 
 
 	public void playsoundexample(){
-		if (init_done && (!file_loaded)) {
-			the_sound_file_contents=read_data_from_file("test_signal.dat"); // Read file from plain file of samples in form of shorts
+		if (init_done && (!file_loaded) && (!(d_filename==null))) {
+			set_output_text(d_filename);
+			the_sound_file_contents=read_data_from_file(d_filename); // Read file from plain file of samples in form of shorts
 			the_sound_file_contents_bb=ByteBuffer.wrap(the_sound_file_contents); // Wrapper to easier access content.
 			the_sound_file_contents_bb.order(ByteOrder.LITTLE_ENDIAN);
 			file_loaded=true;
-			set_output_text("length="+the_sound_file_contents.length);
 		};
 		
 		if (file_loaded) {
-			buffer = new short[the_sound_file_contents.length/2];
 			if (the_sound_file_contents_bb.remaining()<2*buffer.length)
 				the_sound_file_contents_bb.rewind(); // Start buffer from beginning
 			for (int i1=0;i1<buffer.length;i1++) {				

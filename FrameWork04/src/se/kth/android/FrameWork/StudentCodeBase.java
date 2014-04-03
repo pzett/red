@@ -66,9 +66,9 @@ public class StudentCodeBase implements OnPlaybackPositionUpdateListener  {
 	public boolean useAutoFocus=false;
 	
 	public boolean userInputString=false;
-	public String userInputStringMenuItem="Input String";
-	public String userInputStringTitle="Title";
-	public String userInputStringMessage="Message";
+	public String userInputStringMenuItem="Input Frequency";
+	public String userInputStringTitle="Input Frequency in Hz";
+	public String userInputStringMessage="Range: 1~15000";
 
 	
 	public boolean logSound=true;

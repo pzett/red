@@ -1,6 +1,6 @@
 /* Copyright KTH Royal Institute of Technology, Martin Ohlsson, Per Zetterberg
-* This software is provided  �as is�. It is free to use for non-commercial purposes.
-* For commercial purposes please contact Peter H�ndel (peter.handel@ee.kth.se)
+* This software is provided  抋s is�. It is free to use for non-commercial purposes.
+* For commercial purposes please contact Peter H鋘del (peter.handel@ee.kth.se)
 * for a license. For non-commercial use, we appreciate citations of our work,
 * please contact, Per Zetterberg (per.zetterberg@ee.kth.se), 
 * for how information on how to cite. */ 
@@ -35,11 +35,15 @@ import com.google.zxing.qrcode.detector.Detector;
 //import org.apache.commons.net.ntp.TimeInfo;
 //import org.apache.commons.net.ntp.TimeStamp;
 
+
+
 //import se.kth.android.FrameWork.FrameWork;
 import se.kth.android.FrameWork.StudentCodeBase;
 
 //import android.graphics.Bitmap;
 import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 //import android.graphics.Color;
 //import android.graphics.Paint;
 //import android.graphics.Rect;
@@ -57,6 +61,9 @@ public class StudentCode extends StudentCodeBase {
     ByteBuffer the_sound_file_contents_bb=null; 
 	short buffer[]; 
 	String d_filename=null;
+	boolean timeToPlot=false;
+	String str[] = {"R","E","D"};
+	int i=0;
     
 	// This is called before any other functions are initialized so that parameters for these can be set
 	public void init()
@@ -92,7 +99,7 @@ public class StudentCode extends StudentCodeBase {
 		//ntpServer = "192.168.5.11";
 				
 		// Set the approximate interval in milliseconds for your need for calls to your process function
-		processInterval = 1;
+		processInterval = 2000;
 		
 		// If you access and modify data structures from several sensor functions and/or process you may need to make the calls
 		// be performed in series instead of simultaneous to prevent exception when one function changes data at the same time as another 
@@ -101,13 +108,13 @@ public class StudentCode extends StudentCodeBase {
 		
 		
 		// If you want a text on screen before start is pressed put it here
-		introText = "Group Red 2014";
+		introText = "This is Assignment 1";
 	  
 		// Stuff for the playing of sound example
 		init_done=true;
 		buffer=new short[1024]; // 1024 samples sent to codec at a time
 		
-		userInputString=false;
+		userInputString=true;
 	}
  
 	// This is called when the user presses start in the menu, reinitialize any data if needed
@@ -138,7 +145,7 @@ public class StudentCode extends StudentCodeBase {
 		//set_output_text(""+gyroData+"\n"+gpsData + "\n"+triggerTime+"\n"+ magneticData+"\n"+proximityData+"\n"+lightData+"\n"+screenData+"\n"+messageData);		//set_output_text(debug_output+"\n");
 		//set_output_text(wifi_ap);
 		
-		
+		timeToPlot=true;
 		// Sound example. Uncomment to play sound from the file data/lga.dat formatted as described in the slides.		
 		//playsoundexample();
 		
@@ -183,6 +190,7 @@ public class StudentCode extends StudentCodeBase {
 	
 	public void screen_touched(float x, float y) 
 	{
+		set_output_text("x="+x+"y="+y);
 	} 
 		 
 	// Implement your phone to phone receive messaging here
@@ -200,8 +208,62 @@ public class StudentCode extends StudentCodeBase {
 		if((latestRGBImage != null) && ((useSensors & CAMERA_RGB) == CAMERA_RGB)) // If camera is enabled, display
 		{
 			plot_camera_image_rgb(plotCanvas,latestRGBImage,imageWidth,imageHeight,width,height);
-		}				
-	}
+		}		
+        plotCanvas.drawARGB ( 255, 23, 230, 25);
+
+
+        final Paint paint = new Paint();
+
+
+        paint.setAntiAlias(true);
+
+
+        paint.setDither(true);
+
+
+        paint.setStyle(Paint.Style.STROKE);
+
+ 
+        paint.setStrokeJoin(Paint.Join.MITER);
+ 
+
+        paint.setStrokeCap(Paint.Cap.ROUND);
+
+
+        paint.setColor(Color.RED);
+
+
+        paint.setStrokeWidth(10);
+
+        paint.setTextSize(350);
+  
+        paint.setAlpha(100);
+  
+        plotCanvas.drawColor(Color.BLACK);
+ 
+        RectF oval2 = new RectF(60, 100, 200, 240);// 设置个新的长方形，扫描测量
+    
+        
+        plotCanvas.drawArc(oval2, 30, 300, false, paint);
+        plotCanvas.drawLine(140, 200, 195, 200, paint);
+        plotCanvas.drawLine(195, 200, 195, 235, paint);
+        plotCanvas.drawLine(250, 100, 250, 250, paint);
+        plotCanvas.drawLine(350, 100, 350, 250, paint);
+        plotCanvas.drawLine(250, 175, 350, 175, paint);
+        /*plotCanvas.drawText(str[i], 250, 400, paint);
+  
+//
+        
+    	    if(timeToPlot==true)
+      {
+	 
+         i=i+1;
+         i=i%3;
+	         }
+	 timeToPlot=false;   */
+		
+}
+	
 	
 	
 	public void stringFromUser(String user_input){		

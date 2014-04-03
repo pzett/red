@@ -504,8 +504,8 @@ public class FrameWork extends Activity implements OnRecordPositionUpdateListene
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		menu.add(0,1,0,"Start");
-		menu.add(0,2,0,"Kill");
+		menu.add(0,1,0,"N/A");
+		menu.add(0,2,0,"Quit");
 		if (studentCode.userInputString) {
 			menu.add(0,3,0,studentCode.userInputStringMenuItem);
 		};	

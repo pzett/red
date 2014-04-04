@@ -26,7 +26,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import edu.dhbw.andar.CameraPreviewHandler;
 
-import se.kth.android.GroupRed2014.R;
+import se.kth.android.GroupRed2014A6.R;
 import se.kth.android.StudentCode.StudentCode;
 
 import android.app.Activity;

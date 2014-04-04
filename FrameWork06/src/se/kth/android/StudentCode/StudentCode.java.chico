@@ -78,7 +78,7 @@ public class StudentCode extends StudentCodeBase {
     public void init()
     { 
            // Name your project so that messaging will work within your project
-           projectName = "DemoProject";
+           projectName = "Android Task 6";
    
            // Add sensors your project will use
            useSensors =  SOUND_OUT;// CAMERA;//CAMERA_RGB;//WIFI_SCAN | SOUND_OUT; //GYROSCOPE;//SOUND_IN|SOUND_OUT;//WIFI_SCAN | ACCELEROMETER | MAGNETIC_FIELD | PROXIMITY | LIGHT;//TIME_SYNC|SOUND_IN;//TIME_SYNC | ACCELEROMETER | MAGNETIC_FIELD | PROXIMITY | LIGHT | SOUND_IN;
@@ -117,7 +117,7 @@ public class StudentCode extends StudentCodeBase {
           
           
            // If you want a text on screen before start is pressed put it here
-           introText = "This is for Assignment 4";
+           introText = "This is for Assignment 6";
      
            // Stuff for the playing of sound example
            init_done=true;

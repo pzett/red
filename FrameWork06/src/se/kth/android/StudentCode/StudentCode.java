@@ -328,13 +328,14 @@ public class StudentCode extends StudentCodeBase {
     	for(int i=0; i<in_values.length; i++){
     		in_values[i]=in.readDouble(); 
     	};
-
+       
     	
         // Call the function to be tested 
-    	out_values=square(in_values);
+    	   out_values=goertzel(in_values);
+		   // out_values=square(in_values);
     	
     	// Write file on sdcard 
-    	for(int i=0; i<in_values.length; i++){
+    	for(int i=0; i<out_values.length; i++){
     		out.writeDouble(out_values[i]);
     	};
     	    	  
@@ -356,7 +357,58 @@ public class StudentCode extends StudentCodeBase {
 	} 
    	return out_values;
    }
-
+/* Test harness for Goertzel algorithm */
+    private double[] goertzel(double [] r){
+	  int fs=44100;
+	  //Define testing variables
+		int f1=441;
+        int f2=4410;	
+        int n=100;
+	 
+	  double k1=0.5+ n*f1/fs;
+	  double k2=0.5+ n*f2/fs;
+	  
+	  double coeff1=2*Math.cos(2 * Math.PI / n * k1);
+	  double coeff2=2*Math.cos(2 * Math.PI / n * k2);
+	  
+	  double[] P =new double[3];
+	  double[] Q =new double[3];
+	  
+	  double[] mag1 =new double[r.length/n];  // check
+	  double[] mag2 =new double[r.length/n];
+	  int aux=0;
+	 
+	  for(int l=0;l<r.length;l++) {
+			
+		  P[0]=coeff1*P[1]-P[2] + r[l];
+		  Q[0]=coeff2*Q[1]-Q[2] + r[l];
+		  Q[2]=Q[1]; Q[1]=Q[0];
+		  P[2]=P[1]; P[1]=P[0];
+		 	
+		 if((l+1)%n == 0){
+			 mag1[aux]=P[1]*P[1]+P[2]*P[2]-P[1]*P[2]*coeff1;
+			 mag2[aux]=Q[1]*Q[1]+Q[2]*Q[2]-Q[1]*Q[2]*coeff2;
+			 aux++;
+			//reset
+			 Q[2]=0;Q[1]=0;Q[0]=0;
+			 P[2]=0;P[1]=0;P[0]=0;
+			 
+		 }
+		
+	 }
+	 
+	 int[] decision= new int[aux];
+	 for(int l=0;l<aux;l++){
+		 if(mag1[l]>mag2[l]){
+			 decision[l]=1;
+		 }else{
+			 decision[l]=0;
+		 }
+	 }
+ 	 //return decision;
+	 return mag1;
+    }
+   
 
 	public void playsoundexample(){
 		if (init_done && (!file_loaded) && (!(d_filename==null))) {

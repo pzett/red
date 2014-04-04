@@ -305,7 +305,7 @@ public class StudentCode extends StudentCodeBase {
     // Use this to test algorithms with static data.
     public boolean test_harness()
     {
-    	boolean do_test=false; // Set to true when running test_harness_example
+    	boolean do_test=true; // Set to true when running test_harness_example
     	
      // The below code is used together with test_harness_example.m.	
     if (do_test) {	

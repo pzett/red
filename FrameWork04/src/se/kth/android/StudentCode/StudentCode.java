@@ -116,7 +116,7 @@ public class StudentCode extends StudentCodeBase {
           
           
            // If you want a text on screen before start is pressed put it here
-           introText = "This is for Assignment 4";
+           introText = "This is Assignment 4\nPress Menu to see the options";
      
            // Stuff for the playing of sound example
            init_done=true;

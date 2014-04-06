@@ -117,7 +117,7 @@ public class StudentCode extends StudentCodeBase {
           
           
            // If you want a text on screen before start is pressed put it here
-           introText = "This is for Assignment 3";
+           introText = "This is Assignment 3\nEchoes Generator\n\nPress Menu to select an option...";
      
            // Stuff for the playing of sound example
            init_done=true;
@@ -209,7 +209,7 @@ public class StudentCode extends StudentCodeBase {
     {                  
            // Task 4 create the echo
           
-           set_output_text("buffer size="+length);
+           set_output_text("Echoes Generator\n\nSay something...\nbuffer size="+length);
            //sound_out(samples,length);
           
            for(int ind =0;ind<longBuffer.length-length;ind++)

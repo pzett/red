@@ -65,7 +65,7 @@ public class StudentCode extends StudentCodeBase {
 		projectName = "DemoProject";
 	
 		// Add sensors your project will use
-		useSensors =  SOUND_OUT;// CAMERA;//CAMERA_RGB;//WIFI_SCAN | SOUND_OUT; //GYROSCOPE;//SOUND_IN|SOUND_OUT;//WIFI_SCAN | ACCELEROMETER | MAGNETIC_FIELD | PROXIMITY | LIGHT;//TIME_SYNC|SOUND_IN;//TIME_SYNC | ACCELEROMETER | MAGNETIC_FIELD | PROXIMITY | LIGHT | SOUND_IN;
+		useSensors =  SOUND_IN;// CAMERA;//CAMERA_RGB;//WIFI_SCAN | SOUND_OUT; //GYROSCOPE;//SOUND_IN|SOUND_OUT;//WIFI_SCAN | ACCELEROMETER | MAGNETIC_FIELD | PROXIMITY | LIGHT;//TIME_SYNC|SOUND_IN;//TIME_SYNC | ACCELEROMETER | MAGNETIC_FIELD | PROXIMITY | LIGHT | SOUND_IN;
 								
 		
 		// Set sample rate for sound in/out, 8000 for emulator, 8000, 11025, 22050 or 44100 for target device
@@ -76,7 +76,7 @@ public class StudentCode extends StudentCodeBase {
 		useAutoFocus=true;
 		
 		// Enable or disable logging of sensor data to memory card
-		loggingOn = false;
+		loggingOn = true;
 		
 		// If message communication is used between phones in the project, enable it here and set server address, type and group names
 		useMessaging = false;   
@@ -101,7 +101,7 @@ public class StudentCode extends StudentCodeBase {
 		
 		
 		// If you want a text on screen before start is pressed put it here
-		introText = "Group Red 2014";
+		introText = "RX Client";
 	  
 		// Stuff for the playing of sound example
 		init_done=true;

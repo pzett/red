@@ -67,7 +67,7 @@ public class StudentCode extends StudentCodeBase {
     short buffer[];
     short longBuffer[] = new short[4096*10];
     short delaySamples[] = new short[4096];
-    private final int duration = 3; // seconds
+    private final int duration = 6; // seconds
     private final int mysampleRate = 44100;
     private final int numSamples = duration * mysampleRate;
     private final double sample[] = new double[numSamples];

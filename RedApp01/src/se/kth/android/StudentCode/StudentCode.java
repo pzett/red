@@ -103,12 +103,12 @@ public class StudentCode extends StudentCodeBase {
     private static int gb_length = 20;
     private static double[] ts_mod;
     private static int side=-1;
-    AlertDialog alertDialog;
+   
     AudioTrack atp; 
        // This is called before any other functions are initialized so that parameters for these can be set
-    public void init(int a)
+    public void init(int a) //a=0 -> tx ; a=1 -> rx
     { 
-    	//a=0 -> tx ; a=1 -> rx
+    	
            // Name your project so that messaging will work within your project
            projectName = "DemoProject";
            introText = "Hello World! Press menu for options!";
@@ -118,7 +118,7 @@ public class StudentCode extends StudentCodeBase {
            add_output_text_line("TX side");
            side=0;
            }
-           if(a==1){ useSensors=SOUND_IN; add_output_text_line("RX side"); side=1;}                               
+           if(a==1){ useSensors=SOUND_IN; add_output_text_line("RX side"); side=1; }                               
           
            // Set sample rate for sound in/out, 8000 for emulator, 8000, 11025, 22050 or 44100 for target device
            sampleRate = 44100;
@@ -153,8 +153,6 @@ public class StudentCode extends StudentCodeBase {
           
           
            // If you want a text on screen before start is pressed put it here
-         
-          
      
            // Stuff for the playing of sound example
            init_done=true;
@@ -230,14 +228,15 @@ public class StudentCode extends StudentCodeBase {
         	  //useSensors =  SOUND_OUT;
         	  int block_length=no_samp_period*(gb_length+ts_length+20);
         	  double[] rx_bufferdouble = new double[rx_buffer.length];
-        	  add_output_text_line("index="+rx_buffer.length);
+        	  add_output_text_line("buffer length="+rx_buffer.length);
         	  for (int j=0;j<rx_ind;j++) {
         	      rx_bufferdouble[j] = (double)rx_buffer[j];
         	  }
         	  int index = maxXcorr(Arrays.copyOfRange(rx_bufferdouble, 1, block_length),ts_mod);
         	  int decision[]=goertzel(f1,f2,no_samp_period, Arrays.copyOfRange(rx_bufferdouble,index+no_samp_period*ts_length,rx_buffer.length));
-        	  save_to_file("decision.txt", decision);
+        	  save_to_file("decision.txt", decision,decision.length);
         	  add_output_text_line("stopped listening");
+        	  compare(decision);
         	  trigger=-1;
         	  //stop();
           }
@@ -308,7 +307,7 @@ public class StudentCode extends StudentCodeBase {
     public void sound_in(long time, final short[] samples, int length)
     { 
     	final int threshold =100;
-    	
+    	int continue_listening = 0;
     	if(trigger==0){
     	set_output_text("only noise for the moment");
     	for(int i = 0 ; i < length; i++){
@@ -325,48 +324,22 @@ public class StudentCode extends StudentCodeBase {
     	}
     	}else{
     		if(trigger==1){
+    			for(int i = 0;i<samples.length;i++){
+    				if(samples[i]>threshold) { continue_listening = 1; break;}
+    			}
+    			if(continue_listening==1){
     		rx_buffer=send_to_buffer(rx_buffer,length,samples);
-    		}
+    			}else{
+    				trigger=2;
+    			}
+    			
+    			}
     	}
     
     }
     
     	
-    	
-           // Task 4 create the echo
-    	//Complex[] x = new Complex[length];
-          // set_output_text("buffer size="+length+"sample="+samples[2]);
-           //sound_out(samples,length);
-           //for (int i = 0; i < length; i++) {
-	         //   x[i] = new Complex(samples[i], 0);
-	           	      //  }
-           //Complex[] y =   fft(x);
-           //for(int ind =0;ind<y.length;ind++)
-           //{
-         	 // add_output_text_line("y["+ind+"]="+Math.round(y[ind].abs()*100)/100.0);
-         	  //if(ind%9==0){
-         		// clear_output_text();
-         	  //}
-         		  
-          // }
-          
-           //sound_out(delaySamples,length);
-          
-          
-    /*    try {
-              Thread.sleep(1000);
-           } catch (InterruptedException e) {
-              e.printStackTrace();
-           }
-           */
-           //new Timer().schedule(sound_out(samples,samples.length),1000);
-           //sound_out(samples,samples.length);
-           //echoPlay(samples,samples.length);
-           // start a timer and do sound out in the fired event 
-    //     set_output_text(Integer.toString(samples[samples.length]));
-    
-   
-   
+  
     public void screen_touched(float x, float y) 
     {
     } 
@@ -397,8 +370,6 @@ public class StudentCode extends StudentCodeBase {
            //playSound();
            
           square(in);
-       
-         
     }
 
    
@@ -755,10 +726,11 @@ void send_data(){
 	int[] guard_stream = new int[gb_length];
 	int current_position=0;
 	
-	for(int i = 0;i<Nb;i++){
-		bit_stream[i]=Math.round((float) Math.random());
-		}
-	save_to_file("data.txt",bit_stream);
+//	for(int i = 0;i<Nb;i++){
+//		bit_stream[i]=Math.round((float) Math.random());
+//		}
+	bit_stream = load_from_file("data_test.txt",Nb);
+	save_to_file("data.txt",bit_stream,Nb);
 	double[] guard_signal = FSK_mod(f1,f2,guard_stream);
 	double[] data_signal = FSK_mod(f1,f2,bit_stream);
 	double[] tx_signal =new double[guard_signal.length+data_signal.length+ts_mod.length+bufferInt.length];
@@ -845,15 +817,53 @@ public double[] modulate_ts(int length, int f1, int f2){
 	return mod_ts;
 }
 
-public void save_to_file(String filename,int[] data){
+public void save_to_file(String filename,int[] data,int length){
 	SimpleOutputFile out = new SimpleOutputFile();
 	out.open(filename);
-	
+	out.writeInt(length);
 	for(int i=0; i<data.length; i++){
       out.writeInt(data[i]);
 	}
 	out.close();
 	
+	
+}
+
+public int[] load_from_file(String filename,int mode){
+	 
+	SimpleInputFile in = new SimpleInputFile();
+	in.open(filename);  
+	int[] length=new int[1];
+	length[0] = in.readInt(); 
+	if(mode==0) return length;
+    int[] in_values = new int[length[0]];
+   
+    
+    // Read file from sdcard
+    for(int i=0; i<in_values.length; i++){
+           in_values[i]=in.readInt(); 
+    };
+    return in_values;
+	
+}
+
+public void compare(int decision[]){
+	int[] length_vec=load_from_file("data_test.txt",0);
+	float length = length_vec[0];
+	add_output_text_line("length of tx_seq"+length);
+	int tx_seq[];
+	tx_seq=load_from_file("data_test.txt",1);
+	float e = 0;
+	for (int a = 0; a < length; a++) {
+
+        if (tx_seq[a] == decision[a]) {
+            e=e;
+            } else {
+            e++;
+        }
+	}
+	double BER =e/length;
+	add_output_text_line("BER="+BER);
 	
 }
 

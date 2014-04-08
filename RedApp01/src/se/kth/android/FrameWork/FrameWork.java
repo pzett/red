@@ -26,7 +26,7 @@ import android.app.AlertDialog;
 
 import edu.dhbw.andar.CameraPreviewHandler;
 
-import se.kth.android.GroupRed2014.R;
+import se.kth.android.RedSimulation01.R;
 import se.kth.android.StudentCode.StudentCode;
 
 import android.app.Activity;

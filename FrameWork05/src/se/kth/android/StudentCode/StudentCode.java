@@ -244,7 +244,7 @@ public class StudentCode extends StudentCodeBase {
             delaySamples[ind] = (short) (samples[ind]);
            }
            
-           sound_out(delaySamples,length);
+          // sound_out(delaySamples,length);
           
            Complex[] x = new Complex[length];
            //set_output_text("buffer size="+length+"sample="+samples[2]);
@@ -337,15 +337,15 @@ public class StudentCode extends StudentCodeBase {
     	// Draw waveform    	
     	//synchronized (this){
     	
-    	for (int i = 0; i < delaySamples.length; ++i) {
+    	for (int i = 0; i < 600; ++i) {
             final float x =  20 + i;
             final float y;
             
             if(delaySamples[i]<0){
-            	 y = - (delaySamples[i]/80)+150;
+            	 y = - (delaySamples[i]/50)+150;
             }
             else{
-                y = 150 - (delaySamples[i]/80);
+                y = 150 - (delaySamples[i]/50);
             }
             plotCanvas.drawLine(x, dHeight1, x, y, paint);    	
     	}

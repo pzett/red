@@ -60,6 +60,7 @@ import android.net.wifi.ScanResult;
 import android.os.Handler;
 
 import android.app.AlertDialog;
+
 public class StudentCode extends StudentCodeBase {
 	
 
@@ -80,15 +81,17 @@ public class StudentCode extends StudentCodeBase {
     Complex i;
     final double inputxcorr[]={1,5.6,2.4,9.69, 15.7};
     final double inputycorr[]={1,2};
-    final static int no_samp_period = 100;
-    final static int f1=2500;
-    final static int f2=3500;
-    final static int ts_f1=1000;
-    final static int ts_f2=2000;
+    
+    final static int no_samp_period = 30;
+    final static int f1=mysampleRate/5;
+    final static int f2=mysampleRate/8;
+    final static int ts_f1=mysampleRate/20;
+    final static int ts_f2=mysampleRate/15;
     final static double[] cosf1 =initCosine(f1, mysampleRate,no_samp_period);
     final static double[] cosf2 =initCosine(f2, mysampleRate,no_samp_period);
     final static double[] cosf1ts =initCosine(ts_f1, mysampleRate,no_samp_period);
     final static double[] cosf2ts =initCosine(ts_f2, mysampleRate,no_samp_period);
+    
     private static final double MAX_16_BIT = Short.MAX_VALUE; 
     private static final int SAMPLE_BUFFER_SIZE = 4096;
     private static byte[] bufferInt;         // our internal buffer
@@ -96,6 +99,7 @@ public class StudentCode extends StudentCodeBase {
     private static int bufferLength = 4096; 
     private static final int BYTES_PER_SAMPLE = 2;                // 16-bit audio
     private static final int BITS_PER_SAMPLE = 16;                // 16-bit audio
+    
     public static int trigger = 0; //0 -> listening and waiting 1 -> listening and received 2 -> done listening -1 ->processed
     private static short[] rx_buffer;
     private static int rx_ind=0;
@@ -111,7 +115,7 @@ public class StudentCode extends StudentCodeBase {
     	
            // Name your project so that messaging will work within your project
            projectName = "DemoProject";
-           introText = "Hello World! Press menu for options!";
+           set_output_text("Hello World! Press menu for options!");
            // Add sensors your project will use
           
            if(a==0){ useSensors =  SOUND_OUT; // CAMERA;CAMERA_RGB;//WIFI_SCAN | SOUND_OUT; //GYROSCOPE;//SOUND_IN|SOUND_OUT;//WIFI_SCAN | ACCELEROMETER | MAGNETIC_FIELD | PROXIMITY | LIGHT;//TIME_SYNC|SOUND_IN;//TIME_SYNC | ACCELEROMETER | MAGNETIC_FIELD | PROXIMITY | LIGHT | SOUND_IN;
@@ -158,6 +162,7 @@ public class StudentCode extends StudentCodeBase {
            init_done=true;
            buffer=new short[1024]; // 1024 samples sent to codec at a time
            userInputString=true;
+           
            bufferInt = new byte[SAMPLE_BUFFER_SIZE * BYTES_PER_SAMPLE];
            
            int length_rxb =no_samp_period*2000*5;
@@ -165,13 +170,14 @@ public class StudentCode extends StudentCodeBase {
           
                      
            ts_mod = modulate_ts(ts_length,ts_f1,ts_f2);
+           
            atp = new AudioTrack(AudioManager.STREAM_MUSIC,
                    mysampleRate, AudioFormat.CHANNEL_OUT_MONO,
                    AudioFormat.ENCODING_PCM_16BIT, bufferInt.length,
                    AudioTrack.MODE_STREAM);
-           
-           
-           
+          
+          
+          add_output_text_line("f1= "+f1+" f2= "+f2+" k= "+no_samp_period);
 
     }
 
@@ -183,7 +189,7 @@ public class StudentCode extends StudentCodeBase {
     	 //int corr = maxXcorr(inputxcorr,inputycorr); 
     	//add_output_text_line("index="+corr);
     	if(side==0) send_data();
-    	 
+    	
     }
      
     // This is called when the user presses stop in the menu, do any post processing here
@@ -236,6 +242,7 @@ public class StudentCode extends StudentCodeBase {
         	  int decision[]=goertzel(f1,f2,no_samp_period, Arrays.copyOfRange(rx_bufferdouble,index+no_samp_period*ts_length,rx_buffer.length));
         	  save_to_file("decision.txt", decision,decision.length);
         	  add_output_text_line("stopped listening");
+        	  add_output_text_line("f1= "+f1+" f2= "+f2+"k= "+no_samp_period);
         	  compare(decision);
         	  trigger=-1;
         	  //stop();
@@ -306,7 +313,7 @@ public class StudentCode extends StudentCodeBase {
    
     public void sound_in(long time, final short[] samples, int length)
     { 
-    	final int threshold =100;
+    	final int threshold = 200;
     	int continue_listening = 0;
     	if(trigger==0){
     	set_output_text("only noise for the moment");
@@ -866,6 +873,7 @@ public void compare(int decision[]){
 	add_output_text_line("BER="+BER);
 	
 }
+
 
 
 }

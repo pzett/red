@@ -27,3 +27,9 @@ proguard/
 *.ipr
 *.iws
 .idea/
+
+# MATLAB temp register files
+*.csv
+*.asv
+*.dat
+*.m~

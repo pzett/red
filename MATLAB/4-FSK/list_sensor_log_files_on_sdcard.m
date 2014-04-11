@@ -20,7 +20,7 @@ function list = list_sensor_log_files_on_sdcard(time0)
     if ~exist('time0')
         time0=[2010,1,1,0,0,0];
     end;
-    [status,str]=system('adb shell ls sdcard/');
+    [status,str]=system('C:\android\adt-bundle-windows-x86_64-20140321\sdk\platform-tools\adb shell ls sdcard/');
     start_index=strfind(str,'sensorlog');
     stop_index=strfind(str,'.csv');
     for i1=1:length(start_index)

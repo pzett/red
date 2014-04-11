@@ -13,6 +13,6 @@ function copy_file_from_working_directory_to_sdcard( filename )
 % for how information on how to cite.
 
 
-   cmd_str=['adb push ',filename,' /sdcard/data/',filename];
+   cmd_str=['C:\android\adt-bundle-windows-x86_64-20140321\sdk\platform-tools\adb push ',filename,' /sdcard/',filename];
    system(cmd_str);
 end

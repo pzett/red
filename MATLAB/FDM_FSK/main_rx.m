@@ -28,7 +28,7 @@ load('mod_ts.mat')
 
 [k_start nr_of_bits] = pilot_demodulator(r,mod_ts,gb_length,Tb,fs,f1_ts,f2_ts,d_length);
 
-nr_of_samples = 1/2*nr_of_bits*Tb*fs/7; %number of samples expected to be received 
+nr_of_samples = 1/2*nr_of_bits*Tb*fs/4; %number of samples expected to be received 
 
 fprintf('Expected number of bits to be received: %d \n',nr_of_bits);
 
@@ -44,13 +44,13 @@ decision1=goertzel2(f1(1),f1(2),f1(3),f1(4),fs,Tb*fs,r);
 decision2=goertzel2(f2(1),f2(2),f2(3),f2(4),fs,Tb*fs,r);
 decision3=goertzel2(f3(1),f3(2),f3(3),f3(4),fs,Tb*fs,r);
 decision4=goertzel2(f4(1),f4(2),f4(3),f4(4),fs,Tb*fs,r);
-decision5=goertzel2(f5(1),f5(2),f5(3),f5(4),fs,Tb*fs,r);
-decision6=goertzel2(f6(1),f6(2),f6(3),f6(4),fs,Tb*fs,r);
-decision7=goertzel2(f7(1),f7(2),f7(3),f7(4),fs,Tb*fs,r);
+% decision5=goertzel2(f5(1),f5(2),f5(3),f5(4),fs,Tb*fs,r);
+% decision6=goertzel2(f6(1),f6(2),f6(3),f6(4),fs,Tb*fs,r);
+% decision7=goertzel2(f7(1),f7(2),f7(3),f7(4),fs,Tb*fs,r);
 %-------demultiplexing-----------
 v=[];
 for n=1:length(decision1);
-    v=[v decision1(n) decision2(n) decision3(n) decision4(n) decision5(n) decision6(n) decision7(n)];
+    v=[v decision1(n) decision2(n) decision3(n) decision4(n)];
 end
 
 %--------Decoder -----------------
@@ -70,10 +70,10 @@ errors = sum(decoder_output(1:length(data_raw))~=data_raw(:,:));
 % errors5 = sum(decision5(1:length(data))~=data(5,:));
 % errors6 = sum(decision6(1:length(data))~=data(6,:));
 % errors7 = sum(decision7(1:length(data))~=data(7,:));
-% errors = errors1 + errors2 + errors3 + errors4 + errors5 + errors6 + errors7;
-BER = errors/Nb*100;
+%errors = errors1 + errors2 + errors3 + errors4;
+BER = errors/length(data_raw)*100;
 
-rate =7*bits_per_symbol/Tb;
+rate =3*bits_per_symbol/Tb;
 
 
 

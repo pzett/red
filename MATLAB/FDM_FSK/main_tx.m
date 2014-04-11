@@ -11,11 +11,11 @@ fclose('all');
 
 %Initialize variables
 fs=44100; %Sampling frequency
-Nb=21000; %Number of bits to transmit.
+Nb=21001; %Number of bits to transmit.
   
-  if mod(Nb,2)~= 0
-      error('Use a number of bits that is divisible by 2');
-  end
+%   if mod(Nb,2)~= 0
+%       error('Use a number of bits that is divisible by 2');
+%   end
 
 %% -------- Binary FSK parameters-----------
 %uncomment to use BFSK
@@ -30,15 +30,15 @@ Nb=21000; %Number of bits to transmit.
 % bits_per_symbol = 1;
 
 %% --------- MFSK paarameters with Hanning window -------------
-Tb=102/fs;  %Bit/symbol period + guard period between symbols
+Tb=55/fs;  %Bit/symbol period + guard period between symbols
 t = Tb;    %Bit/symbol period (t=Tb to set guard period to 0)
 M=4;       %Number of frequencies to transmit over. 
 f=zeros(1,M); %vector containing the frequencies to be used.
 alfa=zeros(1,M); %variable to construct the working frequencies
- multiple=62; %sampling frequency is a multiple of the used frequencies.
+ multiple=35; %sampling frequency is a multiple of the used frequencies.
 for(m=1:M)
     alfa(m)=(m-1)*fs/multiple; % different frequencies are separated by
-    f(m)=fs/multiple+alfa(m)-300;  % fs/multiple
+    f(m)=fs/multiple+alfa(m)-700;  % fs/multiple
 end
 f1=f;
 f2=f+4*fs/multiple;
@@ -95,18 +95,17 @@ g4 = [1 0 0 1 1 1];
 g = [g1;g2;g3;g4];
 data=cnv_encd(g,k0,data);
 Nb=length(data);
-%data=markovsource(0.05,0.05,Nb); %Generate pseudo random bits.
-l=length(data)/7;
-if rem(length(l),7) > 1
-  data=[data,zeros(size(1:7-rem(length(data),7)))];
-end
-l=floor(length(data)/7);
-DATA=zeros(7,l);
-for k=1:l;
+l=length(data)/4;
+% if rem(length(l),4) > 1
+%   data=[data,zeros(size(1:4-rem(length(data),4)))];
+% end
+l=floor(length(data)/4);
+DATA=zeros(4,l);
+for k=1:4*l;
     DATA(k)=data(k);
 end
 data=DATA;
-save('FDM.mat','f1','f2','f3','f4','f5','f6','f7','g','k0');
+save('FDM.mat','f1','f2','f3','f4','f5','f6','f7','k0','g');
 % ----------Coding----------------
 %   s_name='data5kB.txt'; % name of source file
 %   encodeASCII(s_name,'encoded.bin'); 
@@ -126,10 +125,10 @@ mod_signal1 = MFSKwindow_modulation(DATA(1,:), fs,f1,Tb,gb_length,t,tsequence);
 mod_signal2 = MFSKwindow_modulation(DATA(2,:), fs,f2,Tb,gb_length,t,tsequence);
 mod_signal3 = MFSKwindow_modulation(DATA(3,:), fs,f3,Tb,gb_length,t,tsequence);
 mod_signal4 = MFSKwindow_modulation(DATA(4,:), fs,f4,Tb,gb_length,t,tsequence);
-mod_signal5 = MFSKwindow_modulation(DATA(5,:), fs,f5,Tb,gb_length,t,tsequence);
-mod_signal6 = MFSKwindow_modulation(DATA(6,:), fs,f6,Tb,gb_length,t,tsequence);
-mod_signal7 = MFSKwindow_modulation(DATA(7,:), fs,f7,Tb,gb_length,t,tsequence);
-mod_signal = 1/7*(mod_signal1 + mod_signal2 + mod_signal3 + mod_signal4 + mod_signal5 + mod_signal6 + mod_signal7);
+% mod_signal5 = MFSKwindow_modulation(DATA(5,:), fs,f5,Tb,gb_length,t,tsequence);
+% mod_signal6 = MFSKwindow_modulation(DATA(6,:), fs,f6,Tb,gb_length,t,tsequence);
+% mod_signal7 = MFSKwindow_modulation(DATA(7,:), fs,f7,Tb,gb_length,t,tsequence);
+mod_signal = 1/4*(mod_signal1 + mod_signal2 + mod_signal3 + mod_signal4);
 mod_signal = [mod_pilot mod_signal]; %concatenate
 
 % -----------Save signals and parameters----------

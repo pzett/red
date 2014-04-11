@@ -54,7 +54,7 @@ for n=1:length(decision1);
 end
 
 %--------Decoder -----------------
-[decoder_output,survivor_state,cumulated_metric]=viterbi(g,k0,v);
+[decoder_output]=convdecode(v,'3/4');
 %    bin_fid2=fopen('decoded.bin','w');
 %    fprintf(bin_fid2,'%1d',decision);
 %    fclose(bin_fid2);
@@ -62,7 +62,7 @@ end
 
 %---------Plots--------------------------
 %%
-errors = sum(decoder_output(1:length(data_raw))~=data_raw(:,:));
+ errors = sum(decoder_output(1:length(data_raw))~=data_raw(:,:));
 % errors1 = sum(decision1(1:length(data))~=data(1,:));
 % errors2 = sum(decision2(1:length(data))~=data(2,:));
 % errors3 = sum(decision3(1:length(data))~=data(3,:));

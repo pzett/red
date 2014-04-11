@@ -11,7 +11,7 @@ fclose('all');
 
 %Initialize variables
 fs=44100; %Sampling frequency
-Nb=21001; %Number of bits to transmit.
+Nb=21001; %Number of bits to transmit(even).
   
 %   if mod(Nb,2)~= 0
 %       error('Use a number of bits that is divisible by 2');
@@ -86,14 +86,9 @@ save('pilot.mat','f1_ts','f2_ts','gb_length','d_length');
 
 % ---------Generate data---------
 data_raw = round(rand(1,Nb)); % Generate bits randomly for data
-data = data_raw;
-k0 = 3;
-g1 = [0 0 1 0 1 1];
-g2 = [0 1 0 1 0 1];
-g3 = [1 1 0 0 0 1];
-g4 = [1 0 0 1 1 1];
-g = [g1;g2;g3;g4];
-data=cnv_encd(g,k0,data);
+% ----------Coding----------------
+data = convencode(data_raw,'3/4');
+
 Nb=length(data);
 l=length(data)/4;
 % if rem(length(l),4) > 1
@@ -105,7 +100,7 @@ for k=1:4*l;
     DATA(k)=data(k);
 end
 data=DATA;
-save('FDM.mat','f1','f2','f3','f4','f5','f6','f7','k0','g');
+save('FDM.mat','f1','f2','f3','f4','f5','f6','f7');
 % ----------Coding----------------
 %   s_name='data5kB.txt'; % name of source file
 %   encodeASCII(s_name,'encoded.bin'); 

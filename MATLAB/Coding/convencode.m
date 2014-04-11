@@ -7,7 +7,7 @@ function [ data_output ] = convencode( data_input,code_rate )
 switch code_rate
     case '1/2'
     %1/2 Gen:[15,17]   dfree=6
-    g=[ 1 1 0 1 ...  %15
+    g=[ 1 1 0 1; ...  %15
         1 1 1 1 ];   %17
     k=1;    
     case '2/3' 

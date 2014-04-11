@@ -7,7 +7,7 @@ function [ decoder_output] = convdecode( channel_output,code_rate )
 switch code_rate
     case '1/2'
     %1/2 Gen:[15,17]   dfree=6
-    G=[ 1 1 0 1 ...  %15
+    G=[ 1 1 0 1; ...  %15
         1 1 1 1 ];   %17
     k=1;    
     case '2/3' 

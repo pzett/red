@@ -877,6 +877,20 @@ String(Environment.getExternalStorageDirectory() + "/" + name);
     {
         return (int)readDouble();
     }
+    public String readString()
+    
+    	   {
+    	        if(stream == null)
+    	            return null;
+    	        String result = null;
+    	        try {
+    	            result = stream.readLine();
+    	        } catch (IOException e) {
+    	            e.printStackTrace();
+    	        }
+    	        return result;
+    	    }
+    
 
 }
 

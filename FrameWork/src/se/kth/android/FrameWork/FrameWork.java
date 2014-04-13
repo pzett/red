@@ -23,6 +23,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
 import android.app.AlertDialog;
+import android.media.AudioManager;
 
 import edu.dhbw.andar.CameraPreviewHandler;
 
@@ -72,7 +73,7 @@ import android.widget.EditText;
 public class FrameWork extends Activity implements OnRecordPositionUpdateListener, OnPlaybackPositionUpdateListener, SensorEventListener, PreviewCallback, LocationListener {
 	AudioRecord  recorder = null;
 	AudioTrack player = null;
-	
+  
 	Thread t1 = null; 
 	boolean active = false;
 	PlotView plotView = null;
@@ -122,6 +123,7 @@ public class FrameWork extends Activity implements OnRecordPositionUpdateListene
     @Override
     public void onCreate(Bundle savedInstanceState) {
     	
+    	
         super.onCreate(savedInstanceState);
         context = this;
         setContentView(R.layout.main);
@@ -132,6 +134,28 @@ public class FrameWork extends Activity implements OnRecordPositionUpdateListene
         buttonView = (View)findViewById(R.id.buttons);
         studentCode = new StudentCode();
         
+        
+        
+        AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
+		    int max_value =am.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+		    int volume_level= am.getStreamVolume(AudioManager.STREAM_MUSIC);
+		    am.setStreamVolume(AudioManager.STREAM_MUSIC,(int) Math.floor(max_value/2+1), 0);
+		    boolean meow = am.isWiredHeadsetOn();
+		    if(meow == false){
+		    	
+	        		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+	        		builder.setMessage("You must plug the headset.")
+	        		       .setCancelable(false)
+	        		       .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+	        		           public void onClick(DialogInterface dialog, int id) {
+	        		        	  
+	        		           }
+	        		       });
+	        		AlertDialog alert = builder.create();
+	        		alert.show();
+	        			    }
+		    
+		    
         studentCode.init(-1);
         
         if(studentCode.test_harness())
@@ -153,7 +177,9 @@ public class FrameWork extends Activity implements OnRecordPositionUpdateListene
       					textView.post(new Runnable() {
         					public void run()
         					{
-         						textView.setText(studentCode.textOutput);//+"\n"+(plotView.maxOffset-plotView.minOffset)*1000f/0x100000000L);
+         						//+"\n"+(plotView.maxOffset-plotView.minOffset)*1000f/0x100000000L);
+         						  
+         						textView.setText(studentCode.textOutput);
          					}
         				});
 						wait(100);
@@ -492,7 +518,10 @@ public class FrameWork extends Activity implements OnRecordPositionUpdateListene
         	else
         		studentCode.textOutput = studentCode.introText;
         }
-    }
+        
+ 
+        
+         }
 	@Override
 	protected void onDestroy() {
 		if(recorder != null)

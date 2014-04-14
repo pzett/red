@@ -1,12 +1,12 @@
 filename = 'try1.txt';
 
-L_estim = 13;
+L_estim = 10;
 Q=3;
 Nsymb=(Q-1)*L_estim;
 a=0.2;
-sync_seq_len= 2000;
-
+sync_seq_len=2000;
 mu=0.15;
+
 Ns= Nsymb+L_estim;%--> size of the block of symbols transmitted through the ifft\
 
 fmin=0.05;%--> minimum frequency

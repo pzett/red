@@ -1,7 +1,12 @@
 
 load('OFDM.mat');
-rx0 = wavread('mod_signal.wav');
-rx = rx0;
+% rx0 = wavread('mod_signal.wav');
+% rx = rx0;
+names=list_sensor_log_files_on_sdcard;%grabs list of .csv files on phone
+filename = char(names.filenames(end)); % Char converts cell to string
+copy_file_from_sdcard_to_working_directory(filename);%copy file to folder
+log_data=get_log_data_from_FrameWork(filename); %grab log data
+rx=extract_sound_from_log_data(log_data); %extract sound from log data.
 plot(rx)
 t = [0:sync_seq_len-1]'; 
 sync_seq=0.45*sin(2*pi*mu/sync_seq_len*t.^2);

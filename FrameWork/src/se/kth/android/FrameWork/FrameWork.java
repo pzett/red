@@ -22,12 +22,10 @@ import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
-import android.app.AlertDialog;
-import android.media.AudioManager;
+
 
 import edu.dhbw.andar.CameraPreviewHandler;
 
-import se.kth.android.GroupRed2014.R;
 import se.kth.android.StudentCode.StudentCode;
 
 import android.app.Activity;
@@ -73,7 +71,7 @@ import android.widget.EditText;
 public class FrameWork extends Activity implements OnRecordPositionUpdateListener, OnPlaybackPositionUpdateListener, SensorEventListener, PreviewCallback, LocationListener {
 	AudioRecord  recorder = null;
 	AudioTrack player = null;
-  
+	
 	Thread t1 = null; 
 	boolean active = false;
 	PlotView plotView = null;
@@ -123,7 +121,6 @@ public class FrameWork extends Activity implements OnRecordPositionUpdateListene
     @Override
     public void onCreate(Bundle savedInstanceState) {
     	
-    	
         super.onCreate(savedInstanceState);
         context = this;
         setContentView(R.layout.main);
@@ -134,29 +131,7 @@ public class FrameWork extends Activity implements OnRecordPositionUpdateListene
         buttonView = (View)findViewById(R.id.buttons);
         studentCode = new StudentCode();
         
-        
-        
-        AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
-		    int max_value =am.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-		    int volume_level= am.getStreamVolume(AudioManager.STREAM_MUSIC);
-		    am.setStreamVolume(AudioManager.STREAM_MUSIC,(int) Math.floor(max_value/2+1), 0);
-		    boolean meow = am.isWiredHeadsetOn();
-		    if(meow == false){
-		    	
-	        		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-	        		builder.setMessage("You must plug the headset.")
-	        		       .setCancelable(false)
-	        		       .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-	        		           public void onClick(DialogInterface dialog, int id) {
-	        		        	  
-	        		           }
-	        		       });
-	        		AlertDialog alert = builder.create();
-	        		alert.show();
-	        			    }
-		    
-		    
-        studentCode.init(-1);
+        studentCode.init();
         
         if(studentCode.test_harness())
             System.exit(0);
@@ -177,9 +152,7 @@ public class FrameWork extends Activity implements OnRecordPositionUpdateListene
       					textView.post(new Runnable() {
         					public void run()
         					{
-         						//+"\n"+(plotView.maxOffset-plotView.minOffset)*1000f/0x100000000L);
-         						  
-         						textView.setText(studentCode.textOutput);
+         						textView.setText(studentCode.textOutput);//+"\n"+(plotView.maxOffset-plotView.minOffset)*1000f/0x100000000L);
          					}
         				});
 						wait(100);
@@ -518,10 +491,7 @@ public class FrameWork extends Activity implements OnRecordPositionUpdateListene
         	else
         		studentCode.textOutput = studentCode.introText;
         }
-        
- 
-        
-         }
+    }
 	@Override
 	protected void onDestroy() {
 		if(recorder != null)
@@ -533,152 +503,17 @@ public class FrameWork extends Activity implements OnRecordPositionUpdateListene
 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
-		menu.add(0,1,0,"TX");
+		menu.add(0,1,0,"Start");
 		menu.add(0,2,0,"Kill");
-		menu.add(0,4,0,"RX");
 		if (studentCode.userInputString) {
 			menu.add(0,3,0,studentCode.userInputStringMenuItem);
 		};	
-		
 		return super.onCreateOptionsMenu(menu);
 	}
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) 
 		{
-		case 4:{
-			if(!active)
-			{
-				item.setTitle("Stop");
-				studentCode.init(1);
-
-				
-			    if((studentCode.useSensors & StudentCode.CAMERA) == StudentCode.CAMERA || (studentCode.useSensors & StudentCode.CAMERA_RGB) == StudentCode.CAMERA_RGB) {
-			    	if (studentCode.useCameraGUI)
-			    		buttonView.setVisibility(View.VISIBLE);
-			    };
-
-			    
-			    if((studentCode.useSensors & StudentCode.TIME_SYNC) == StudentCode.TIME_SYNC)
-			    	synchronizedTime.Start();
-			    
-			    studentCode.start_up(this);
-		        lock();
-			    studentCode.start();
-		        unlock();
-			    
-				active = true;
-
-//				if(camera != null)
-//					camera.startPreview();
-
-				if(mLocationManager != null)
-				    mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, this);       	
- 
-				SendCurrentSensorValues();
-			       
-				if(studentCode.loggingOn)
-				{ 
-
-			        String logName = new String(Environment.getExternalStorageDirectory() + "/sensorlog"+ 
-							new SimpleDateFormat("yyyyMMddHHmm").format(new Date()) + ".csv");
-					try {
-						logFile = new BufferedOutputStream(new FileOutputStream(logName), 65536*16);
-						String s = "C;"+System.currentTimeMillis()+";"+System.nanoTime()+"\n";
-						logFile.write(s.getBytes());
-					} catch (FileNotFoundException e) {
-						e.printStackTrace();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}	
-
-				if((studentCode.useSensors & StudentCode.SOUND_IN) == StudentCode.SOUND_IN)
-				{
-					t1 = new Thread(new Runnable() {
-					    synchronized public void run() {
-					    	record();
-					      }     
-					    });
-					t1.start();
-				}return true;
-			}else{
-				item.setTitle("RX");
-				active = false;
-
-			    if((studentCode.useSensors & StudentCode.CAMERA) == StudentCode.CAMERA || (studentCode.useSensors & StudentCode.CAMERA_RGB) == StudentCode.CAMERA_RGB)
-			    {
-			    	buttonView.setVisibility(View.INVISIBLE);
-					if(cameraState == CameraState.PLAYING && replayFile != null)
-					{
-						cameraState = CameraState.IDLE;
-						try {
-							replayFile.close();
-						} catch (IOException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-						replayFile = null;
-					} 
-					if(cameraState == CameraState.RECORDING && camera != null)
-					{
-						cameraState = CameraState.STARTED;
-						if(recordingFile!=null)
-						{
-							try {
-								recordingFile.flush();
-								recordingFile.close();
-							} catch (IOException e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
-							recordingFile = null;
-						}
-					}
-					if(cameraState == CameraState.STARTED && camera != null)
-					{
-						cameraState = CameraState.IDLE;
-						if (studentCode.useAutoFocus)
-							camera.cancelAutoFocus();
-						camera.stopPreview();
-					}
-			    }
-				studentCode.ips.clear();
-				
-//				if(camera != null)
-//					camera.stopPreview();
-				
-				if(mLocationManager != null)
-			       mLocationManager.removeUpdates(this);
-			       
-
-			    if((studentCode.useSensors & StudentCode.TIME_SYNC) == StudentCode.TIME_SYNC)
-			    	synchronizedTime.Stop();
-				
-		        lock();
-			    studentCode.stop();
-		        unlock();
-			   
-				if(studentCode.loggingOn)
-				{
-
-			        synchronized (this) 
-			        {
-				    	if(logFile != null)
-					       try {
-								logFile.flush();
-								logFile.close();
-								logFile = null;
-							} catch (IOException e) {
-								e.printStackTrace();
-							}
-					}
-				}			
-			}
-		}return true;
-		case 2:{
-        	System.exit(0);
-        	break;}
         case 3:
 
         	final AlertDialog.Builder alert = new AlertDialog.Builder(this);
@@ -704,12 +539,14 @@ public class FrameWork extends Activity implements OnRecordPositionUpdateListene
 			alert.show();					        	
 			return true;
 			
-        
+        case 2:
+        	System.exit(0);
+        	break;
 		case 1:
 			if(!active)
 			{
 				item.setTitle("Stop");
-				studentCode.init(0);
+				studentCode.init();
 
 				
 			    if((studentCode.useSensors & StudentCode.CAMERA) == StudentCode.CAMERA || (studentCode.useSensors & StudentCode.CAMERA_RGB) == StudentCode.CAMERA_RGB) {
@@ -762,7 +599,7 @@ public class FrameWork extends Activity implements OnRecordPositionUpdateListene
 					t1.start();
 				}
 			}else{
-				item.setTitle("TX");
+				item.setTitle("Start");
 				active = false;
 
 			    if((studentCode.useSensors & StudentCode.CAMERA) == StudentCode.CAMERA || (studentCode.useSensors & StudentCode.CAMERA_RGB) == StudentCode.CAMERA_RGB)
@@ -834,8 +671,6 @@ public class FrameWork extends Activity implements OnRecordPositionUpdateListene
 					}
 				}			
 			}
-		
-			
 			return true;
 		}
 		return false;

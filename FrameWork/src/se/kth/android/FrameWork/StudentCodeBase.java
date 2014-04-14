@@ -332,8 +332,8 @@ Runnable() {
     }
 
 	
-	protected void clear_output_text() { textOutput = new String(); }
-	protected void add_output_text_line(String line) { textOutput += "\n" + line; }
+	void clear_output_text() { textOutput = new String(); }
+	void add_output_text_line(String line) { textOutput += "\n" + line; }
 	protected void set_output_text(String text) { textOutput = text; }
 	
 	public void gps(long time, double latitude, double longitude, double height, double precision){}
@@ -877,20 +877,6 @@ String(Environment.getExternalStorageDirectory() + "/" + name);
     {
         return (int)readDouble();
     }
-    public String readString()
-    
-    	   {
-    	        if(stream == null)
-    	            return null;
-    	        String result = null;
-    	        try {
-    	            result = stream.readLine();
-    	        } catch (IOException e) {
-    	            e.printStackTrace();
-    	        }
-    	        return result;
-    	    }
-    
 
 }
 

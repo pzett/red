@@ -65,15 +65,15 @@
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.1}MFSK}{5}{subsection.2.1}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Pulse Shaping Functions}{5}{subsection.2.2}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Efficient MFSK Demodulation}{6}{subsection.2.3}}
-\newlabel{wincar}{{\caption@xref {wincar}{ on input line 263}}{7}{Pulse Shaping Functions}{figure.caption.7}{}}
+\newlabel{wincar}{{\caption@xref {wincar}{ on input line 264}}{7}{Pulse Shaping Functions}{figure.caption.7}{}}
 \newlabel{wincar@cref}{{[subsection][2][2]2.2}{7}}
 \newlabel{wc}{{7a}{7}{Different windows in time and frequency domain. \textbf {Blue, red and green lines correspond to the rectangular, Gaussian and Hanning window, respectively.}\relax }{figure.caption.7}{}}
 \newlabel{wc@cref}{{[subfigure][1][7]7a}{7}}
 \newlabel{sub@wc}{{a}{7}{Different windows in time and frequency domain. \textbf {Blue, red and green lines correspond to the rectangular, Gaussian and Hanning window, respectively.}\relax }{figure.caption.7}{}}
 \newlabel{sub@wc@cref}{{[subfigure][1][7]7a}{7}}
-\newlabel{wcomp}{{7b}{7}{PSD of the transmitted pulse usingthe rectangular and Hanning window for a BFSK system.\relax }{figure.caption.7}{}}
+\newlabel{wcomp}{{7b}{7}{PSD of the transmitted pulse using the rectangular and Hanning window for a BFSK system.\relax }{figure.caption.7}{}}
 \newlabel{wcomp@cref}{{[subfigure][2][7]7b}{7}}
-\newlabel{sub@wcomp}{{b}{7}{PSD of the transmitted pulse usingthe rectangular and Hanning window for a BFSK system.\relax }{figure.caption.7}{}}
+\newlabel{sub@wcomp}{{b}{7}{PSD of the transmitted pulse using the rectangular and Hanning window for a BFSK system.\relax }{figure.caption.7}{}}
 \newlabel{sub@wcomp@cref}{{[subfigure][2][7]7b}{7}}
 \@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces The importance of choosing the right window for pulse shaping.\relax }}{7}{figure.caption.7}}
 \newlabel{main}{{7}{7}{The importance of choosing the right window for pulse shaping.\relax }{figure.caption.7}{}}
@@ -84,18 +84,71 @@
 \newlabel{gaussianalpha@cref}{{[figure][8][]8}{8}}
 \newlabel{IIRtime}{{1}{8}{Goertzel Algorithm}{equation.2.1}{}}
 \newlabel{IIRtime@cref}{{[equation][1][]1}{8}}
-\@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces Direct-Form Realization of the Goertzel Algorithm.\relax }}{9}{figure.caption.9}}
-\newlabel{IIR}{{9}{9}{Direct-Form Realization of the Goertzel Algorithm.\relax }{figure.caption.9}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces Direct-Form Realisation of the Goertzel Algorithm.\relax }}{9}{figure.caption.9}}
+\newlabel{IIR}{{9}{9}{Direct-Form Realisation of the Goertzel Algorithm.\relax }{figure.caption.9}{}}
 \newlabel{IIR@cref}{{[figure][9][]9}{9}}
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {2.4.1}Computational and Memory complexities}{9}{subsubsection.2.4.1}}
 \newlabel{ineffgor}{{2}{9}{Computational and Memory complexities}{equation.2.2}{}}
 \newlabel{ineffgor@cref}{{[equation][2][]2}{9}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.5}Training Sequence}{10}{subsection.2.5}}
-\newlabel{ts}{{2.5}{10}{Training Sequence}{subsection.2.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.5}Synchronisation}{10}{subsection.2.5}}
+\newlabel{ts}{{2.5}{10}{Synchronisation}{subsection.2.5}{}}
 \newlabel{ts@cref}{{[subsection][5][2]2.5}{10}}
-\@writefile{toc}{\contentsline {section}{\numberline {3}Android part}{11}{section.3}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}FrameWork}{11}{subsection.3.1}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}PictureOfFrameWork}{11}{subsection.3.2}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Transmitter and Receiver}{11}{subsection.3.3}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.5.1}Symbol Synchronisation}{10}{subsubsection.2.5.1}}
+\@writefile{lof}{\contentsline {figure}{\numberline {10}{\ignorespaces Output from the matched filter for successive signalling in absence of noise. The small arrows illustrate the preferred sampling instants.\relax }}{10}{figure.caption.10}}
+\newlabel{mfpeaks}{{10}{10}{Output from the matched filter for successive signalling in absence of noise. The small arrows illustrate the preferred sampling instants.\relax }{figure.caption.10}{}}
+\newlabel{mfpeaks@cref}{{[figure][10][]10}{10}}
+\newlabel{a}{{11a}{11}{Symbol spaced cross-correlation. In this example the delay is estimated to be 8 and therefore the system should be sampled at 8+kQ, k=0,1,2,..N.\relax }{figure.caption.11}{}}
+\newlabel{a@cref}{{[subfigure][1][11]11a}{11}}
+\newlabel{sub@a}{{a}{11}{Symbol spaced cross-correlation. In this example the delay is estimated to be 8 and therefore the system should be sampled at 8+kQ, k=0,1,2,..N.\relax }{figure.caption.11}{}}
+\newlabel{sub@a@cref}{{[subfigure][1][11]11a}{11}}
+\newlabel{fig7:b}{{11b}{11}{One sample resolution cross correlation with training sequence of length 20 symbols.\relax }{figure.caption.11}{}}
+\newlabel{fig7:b@cref}{{[subfigure][2][11]11b}{11}}
+\newlabel{sub@fig7:b}{{b}{11}{One sample resolution cross correlation with training sequence of length 20 symbols.\relax }{figure.caption.11}{}}
+\newlabel{sub@fig7:b@cref}{{[subfigure][2][11]11b}{11}}
+\newlabel{fig7:c}{{11c}{11}{One sample resolution cross correlation with training sequence of length 100 symbols and equal frequency to rest of trasmission.\relax }{figure.caption.11}{}}
+\newlabel{fig7:c@cref}{{[subfigure][3][11]11c}{11}}
+\newlabel{sub@fig7:c}{{c}{11}{One sample resolution cross correlation with training sequence of length 100 symbols and equal frequency to rest of trasmission.\relax }{figure.caption.11}{}}
+\newlabel{sub@fig7:c@cref}{{[subfigure][3][11]11c}{11}}
+\newlabel{fig7:d}{{11d}{11}{One sample resolution cross correlation with training sequence of length 100 symbols and different frequency to rest of transmission.\relax }{figure.caption.11}{}}
+\newlabel{fig7:d@cref}{{[subfigure][4][11]11d}{11}}
+\newlabel{sub@fig7:d}{{d}{11}{One sample resolution cross correlation with training sequence of length 100 symbols and different frequency to rest of transmission.\relax }{figure.caption.11}{}}
+\newlabel{sub@fig7:d@cref}{{[subfigure][4][11]11d}{11}}
+\@writefile{lof}{\contentsline {figure}{\numberline {11}{\ignorespaces Training sequence algorithm/length/modulation comparison.\relax }}{11}{figure.caption.11}}
+\newlabel{tscomp}{{11}{11}{Training sequence algorithm/length/modulation comparison.\relax }{figure.caption.11}{}}
+\newlabel{tscomp@cref}{{[figure][11][]11}{11}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.5.2}Carrier Synchronisation}{12}{subsubsection.2.5.2}}
+\@writefile{lof}{\contentsline {figure}{\numberline {12}{\ignorespaces Block diagram of basic QPSK/QAM digital receiver. In the digital implementation, the VCO takes the form of a direct digital synthesizer (DDS). \relax }}{12}{figure.caption.12}}
+\newlabel{rxMQAM}{{12}{12}{Block diagram of basic QPSK/QAM digital receiver. In the digital implementation, the VCO takes the form of a direct digital synthesizer (DDS). \relax }{figure.caption.12}{}}
+\newlabel{rxMQAM@cref}{{[figure][12][]12}{12}}
+\newlabel{DPLL}{{13a}{12}{Digital phase locked loop for carrier phase synchronisation.\relax }{figure.caption.13}{}}
+\newlabel{DPLL@cref}{{[subfigure][1][13]13a}{12}}
+\newlabel{sub@DPLL}{{a}{12}{Digital phase locked loop for carrier phase synchronisation.\relax }{figure.caption.13}{}}
+\newlabel{sub@DPLL@cref}{{[subfigure][1][13]13a}{12}}
+\newlabel{PD}{{13b}{12}{16-QAM constellation with decision boundaries and phase error.\relax }{figure.caption.13}{}}
+\newlabel{PD@cref}{{[subfigure][2][13]13b}{12}}
+\newlabel{sub@PD}{{b}{12}{16-QAM constellation with decision boundaries and phase error.\relax }{figure.caption.13}{}}
+\newlabel{sub@PD@cref}{{[subfigure][2][13]13b}{12}}
+\@writefile{lof}{\contentsline {figure}{\numberline {13}{\ignorespaces Carrier phase estimation diagrams.\relax }}{12}{figure.caption.13}}
+\newlabel{carrierphase}{{13}{12}{Carrier phase estimation diagrams.\relax }{figure.caption.13}{}}
+\newlabel{carrierphase@cref}{{[figure][13][]13}{12}}
+\newlabel{DPLL}{{14a}{13}{Transmitted constellation.\relax }{figure.caption.14}{}}
+\newlabel{DPLL@cref}{{[subfigure][1][14]14a}{13}}
+\newlabel{sub@DPLL}{{a}{13}{Transmitted constellation.\relax }{figure.caption.14}{}}
+\newlabel{sub@DPLL@cref}{{[subfigure][1][14]14a}{13}}
+\newlabel{PD}{{14b}{13}{Received constellation.\relax }{figure.caption.14}{}}
+\newlabel{PD@cref}{{[subfigure][2][14]14b}{13}}
+\newlabel{sub@PD}{{b}{13}{Received constellation.\relax }{figure.caption.14}{}}
+\newlabel{sub@PD@cref}{{[subfigure][2][14]14b}{13}}
+\newlabel{PD}{{14c}{13}{Received constellation after phase correction.\relax }{figure.caption.14}{}}
+\newlabel{PD@cref}{{[subfigure][3][14]14c}{13}}
+\newlabel{sub@PD}{{c}{13}{Received constellation after phase correction.\relax }{figure.caption.14}{}}
+\newlabel{sub@PD@cref}{{[subfigure][3][14]14c}{13}}
+\@writefile{lof}{\contentsline {figure}{\numberline {14}{\ignorespaces Example of frequency offset in a 16-QAM constellation with decision boundaries. \relax }}{13}{figure.caption.14}}
+\newlabel{phaseoff}{{14}{13}{Example of frequency offset in a 16-QAM constellation with decision boundaries. \relax }{figure.caption.14}{}}
+\newlabel{phaseoff@cref}{{[figure][14][]14}{13}}
+\@writefile{toc}{\contentsline {section}{\numberline {3}Android part}{14}{section.3}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}FrameWork}{14}{subsection.3.1}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}PictureOfFrameWork}{14}{subsection.3.2}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Transmitter and Receiver}{14}{subsection.3.3}}
 \bibcite{Madhow}{1}
 \bibcite{Proakis}{2}

@@ -34,3 +34,10 @@ proguard/
 *.dat
 *.mat
 *.m~
+
+# Latex Temp files
+.textpadtmp/
+*.aux
+*.log
+*.out
+*.gz

@@ -27,7 +27,7 @@ import android.media.AudioManager;
 
 import edu.dhbw.andar.CameraPreviewHandler;
 
-import se.kth.android.GroupRed2014.R;
+import se.kth.android.GroupRed2014App02.R;
 import se.kth.android.StudentCode.StudentCode;
 
 import android.app.Activity;

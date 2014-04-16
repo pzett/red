@@ -96,7 +96,7 @@ public class StudentCode extends StudentCodeBase {
     final static int f1=mysampleRate/20;
     final static int f2=mysampleRate/24;
     final static int f3=mysampleRate/16;
-    final static int f4=mysampleRate/12;
+    final static int f4=mysampleRate/10;
     final static int ts_f1=mysampleRate/20;
     final static int ts_f2=mysampleRate/15;
     
@@ -826,9 +826,9 @@ void send_data(){
 		tx_signal[current_position]=data_signal[i];
 		current_position++;
 	}
-	for(int i=0;i<bufferInt.length-current_position%bufferInt.length+1;i++){
-		tx_signal[current_position+i]=0;
-	}
+//	for(int i=0;i<bufferInt.length-current_position%bufferInt.length+1;i++){
+//		tx_signal[current_position+i]=0;
+//	}
 	
 	final AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
             mysampleRate, AudioFormat.CHANNEL_OUT_MONO,
@@ -891,7 +891,7 @@ public double[] modulate_ts(int length, int f1, int f2){
     };
    //add_output_text_line("ts(0,1)="+ts[0]+""+ts[1]);
     in.close();
-	final double[] mod_ts =FSK_mod_ts(f1,f2,ts);
+	final double[] mod_ts = FSK_mod_ts(f1,f2,ts);
 	
 	return mod_ts;
 }

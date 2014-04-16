@@ -946,6 +946,16 @@ String(Environment.getExternalStorageDirectory() + "/" + name);
         }
      
     }
+    public void writeString(String input)
+    {
+        if(stream == null)
+            return;
+        try {
+            stream.write(""+input+"\n");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 	}
 
 	public String list_ips()  {

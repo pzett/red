@@ -274,7 +274,7 @@ public class StudentCode extends StudentCodeBase {
     	  //Complex a =new Complex(2,3);
           //Complex b =new Complex(1,6);
     	
-        if(d_filename != null) state=0; //file has been picked
+        if(d_filename != null) state=GETDATA; //file has been picked
     	
     	switch(state){
     	
@@ -434,7 +434,18 @@ public class StudentCode extends StudentCodeBase {
 	}
    
     public void stringFromUser(String user_input)
-    {       
+    {
+        
+         SimpleOutputFile out = new SimpleOutputFile();
+        //Call the function to be tested 
+         out.open("message.txt");
+         out.writeString(user_input);
+    	// Write file on sdcard 
+    	  d_filename="message.txt";
+//    	       trigger=0;  
+//    	       side=0;
+//    	       init(0);
+    	    out.close(); 
     }
 
    
@@ -824,11 +835,10 @@ void send_data(){
 		tx_signal[current_position]=data_signal[i];
 		current_position++;
 	}
-	for(int i=current_position%bufferInt.length;i<bufferInt.length;i++){
-		tx_signal[current_position]=0;
-	}
-	
-	
+//	for(int i=0;i<bufferInt.length-current_position%bufferInt.length+1;i++){
+//		tx_signal[current_position+i]=0;
+//	}
+//	
 	final AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
             mysampleRate, AudioFormat.CHANNEL_OUT_MONO,
             AudioFormat.ENCODING_PCM_16BIT, bufferInt.length,

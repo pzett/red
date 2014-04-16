@@ -6,6 +6,7 @@
 * for how information on how to cite. */ 
 
 package se.kth.android.StudentCode;
+import java.io.BufferedReader;
 
 //import java.util.ArrayList;
 //import java.util.Arrays;
@@ -18,8 +19,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.Object;
+import android.app.Activity;
 
-
+import android.content.Context;
 
 import com.google.zxing.Binarizer;
 import com.google.zxing.BinaryBitmap;
@@ -49,6 +51,7 @@ import se.kth.android.FrameWork.StudentCodeBase;
 
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 //import android.graphics.Bitmap;
 import android.graphics.Canvas;
 //import android.graphics.Color;
@@ -63,13 +66,12 @@ import android.net.wifi.ScanResult;
 import android.os.Environment;
 import android.os.Handler;
 
-import android.app.AlertDialog;
-import android.content.Context;
+
 
 public class StudentCode extends StudentCodeBase {
 	
 
-	  /* Varibles need for plaing sound example */
+	 
     boolean init_done=false;
     boolean file_loaded=false;
     byte[] the_sound_file_contents=null;
@@ -88,14 +90,21 @@ public class StudentCode extends StudentCodeBase {
     final double inputycorr[]={1,2};
     
     final static int no_samp_period = 30;
-    final static int f1=mysampleRate/5;
-    final static int f2=mysampleRate/8;
+    final static int f1=mysampleRate/4;
+    final static int f2=mysampleRate/6;
+    final static int f3=mysampleRate/2;
+    final static int f4=mysampleRate/8;
     final static int ts_f1=mysampleRate/20;
     final static int ts_f2=mysampleRate/15;
+    
     final static double[] cosf1 =initCosine(f1, mysampleRate,no_samp_period);
     final static double[] cosf2 =initCosine(f2, mysampleRate,no_samp_period);
+    final static double[] cosf3 =initCosine(f3, mysampleRate,no_samp_period);
+    final static double[] cosf4 =initCosine(f4, mysampleRate,no_samp_period);
+    
     final static double[] cosf1ts =initCosine(ts_f1, mysampleRate,no_samp_period);
     final static double[] cosf2ts =initCosine(ts_f2, mysampleRate,no_samp_period);
+    
     
     private static final double MAX_16_BIT = Short.MAX_VALUE; 
     private static final int SAMPLE_BUFFER_SIZE = 4096;
@@ -109,7 +118,7 @@ public class StudentCode extends StudentCodeBase {
     private static short[] rx_buffer;
     private static int rx_ind=0;
     private static int ts_length = 50;
-    private static int gb_length = 20;
+    private static int gb_length = 30;
     private static double[] ts_mod;
     private static int side=-1;
     
@@ -125,6 +134,8 @@ public class StudentCode extends StudentCodeBase {
     int[] bit_buffer;
     int state=-1;
 	int state_two = 0;
+	int[] sizeofFile; //= new int [128];
+	int[] titleofFile;  //= new int [16];
 	final int GETDATA = 0; 
 	final int RECEIVED = 1;
 	final int SEND = 2;
@@ -133,7 +144,16 @@ public class StudentCode extends StudentCodeBase {
 	final int FIRST = 0;
 	final int SECOND = 1;
     
-    AudioTrack atp; 
+	// Variables used in FSK_mod4
+	int state_three_fsk = -1;
+	final int zerozero = 0;
+	final int zeroone = 1;
+	final int onezero = 2;
+	final int oneone = 3;
+	
+	AudioTrack atp; 
+ 
+	
        // This is called before any other functions are initialized so that parameters for these can be set
     public void init(int a) //a=0 -> tx ; a=1 -> rx
     { 
@@ -142,7 +162,6 @@ public class StudentCode extends StudentCodeBase {
            projectName = "DemoProject";
            set_output_text("Hello World! Press menu for options!");
            // Add sensors your project will use
-          
            if(a==0){ useSensors =  SOUND_OUT; // CAMERA;CAMERA_RGB;//WIFI_SCAN | SOUND_OUT; //GYROSCOPE;//SOUND_IN|SOUND_OUT;//WIFI_SCAN | ACCELEROMETER | MAGNETIC_FIELD | PROXIMITY | LIGHT;//TIME_SYNC|SOUND_IN;//TIME_SYNC | ACCELEROMETER | MAGNETIC_FIELD | PROXIMITY | LIGHT | SOUND_IN;
            add_output_text_line("TX side");
            side=0;
@@ -204,8 +223,6 @@ public class StudentCode extends StudentCodeBase {
           
           add_output_text_line("f1= "+f1+" f2= "+f2+" k= "+no_samp_period);
          
-          //audio = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-         // getStreamMaxVolume(int streamType)
 
     }
 
@@ -216,7 +233,6 @@ public class StudentCode extends StudentCodeBase {
     	
     	if(side==0){
     		browseForFile();
-    		//setVolume();
     		
     	}
     	//set_output_text("d_filename ="+d_filename);
@@ -253,69 +269,61 @@ public class StudentCode extends StudentCodeBase {
     // Fill in the process function that will be called according to interval above
     @SuppressLint("NewApi")
 	public void process()
-    { 
-           //set_output_text(""+gyroData+"\n"+gpsData + "\n"+triggerTime+"\n"+ magneticData+"\n"+proximityData+"\n"+lightData+"\n"+screenData+"\n"+messageData);           //set_output_text(debug_output+"\n");
-           //set_output_text(wifi_ap);
-          
+    {  
     	//Complex[] y =   fft(input);
     	
     	//z=FFT.cconvolve(x, y)   ;
     	
     	  //Complex a =new Complex(2,3);
           //Complex b =new Complex(1,6);
-        if(d_filename != null) state=0;
+    	
+        if(d_filename != null) state=0; //file has been picked
     	
     	switch(state){
     	
+    	// Convert file to be sent into a binary stream stored in bit_buffer
     	case GETDATA:
     		bit_buffer = data_buffer_bits();
-    		
     	    break;
     	    
-    	case SEND:
+    	// Send data stored in bit_buffer
+    	case SEND:  
     		send_data();
-    		//break;
     		
+        // Receiver part
     	case RECEIVED:
     	if(trigger==2){
-        	  
+    		add_output_text_line("stopped listening, decoding");
         	  //useSensors =  SOUND_OUT;
-        	  int block_length=no_samp_period*(gb_length+ts_length+20);
-        	  double[] rx_bufferdouble = new double[rx_buffer.length];
+        	  int block_length=no_samp_period*(gb_length+ts_length+20); //block to do autocorrelation
+        	  double[] rx_bufferdouble = new double[rx_buffer.length]; //buffer of doubles
         	  add_output_text_line("buffer length="+rx_buffer.length);
         	  for (int j=0;j<rx_ind;j++) {
-        	      rx_bufferdouble[j] = (double)rx_buffer[j];
+        	      rx_bufferdouble[j] = (double)rx_buffer[j]; //convert received samples to doubles.
         	  }
-        	  int index = maxXcorr(Arrays.copyOfRange(rx_bufferdouble, 1, block_length),ts_mod);
+        	  
+        	  int index = maxXcorr(Arrays.copyOfRange(rx_bufferdouble, 1, block_length),ts_mod); //find where training sequence begins
+        	  
+        	  //send received data to goertzel algorithm, copy only data part
         	  int decision[]=goertzel(f1,f2,no_samp_period, Arrays.copyOfRange(rx_bufferdouble,index+no_samp_period*ts_length,rx_buffer.length));
+        	  //save decision to file
         	  save_to_file("decision.txt", decision,decision.length);
-        	  add_output_text_line("stopped listening");
-        	  add_output_text_line("f1= "+f1+" f2= "+f2+"k= "+no_samp_period);
+        	  
         	  //compare(decision);
         	  
-        	  
-        	  
+        	  // Convert binary stream back into a file
         	  retrieveData(decision);
-        	  trigger=-1;
+        	  clear_output_text();
+        	  
+        	  readFile("received.txt");
+        	  add_output_text_line("stopped listening");
+          	  trigger=-1;
         	  state=-1;
+        	  d_filename = null;
         	  //stop();
           }
     	}
-          
-          
-          
-          //set_output_text("\n b + a        = " + b.plus(a));
-          //int corr = maxXcorr(inputxcorr,inputycorr);
-          //for(int ind =0;ind<y.length;ind++)
-          //{
-        	  //add_output_text_line("y["+ind+"]="+y[ind]);
-        	 
-       //   }
-       //  set_output_text(""+sample+"\n"+Q+ "\n");
-         // add_output_text_line("index="+corr);
-        //show(y, "y = fft(x)");
-           // Sound example. Uncomment to play sound from the file data/lga.dat formatted as described in the slides.             
-           //playsoundexample();
+
     };       
      
    
@@ -367,7 +375,7 @@ public class StudentCode extends StudentCodeBase {
     public void sound_in(long time, final short[] samples, int length)
     { 
     	final int threshold = 200;
-    	int continue_listening = 0;
+    	int continue_listening = 0; //variable to verify if transmission is done (detect only noise in buffer)
     	if(trigger==0){
     	set_output_text("only noise for the moment");
     	for(int i = 0 ; i < length; i++){
@@ -389,8 +397,8 @@ public class StudentCode extends StudentCodeBase {
     			}
     			if(continue_listening==1){
     		rx_buffer=send_to_buffer(rx_buffer,length,samples);
-    			}else{
-    				trigger=2;
+    			}else{ //buffer of only noise, transmission done
+    				 trigger=2;
     				 state=RECEIVED;
     			}
     			
@@ -423,19 +431,13 @@ public class StudentCode extends StudentCodeBase {
            }                         
     }
     
-	public void stringFromBrowseForFile(String filename) {
+	public void stringFromBrowseForFile(String filename){
 		d_filename=filename;
-		//getData();
-		//set_output_text(d_filename);
+		add_output_text_line("you chose"+d_filename+"for sending");
 	}
    
-    public void stringFromUser(String user_input){       
-           //set_output_text(user_input);
-           //int in = Integer.valueOf(user_input);
-           //genTone(in);
-           //playSound();
-           //browseForFile();
-          //square(in);
+    public void stringFromUser(String user_input)
+    {       
     }
 
    
@@ -633,27 +635,7 @@ private double [] square(double [] in_values) {
      audioTrack.write(generatedSnd, 0, generatedSnd.length);
      audioTrack.play();
  }
- /*
- void setVolume(){
-	 
-	 //Context context = null;
-	 int Volume = 5;
-	 
-	 AudioManager audio = (AudioManager) Context.getSystemService(Context.AUDIO_SERVICE);
-	 //AudioManager audio = null;
-     //int MaxValue=0;
-     //audio.getStreamMaxVolume(MaxValue);
-     audio .setStreamVolume(AudioManager.STREAM_SYSTEM,Volume, 0);
-     //audio.adjustVolume(AudioManager.ADJUST_RAISE, AudioManager.FLAG_SHOW_UI);
-     
-     // 
-     AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-     audioManager.setStreamVolume(AudioManager.STREAM_MUSIC,
-         audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC),
-         AudioManager.FLAG_SHOW_UI);
-     
- }
- */
+ 
  void square(int sample){
 	 double Q=Math.sqrt(sample);
 	 set_output_text(""+sample+"\n"+Q+ "\n");
@@ -722,8 +704,7 @@ private double [] square(double [] in_values) {
 			 Q[2]=0;Q[1]=0;Q[0]=0;
 			 P[2]=0;P[1]=0;P[0]=0;
 		 }
-		
-		
+			
 		 
 	 }
 	 
@@ -738,6 +719,69 @@ private double [] square(double [] in_values) {
  	 return decision;
 	 
  }
+ 
+ public static int[] goertzel2(int f1, int f2, int f3, int f4, int n, double r[]){
+	 int fs=44100;
+	 
+	 double k1=0.5+ n*f1/fs;
+	 double k2=0.5+ n*f2/fs;
+	 double k3=0.5+ n*f3/fs;
+	 double k4=0.5+ n*f4/fs;
+	 
+	 double coeff1=2*Math.cos(2 * Math.PI / n * k1);
+	 double coeff2=2*Math.cos(2 * Math.PI / n * k2);
+	 double coeff3=2*Math.cos(2 * Math.PI / n * k3);
+	 double coeff4=2*Math.cos(2 * Math.PI / n * k4);
+	 
+	 double[] P =new double[3];
+	 double[] Q =new double[3];
+	 double[] R =new double[3];
+	 double[] S =new double[3];
+	 
+	 double[] mag1 =new double[r.length/n];
+	 double[] mag2 =new double[r.length/n];
+	 double[] mag3 =new double[r.length/n];
+	 double[] mag4 =new double[r.length/n];
+	 int aux=0;
+	 
+	 for(int l=0;l<r.length;l++) {
+		 P[0]=coeff1*P[1]-P[2]+r[l];
+		 Q[0]=coeff2*Q[1]-Q[2]+r[l];
+		 R[0]=coeff3*R[1]-R[2]+r[1];
+		 S[0]=coeff4*S[1]-S[2]+r[1];
+		 
+		 Q[2]=Q[1]; Q[1]=Q[0];
+		 P[2]=P[1]; P[1]=P[0];
+		 R[2]=R[1]; R[1]=R[0];
+		 S[2]=S[1]; S[1]=S[0];
+		 	
+		 if((l+1)%n==0){
+			 mag1[aux]=P[1]*P[1]+P[2]*P[2]-P[1]*P[2]*coeff1;
+			 mag2[aux]=Q[1]*Q[1]+Q[2]*Q[2]-Q[1]*Q[2]*coeff2;
+			 mag3[aux]=P[1]*P[1]+P[2]*P[2]-P[1]*P[2]*coeff1;
+			 mag4[aux]=Q[1]*Q[1]+Q[2]*Q[2]-Q[1]*Q[2]*coeff2;
+			 aux++;
+			//reset
+			 Q[2]=0;Q[1]=0;Q[0]=0;
+			 P[2]=0;P[1]=0;P[0]=0;
+		 }
+			
+		 
+	 }
+	 
+	 int[] decision= new int[aux];
+	 for(int l=0;l<aux;l++){
+		 if(mag1[l]>mag2[l]){
+			 decision[l]=1;
+		 }else{
+			 decision[l]=0;
+		 }
+	 }
+ 	 return decision;
+	 
+ }
+ 
+ 
  
  public static int maxXcorr(double[] x,double[] y){
 	 double[] c= new double[x.length-y.length+2];
@@ -778,6 +822,49 @@ private double [] square(double [] in_values) {
  }
 return signal;
 }
+
+ public static double[] FSK_mod4(int f1,int f2, int f3, int f4, int[] r){
+	 	double[] signal = new double[no_samp_period*r.length];
+	 	StringBuilder concatenated = new StringBuilder(2);
+        int current = 0;
+	    int[] r_two;
+        
+	 	for(int i=0;i<r.length;i=i+2){
+	 		for(int k1=current;k1<current+2;k1++){
+	 			r_two[i+k1]=r[current+k1];
+	 			current++;
+	 			concatenated.append(r_two[i+k1]);
+	 		}
+		 	    
+		 	    String data_concatenated = concatenated.toString();
+	 		
+		 	   if(data_concatenated=="00"){
+					 for(int ii=i*no_samp_period;ii<no_samp_period*(i+1)-1;ii++){
+						 signal[ii]=cosf1[ii-i*no_samp_period];
+						  }
+				 }
+				 else if(data_concatenated=="01"){
+					 for(int ii=i*no_samp_period;ii<no_samp_period*(i+1)-1;ii++){
+						 signal[ii]= cosf2[ii-i*no_samp_period];
+					 }
+				 }
+				 else if(data_concatenated=="10"){
+					 for(int ii=i*no_samp_period;ii<no_samp_period*(i+1)-1;ii++){
+						 signal[ii]= cosf3[ii-i*no_samp_period];
+					 }
+				 }
+				 else if(data_concatenated=="11"){
+					 for(int ii=i*no_samp_period;ii<no_samp_period*(i+1)-1;ii++){
+						 signal[ii]= cosf4[ii-i*no_samp_period];
+					 }
+				 }
+	 		
+	 	}
+
+	return signal;
+	}
+ 
+ 
  
  public static double[] FSK_mod_ts(int f1,int f2, int[] r){
 	 	double[] signal = new double[no_samp_period*r.length];
@@ -812,14 +899,19 @@ void send_data(){
 	int[] guard_stream = new int[gb_length];
 	int current_position=0;
 	
+	//int[] size_data_signal = new int [100];
 //	for(int i = 0;i<Nb;i++){
 //		bit_stream[i]=Math.round((float) Math.random());
 //		}
 //	bit_stream = load_from_file("data_test.txt",Nb);
 //	save_to_file("data.txt",bit_stream,Nb);
+	
 	double[] guard_signal = FSK_mod(f1,f2,guard_stream);
 	double[] data_signal = FSK_mod(f1,f2,bit_buffer);
-	double[] tx_signal =new double[guard_signal.length+data_signal.length+ts_mod.length+bufferInt.length];
+	double[] size_data_signal = FSK_mod(f1,f2,sizeofFile);
+	double[] title_data_signal = FSK_mod(f1,f2,titleofFile);
+	// Size of total signal to be transmitted
+	double[] tx_signal =new double[guard_signal.length+data_signal.length+ts_mod.length+bufferInt.length+size_data_signal.length+title_data_signal.length];
 	
 	for(int i=0;i<guard_signal.length;i++){
 		tx_signal[current_position]=guard_signal[i];
@@ -827,6 +919,14 @@ void send_data(){
 	}
 	for(int i=0; i<ts_mod.length; i++){
 		tx_signal[current_position]=ts_mod[i];
+		current_position++;
+	}
+	for(int i=0; i<title_data_signal.length; i++){
+		tx_signal[current_position]=title_data_signal[i];
+		current_position++;
+	}
+	for(int i=0; i<size_data_signal.length; i++){
+		tx_signal[current_position]=size_data_signal[i];
 		current_position++;
 	}
 	for(int i=0;i<data_signal.length;i++){
@@ -848,8 +948,9 @@ void send_data(){
         play(tx_signal[i], audioTrack);
     }
     add_output_text_line("done with buffering of transmission");
+    state=-1;
     //add_output_text_line("tx_signal[1]"+tx_signal);
-   //state=RECEIVED;
+   
 }
 
 public static void play(double in, AudioTrack at) {
@@ -957,43 +1058,57 @@ public int[] data_buffer_bits(){
 	   if (init_done && (!file_loaded) && (!(d_filename==null))) {
 			
 			the_file_contents=read_data_from_file(d_filename); // Read file from plain file of samples in form of shorts
+			
+			// Store length of file in int[] of bits
+			String sizeofFile_s = Integer.toBinaryString(the_file_contents.length);
+			byte[] sizeofFile_b = sizeofFile_s.getBytes();
+			//sizeofFile = new int[8*sizeofFile_b.length];
+			sizeofFile = new int[128];
+			//sizeofFile = new int[128];
+			for (int k=0;k<sizeofFile_b.length;k++) {				
+     		    for (int k1=0; k1<8; k1++){
+			    // Turn each byte into its corresponding bits
+				sizeofFile [8*k+k1]=(sizeofFile_b[k] >> (7-k1) & 1);
+				}
+			}
+			// Store name and extension, d_filename, in int[] of bits
+			byte[] titleofFile_b = (d_filename.getBytes());	
+			//titleofFile = new int[8*titleofFile_b.length];
+			titleofFile = new int[128];
+			for (int k=0;k<titleofFile_b.length;k++) {				
+     		    for (int k1=0; k1<8; k1++){
+			    // Turn each byte into its corresponding bits
+				titleofFile [8*k+k1]=(titleofFile_b[k] >> (7-k1) & 1);
+				}
+			}
+			
+            // Convert the data in file to bits
 			the_file_contents_bb=ByteBuffer.wrap(the_file_contents); // Wrapper to easier access content.
 			the_file_contents_bb.order(ByteOrder.LITTLE_ENDIAN);
-			//file_loaded=true;
-			//set_output_text("data_buffer ="+the_file_contents_bb);
 			file_loaded=true;
 			};
 			
-		//System.out.println("d_filename");
-			
 		if (file_loaded){
-		//	data_buffer = new byte[the_file_contents_bb.remaining()];
-		//	the_file_contents_bb.get(data_buffer, 0, data_buffer.length);
-		//	the_file_contents_bb.clear();
+			// Number of bits is 8 times the byte buffer length
 			numberBits = 8*the_file_contents.length;
 			
 			data_buffer_bits = new int[numberBits];
 			data_buffer = new byte [the_file_contents.length];
-			//data_buffer = new byte[the_file_contents_bb.capacity()];	
-			//the_file_contents_bb.get(data_buffer);
-			//set_output_text("data_buffer ="+data_buffer[1]);
+
 		for (int k=0;k<the_file_contents.length;k++) {				
-			data_buffer[k]=the_file_contents_bb.get(k); // Create a buffer of bytes
-			//set_output_text("data_buffer ="+data_buffer[1]);
-			//System.out.println("data_buffer="+data_buffer[0]);
-		    //data_buffer_bits[8*k]= (int) data_buffer[k];
+			// Extract each byte from buffer
+			data_buffer[k]=the_file_contents_bb.get(k); 
 			
-			//data_buffer_bits[k]= data_buffer[k];
 		    for (int k1=0; k1<8; k1++){
+		    // Turn each byte into its corresponding bits
 			data_buffer_bits[8*k+k1]=(data_buffer[k] >> (7-k1) & 1);
-			//set_output_text(""+data_buffer_bits[8*k+k1]);
-			//System.out.println("data_buffer_bits ="+data_buffer_bits[0]);
 			};
 		}
 		};
-		//state = 1;
+        // When the file is converted to bits, set state to send
 		state=SEND;
 		d_filename=null;
+		// Return bits
 		return data_buffer_bits;	
 }
 
@@ -1029,21 +1144,32 @@ public void retrieveData(int[] received){
 		   //Integer.valueOf(concatenated.toString());
 		   
 		  // int receivedBitstemp_test = receivedBitstemp[0] receivedBitstemp[1] receivedBitstemp[2] ;
-		   add_output_text_line("data="+data_concatenated);
+		
 		   data_buffer_received[k]= (byte) Integer.parseInt(data_concatenated,2);
 	   }
-	   
+
 	   state_two = 1;
 	  
 	   case SECOND:
-	   //Create file
 	   
+	    // Get title of file
+	    byte[] data_buffer_received_title = new byte [16];
+	    for (int k=0;k<16;k++){
+		  data_buffer_received_title[k]=data_buffer_received[k];
+		}
+	   
+	    // Get data, remove size and title of file from the received buffer
+	    //byte[] data_buffer_received = null;
+	    for (int k=32;k<received.length/8;k++){
+		  data_buffer_received[k]=data_buffer_received[k];
+		}
+	   
+	    //String data_buffer_received_title = new String(data_buffer_received_title, "UTF-8");
+	    // Create file
 		FileOutputStream outFile;		
-		d_filename="text";
+		//d_filename="received";
 		File out = new File(Environment.getExternalStorageDirectory().getPath());
-		String filename_title = new String(out+"/"+d_filename+".txt");
-		
-		//byte[] dataBuffer=null;
+		String filename_title = new String(out+"/"+data_buffer_received_title);
 		
 		try {
 			File file = new File(filename_title);
@@ -1061,5 +1187,17 @@ public void retrieveData(int[] received){
 	   }
 }
 
+
+
+public void readFile(String received)
+{
+	SimpleInputFile in = new SimpleInputFile();
+	in.open(received);
+	String result = in.readString();
+	while(result != null){
+		add_output_text_line("line="+result);
+		result = in.readString();
+	}
+}
 
 }

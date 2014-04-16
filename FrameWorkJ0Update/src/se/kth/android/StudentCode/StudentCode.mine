@@ -14,9 +14,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.lang.Object;
 
 
@@ -60,12 +57,9 @@ import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.net.wifi.ScanResult;
-import android.os.Environment;
 import android.os.Handler;
 
 import android.app.AlertDialog;
-import android.content.Context;
-
 public class StudentCode extends StudentCodeBase {
 	
 
@@ -86,17 +80,15 @@ public class StudentCode extends StudentCodeBase {
     Complex i;
     final double inputxcorr[]={1,5.6,2.4,9.69, 15.7};
     final double inputycorr[]={1,2};
-    
-    final static int no_samp_period = 30;
-    final static int f1=mysampleRate/5;
-    final static int f2=mysampleRate/8;
-    final static int ts_f1=mysampleRate/20;
-    final static int ts_f2=mysampleRate/15;
+    final static int no_samp_period = 100;
+    final static int f1=2500;
+    final static int f2=3500;
+    final static int ts_f1=1000;
+    final static int ts_f2=2000;
     final static double[] cosf1 =initCosine(f1, mysampleRate,no_samp_period);
     final static double[] cosf2 =initCosine(f2, mysampleRate,no_samp_period);
     final static double[] cosf1ts =initCosine(ts_f1, mysampleRate,no_samp_period);
     final static double[] cosf2ts =initCosine(ts_f2, mysampleRate,no_samp_period);
-    
     private static final double MAX_16_BIT = Short.MAX_VALUE; 
     private static final int SAMPLE_BUFFER_SIZE = 4096;
     private static byte[] bufferInt;         // our internal buffer
@@ -104,7 +96,6 @@ public class StudentCode extends StudentCodeBase {
     private static int bufferLength = 4096; 
     private static final int BYTES_PER_SAMPLE = 2;                // 16-bit audio
     private static final int BITS_PER_SAMPLE = 16;                // 16-bit audio
-    
     public static int trigger = 0; //0 -> listening and waiting 1 -> listening and received 2 -> done listening -1 ->processed
     private static short[] rx_buffer;
     private static int rx_ind=0;
@@ -112,42 +103,22 @@ public class StudentCode extends StudentCodeBase {
     private static int gb_length = 20;
     private static double[] ts_mod;
     private static int side=-1;
-    
-    // Variables for function: int[] data_buffer_bits() and void retrieveData(int[] received)
-    byte[] the_file_contents=null;
-    ByteBuffer the_file_contents_bb=null;
-    int data_buffer_bits[];
-    byte data_buffer[];
-    int[] receivedBits;
-    int[] received_buffer;
-    String d_filename;
-    int numberBits;
-    int[] bit_buffer;
-    int state=-1;
-	int state_two = 0;
-	final int GETDATA = 0; 
-	final int RECEIVED = 1;
-	final int SEND = 2;
-	final int END = 2;
-	final int WRITE = 2;
-	final int FIRST = 0;
-	final int SECOND = 1;
-    
+    AlertDialog alertDialog;
     AudioTrack atp; 
        // This is called before any other functions are initialized so that parameters for these can be set
-    public void init(int a) //a=0 -> tx ; a=1 -> rx
+    public void init(int a)
     { 
-    	
+    	//a=0 -> tx ; a=1 -> rx
            // Name your project so that messaging will work within your project
            projectName = "DemoProject";
-           set_output_text("Hello World! Press menu for options!");
+           introText = "Hello World! Press menu for options!";
            // Add sensors your project will use
           
            if(a==0){ useSensors =  SOUND_OUT; // CAMERA;CAMERA_RGB;//WIFI_SCAN | SOUND_OUT; //GYROSCOPE;//SOUND_IN|SOUND_OUT;//WIFI_SCAN | ACCELEROMETER | MAGNETIC_FIELD | PROXIMITY | LIGHT;//TIME_SYNC|SOUND_IN;//TIME_SYNC | ACCELEROMETER | MAGNETIC_FIELD | PROXIMITY | LIGHT | SOUND_IN;
            add_output_text_line("TX side");
            side=0;
            }
-           if(a==1){ useSensors=SOUND_IN; add_output_text_line("RX side"); side=1; }                               
+           if(a==1){ useSensors=SOUND_IN; add_output_text_line("RX side"); side=1;}                               
           
            // Set sample rate for sound in/out, 8000 for emulator, 8000, 11025, 22050 or 44100 for target device
            sampleRate = 44100;
@@ -182,12 +153,13 @@ public class StudentCode extends StudentCodeBase {
           
           
            // If you want a text on screen before start is pressed put it here
+         
+          
      
            // Stuff for the playing of sound example
            init_done=true;
            buffer=new short[1024]; // 1024 samples sent to codec at a time
            userInputString=true;
-           
            bufferInt = new byte[SAMPLE_BUFFER_SIZE * BYTES_PER_SAMPLE];
            
            int length_rxb =no_samp_period*2000*5;
@@ -195,17 +167,13 @@ public class StudentCode extends StudentCodeBase {
           
                      
            ts_mod = modulate_ts(ts_length,ts_f1,ts_f2);
-           
            atp = new AudioTrack(AudioManager.STREAM_MUSIC,
                    mysampleRate, AudioFormat.CHANNEL_OUT_MONO,
                    AudioFormat.ENCODING_PCM_16BIT, bufferInt.length,
                    AudioTrack.MODE_STREAM);
-          
-          
-          add_output_text_line("f1= "+f1+" f2= "+f2+" k= "+no_samp_period);
-         
-          //audio = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-         // getStreamMaxVolume(int streamType)
+           
+           
+           
 
     }
 
@@ -213,18 +181,11 @@ public class StudentCode extends StudentCodeBase {
     public void start()
     {    
     	trigger=0;
-    	
-    	if(side==0){
-    		browseForFile();
-    		//setVolume();
-    		
-    	}
-    	//set_output_text("d_filename ="+d_filename);
            // Start audio recording
     	 //int corr = maxXcorr(inputxcorr,inputycorr); 
     	//add_output_text_line("index="+corr);
-    	
-    	
+    	if(side==0) send_data();
+    	 
     }
      
     // This is called when the user presses stop in the menu, do any post processing here
@@ -259,48 +220,28 @@ public class StudentCode extends StudentCodeBase {
           
     	//Complex[] y =   fft(input);
     	
+    	  
     	//z=FFT.cconvolve(x, y)   ;
     	
     	  //Complex a =new Complex(2,3);
           //Complex b =new Complex(1,6);
-        if(d_filename != null) state=0;
-    	
-    	switch(state){
-    	
-    	case GETDATA:
-    		bit_buffer = data_buffer_bits();
-    		
-    	    break;
-    	    
-    	case SEND:
-    		send_data();
-    		//break;
-    		
-    	case RECEIVED:
-    	if(trigger==2){
+          if(trigger==2){
         	  
         	  //useSensors =  SOUND_OUT;
         	  int block_length=no_samp_period*(gb_length+ts_length+20);
         	  double[] rx_bufferdouble = new double[rx_buffer.length];
-        	  add_output_text_line("buffer length="+rx_buffer.length);
+        	  add_output_text_line("index="+rx_buffer.length);
         	  for (int j=0;j<rx_ind;j++) {
         	      rx_bufferdouble[j] = (double)rx_buffer[j];
         	  }
         	  int index = maxXcorr(Arrays.copyOfRange(rx_bufferdouble, 1, block_length),ts_mod);
         	  int decision[]=goertzel(f1,f2,no_samp_period, Arrays.copyOfRange(rx_bufferdouble,index+no_samp_period*ts_length,rx_buffer.length));
-        	  save_to_file("decision.txt", decision,decision.length);
+        	  save_to_file("decision.txt", decision);
         	  add_output_text_line("stopped listening");
-        	  add_output_text_line("f1= "+f1+" f2= "+f2+"k= "+no_samp_period);
-        	  //compare(decision);
-        	  
-        	  
-        	  
-        	  retrieveData(decision);
         	  trigger=-1;
-        	  state=-1;
         	  //stop();
           }
-    	}
+          
           
           
           
@@ -366,8 +307,8 @@ public class StudentCode extends StudentCodeBase {
    
     public void sound_in(long time, final short[] samples, int length)
     { 
-    	final int threshold = 200;
-    	int continue_listening = 0;
+    	final int threshold =100;
+    	
     	if(trigger==0){
     	set_output_text("only noise for the moment");
     	for(int i = 0 ; i < length; i++){
@@ -384,23 +325,48 @@ public class StudentCode extends StudentCodeBase {
     	}
     	}else{
     		if(trigger==1){
-    			for(int i = 0;i<samples.length;i++){
-    				if(samples[i]>threshold) { continue_listening = 1; break;}
-    			}
-    			if(continue_listening==1){
     		rx_buffer=send_to_buffer(rx_buffer,length,samples);
-    			}else{
-    				trigger=2;
-    				 state=RECEIVED;
-    			}
-    			
-    			}
+    		}
     	}
     
     }
     
     	
-  
+    	
+           // Task 4 create the echo
+    	//Complex[] x = new Complex[length];
+          // set_output_text("buffer size="+length+"sample="+samples[2]);
+           //sound_out(samples,length);
+           //for (int i = 0; i < length; i++) {
+	         //   x[i] = new Complex(samples[i], 0);
+	           	      //  }
+           //Complex[] y =   fft(x);
+           //for(int ind =0;ind<y.length;ind++)
+           //{
+         	 // add_output_text_line("y["+ind+"]="+Math.round(y[ind].abs()*100)/100.0);
+         	  //if(ind%9==0){
+         		// clear_output_text();
+         	  //}
+         		  
+          // }
+          
+           //sound_out(delaySamples,length);
+          
+          
+    /*    try {
+              Thread.sleep(1000);
+           } catch (InterruptedException e) {
+              e.printStackTrace();
+           }
+           */
+           //new Timer().schedule(sound_out(samples,samples.length),1000);
+           //sound_out(samples,samples.length);
+           //echoPlay(samples,samples.length);
+           // start a timer and do sound out in the fired event 
+    //     set_output_text(Integer.toString(samples[samples.length]));
+    
+   
+   
     public void screen_touched(float x, float y) 
     {
     } 
@@ -422,20 +388,17 @@ public class StudentCode extends StudentCodeBase {
                   plot_camera_image_rgb(plotCanvas,latestRGBImage,imageWidth,imageHeight,width,height);
            }                         
     }
-    
-	public void stringFromBrowseForFile(String filename) {
-		d_filename=filename;
-		//getData();
-		//set_output_text(d_filename);
-	}
+   
    
     public void stringFromUser(String user_input){       
-           //set_output_text(user_input);
-           //int in = Integer.valueOf(user_input);
+           set_output_text(user_input);
+           int in = Integer.valueOf(user_input);
            //genTone(in);
            //playSound();
-           //browseForFile();
-          //square(in);
+           
+          square(in);
+       
+         
     }
 
    
@@ -633,27 +596,7 @@ private double [] square(double [] in_values) {
      audioTrack.write(generatedSnd, 0, generatedSnd.length);
      audioTrack.play();
  }
- /*
- void setVolume(){
-	 
-	 //Context context = null;
-	 int Volume = 5;
-	 
-	 AudioManager audio = (AudioManager) Context.getSystemService(Context.AUDIO_SERVICE);
-	 //AudioManager audio = null;
-     //int MaxValue=0;
-     //audio.getStreamMaxVolume(MaxValue);
-     audio .setStreamVolume(AudioManager.STREAM_SYSTEM,Volume, 0);
-     //audio.adjustVolume(AudioManager.ADJUST_RAISE, AudioManager.FLAG_SHOW_UI);
-     
-     // 
-     AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-     audioManager.setStreamVolume(AudioManager.STREAM_MUSIC,
-         audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC),
-         AudioManager.FLAG_SHOW_UI);
-     
- }
- */
+ 
  void square(int sample){
 	 double Q=Math.sqrt(sample);
 	 set_output_text(""+sample+"\n"+Q+ "\n");
@@ -808,17 +751,16 @@ return signal;
  
 void send_data(){
 	int Nb = 5000;
-//	int[] bit_stream = new int[Nb];
+	int[] bit_stream = new int[Nb];
 	int[] guard_stream = new int[gb_length];
 	int current_position=0;
 	
-//	for(int i = 0;i<Nb;i++){
-//		bit_stream[i]=Math.round((float) Math.random());
-//		}
-//	bit_stream = load_from_file("data_test.txt",Nb);
-//	save_to_file("data.txt",bit_stream,Nb);
+	for(int i = 0;i<Nb;i++){
+		bit_stream[i]=Math.round((float) Math.random());
+		}
+	save_to_file("data.txt",bit_stream);
 	double[] guard_signal = FSK_mod(f1,f2,guard_stream);
-	double[] data_signal = FSK_mod(f1,f2,bit_buffer);
+	double[] data_signal = FSK_mod(f1,f2,bit_stream);
 	double[] tx_signal =new double[guard_signal.length+data_signal.length+ts_mod.length+bufferInt.length];
 	
 	for(int i=0;i<guard_signal.length;i++){
@@ -848,8 +790,8 @@ void send_data(){
         play(tx_signal[i], audioTrack);
     }
     add_output_text_line("done with buffering of transmission");
-    //add_output_text_line("tx_signal[1]"+tx_signal);
-   //state=RECEIVED;
+    
+    
 }
 
 public static void play(double in, AudioTrack at) {
@@ -903,162 +845,16 @@ public double[] modulate_ts(int length, int f1, int f2){
 	return mod_ts;
 }
 
-public void save_to_file(String filename,int[] data,int length){
+public void save_to_file(String filename,int[] data){
 	SimpleOutputFile out = new SimpleOutputFile();
 	out.open(filename);
-	out.writeInt(length);
+	
 	for(int i=0; i<data.length; i++){
       out.writeInt(data[i]);
 	}
 	out.close();
 	
 	
-}
-
-public int[] load_from_file(String filename,int mode){
-	 
-	SimpleInputFile in = new SimpleInputFile();
-	in.open(filename);  
-	int[] length=new int[1];
-	length[0] = in.readInt(); 
-	if(mode==0) return length;
-    int[] in_values = new int[length[0]];
-   
-    
-    // Read file from sdcard
-    for(int i=0; i<in_values.length; i++){
-           in_values[i]=in.readInt(); 
-    };
-    return in_values;
-	
-}
-
-public void compare(int decision[]){
-	int[] length_vec=load_from_file("data_test.txt",0);
-	float length = length_vec[0];
-	add_output_text_line("length of tx_seq"+length);
-	int tx_seq[];
-	tx_seq=load_from_file("data_test.txt",1);
-	float e = 0;
-	for (int a = 0; a < length; a++) {
-
-        if (tx_seq[a] == decision[a]) {
-            e=e;
-            } else {
-            e++;
-        }
-	}
-	double BER =e/length;
-	add_output_text_line("BER="+BER);
-	
-}
-
-public int[] data_buffer_bits(){
-	   if (init_done && (!file_loaded) && (!(d_filename==null))) {
-			
-			the_file_contents=read_data_from_file(d_filename); // Read file from plain file of samples in form of shorts
-			the_file_contents_bb=ByteBuffer.wrap(the_file_contents); // Wrapper to easier access content.
-			the_file_contents_bb.order(ByteOrder.LITTLE_ENDIAN);
-			//file_loaded=true;
-			//set_output_text("data_buffer ="+the_file_contents_bb);
-			file_loaded=true;
-			};
-			
-		//System.out.println("d_filename");
-			
-		if (file_loaded){
-		//	data_buffer = new byte[the_file_contents_bb.remaining()];
-		//	the_file_contents_bb.get(data_buffer, 0, data_buffer.length);
-		//	the_file_contents_bb.clear();
-			numberBits = 8*the_file_contents.length;
-			
-			data_buffer_bits = new int[numberBits];
-			data_buffer = new byte [the_file_contents.length];
-			//data_buffer = new byte[the_file_contents_bb.capacity()];	
-			//the_file_contents_bb.get(data_buffer);
-			//set_output_text("data_buffer ="+data_buffer[1]);
-		for (int k=0;k<the_file_contents.length;k++) {				
-			data_buffer[k]=the_file_contents_bb.get(k); // Create a buffer of bytes
-			//set_output_text("data_buffer ="+data_buffer[1]);
-			//System.out.println("data_buffer="+data_buffer[0]);
-		    //data_buffer_bits[8*k]= (int) data_buffer[k];
-			
-			//data_buffer_bits[k]= data_buffer[k];
-		    for (int k1=0; k1<8; k1++){
-			data_buffer_bits[8*k+k1]=(data_buffer[k] >> (7-k1) & 1);
-			//set_output_text(""+data_buffer_bits[8*k+k1]);
-			//System.out.println("data_buffer_bits ="+data_buffer_bits[0]);
-			};
-		}
-		};
-		//state = 1;
-		state=SEND;
-		d_filename=null;
-		return data_buffer_bits;	
-}
-
-public void retrieveData(int[] received){
-	   //receivedBits = new int [numberBits];
-	   //the_file_contents=read_data_from_file(d_filename);
-	   //int[] data_test = received;
-	   //double[] data_temp = null;
-	   //int m;
-	   byte[] data_buffer_received = new byte[received.length/8];
-	   int receivedBitstemp[] = new int [8];
-	   
-	   //data_buffer_bits = new int[numberBits/8];
-	   state_two=FIRST;
-	   //data_buffer = new byte [the_file_contents.length];
-	   //Convert bits to bytes, note: LITTLE_ENDIAN
-	   switch(state_two){
-	   case FIRST:
-	   for (int k=0;k<received.length/8;k++){
-	//	   m=7;
-		   //data_buffer[k] = (byte) ()
-		   StringBuilder concatenated = new StringBuilder(8);
-		   for (int k1=0;k1<8;k1++){
-			   receivedBitstemp[k1]=received[8*k+k1];
-			   concatenated.append(receivedBitstemp[k1]);
-			//   data_temp[k]=data_temp[k]+(receivedBitstemp[k+k1]*Math.pow(2, m));
-			//		   m=m-1;
-		   }
-		   String data_concatenated = concatenated.toString();
-		 //  data_buffer_received[k] = (byte) data_temp[k];
-
-		     
-		   //Integer.valueOf(concatenated.toString());
-		   
-		  // int receivedBitstemp_test = receivedBitstemp[0] receivedBitstemp[1] receivedBitstemp[2] ;
-		   add_output_text_line("data="+data_concatenated);
-		   data_buffer_received[k]= (byte) Integer.parseInt(data_concatenated,2);
-	   }
-	   
-	   state_two = 1;
-	  
-	   case SECOND:
-	   //Create file
-	   
-		FileOutputStream outFile;		
-		d_filename="text";
-		File out = new File(Environment.getExternalStorageDirectory().getPath());
-		String filename_title = new String(out+"/"+d_filename+".txt");
-		
-		//byte[] dataBuffer=null;
-		
-		try {
-			File file = new File(filename_title);
-			long fileLength = file.length();
-			//dataBuffer = new byte[(int) fileLength];
-			//dataFile = new FileInputStream(file);
-			outFile = new FileOutputStream(file);
-			outFile.write(data_buffer_received);
-			outFile.close();
-			//state=2;
-		} catch (IOException e) {
-			e.printStackTrace();
-		};
-		
-	   }
 }
 
 

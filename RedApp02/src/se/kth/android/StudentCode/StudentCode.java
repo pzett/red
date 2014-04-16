@@ -294,7 +294,6 @@ public class StudentCode extends StudentCodeBase {
         	  save_to_file("decision.txt", decision,decision.length);
       
         	  
-        	  
         	  //compare(decision);
         	  retrieveData(decision);
         	  clear_output_text();

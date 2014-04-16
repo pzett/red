@@ -92,11 +92,11 @@ public class StudentCode extends StudentCodeBase {
     final double inputxcorr[]={1,5.6,2.4,9.69, 15.7};
     final double inputycorr[]={1,2};
     
-     final static int no_samp_period = 30;
-    final static int f1=mysampleRate/4;
-    final static int f2=mysampleRate/6;
-    final static int f3=mysampleRate/7;
-    final static int f4=mysampleRate/8;
+     final static int no_samp_period = 50;
+    final static int f1=mysampleRate/20;
+    final static int f2=mysampleRate/24;
+    final static int f3=mysampleRate/16;
+    final static int f4=mysampleRate/12;
     final static int ts_f1=mysampleRate/20;
     final static int ts_f2=mysampleRate/15;
     
@@ -122,7 +122,7 @@ public class StudentCode extends StudentCodeBase {
     private static short[] rx_buffer;
     private static int rx_ind=0;
     private static int ts_length = 100;
-    private static int gb_length = 30;
+    private static int gb_length = 40;
     private static double[] ts_mod;
     private static int side=-1;
     
@@ -302,7 +302,8 @@ public class StudentCode extends StudentCodeBase {
         	  int index = maxXcorr(Arrays.copyOfRange(rx_bufferdouble, 1, block_length),ts_mod); //find where training sequence begins
         	  
         	  //send received data to goertzel algorithm, copy only data part
-        	  int decision[]=goertzel(f1,f2,no_samp_period, Arrays.copyOfRange(rx_bufferdouble,index+no_samp_period*ts_length,rx_buffer.length));
+        	  //int decision[]=goertzel(f1,f2,no_samp_period, Arrays.copyOfRange(rx_bufferdouble,index+no_samp_period*ts_length,rx_buffer.length));
+        	  int decision[]=goertzel2(f1,f2,f3,f4,no_samp_period, Arrays.copyOfRange(rx_bufferdouble,index+no_samp_period*ts_length,rx_buffer.length));
         	  //save decision to file
         	  save_to_file("decision.txt", decision,decision.length);
         	  
@@ -694,6 +695,7 @@ private double [] square(double [] in_values) {
 		 P[2]=P[1]; P[1]=P[0];
 		 	
 		 if((l+1)%n==0){
+			
 			 mag1[aux]=P[1]*P[1]+P[2]*P[2]-P[1]*P[2]*coeff1;
 			 mag2[aux]=Q[1]*Q[1]+Q[2]*Q[2]-Q[1]*Q[2]*coeff2;
 			 aux++;
@@ -789,7 +791,7 @@ void send_data(){
 //	int[] bit_stream = new int[Nb];
 	int[] guard_stream = new int[gb_length];
 	int current_position=0;
-	
+
 	//int[] size_data_signal = new int [100];
 //	for(int i = 0;i<Nb;i++){
 //		bit_stream[i]=Math.round((float) Math.random());
@@ -798,9 +800,9 @@ void send_data(){
 //	save_to_file("data.txt",bit_stream,Nb);
 	
 	double[] guard_signal = FSK_mod(f1,f2,guard_stream);
-	double[] data_signal = FSK_mod(f1,f2,bit_buffer);
-	double[] size_data_signal = FSK_mod(f1,f2,sizeofFile);
-	double[] title_data_signal = FSK_mod(f1,f2,titleofFile);
+	double[] data_signal = FSK_mod4(f1,f2,f3,f4,bit_buffer);
+	double[] size_data_signal = FSK_mod4(f1,f2,f3,f4,sizeofFile);
+	double[] title_data_signal = FSK_mod4(f1,f2,f3,f4,titleofFile);
 	// Size of total signal to be transmitted
 	double[] tx_signal =new double[guard_signal.length+data_signal.length+ts_mod.length+bufferInt.length+title_data_signal.length+size_data_signal.length];
 	
@@ -824,10 +826,9 @@ void send_data(){
 		tx_signal[current_position]=data_signal[i];
 		current_position++;
 	}
-	for(int i=current_position%bufferInt.length;i<bufferInt.length;i++){
-		tx_signal[current_position]=0;
+	for(int i=0;i<bufferInt.length-current_position%bufferInt.length+1;i++){
+		tx_signal[current_position+i]=0;
 	}
-	
 	
 	final AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
             mysampleRate, AudioFormat.CHANNEL_OUT_MONO,
@@ -1189,36 +1190,41 @@ public static int[] goertzel2(int f1, int f2, int f3, int f4, int n, double r[])
 		 
 	 }
 	 
-	 int[] decision= new int[aux];
+	 int[] decision= new int[2*aux];
 	 
-	 for(int l=0;l<aux;l++){
+	 for(int l=0;l<2*aux;l=l+2){
 			 
 			 ArrayList <Double> v = new ArrayList <Double>();
-
-			    v.add(new Double(mag1[l]));
-			    v.add(new Double(mag2[l]));
-			    v.add(new Double(mag3[l]));
-			    v.add(new Double(mag4[l]));
+                int b=l/2;
+			    v.add(Double.valueOf(mag1[b]));
+			    v.add(Double.valueOf(mag2[b]));
+			    v.add(Double.valueOf(mag3[b]));
+			    v.add(Double.valueOf(mag4[b]));
 			    Double value = Collections.max(v);
 			    // Might need a += instead
-			    if(value==mag1[l]){
-			    	decision[l]=Integer.parseInt("00");
+			    if(value==mag1[b]){
+			    	decision[b]=Integer.parseInt("0");
+			    	decision[b+1]=Integer.parseInt("0");
 			    }
-			    else if(value==mag2[l]){
-			    	decision[l]=Integer.parseInt("10");
+			    else if(value==mag2[b]){
+			    	decision[b]=Integer.parseInt("1");
+			    	decision[b+1]=Integer.parseInt("0");
 			    }
-			    else if(value==mag3[l]){
-			    	decision[l]=Integer.parseInt("11");
+			    else if(value==mag3[b]){
+			    	decision[b]=Integer.parseInt("1");
+			    	decision[b+1]=Integer.parseInt("1");
 			    }
-			    else if(value==mag4[l]){
-			    	decision[l]=Integer.parseInt("01");
+			    else if(value==mag4[b]){
+			    	decision[b]=Integer.parseInt("0");
+			    	decision[b+1]=Integer.parseInt("1");
 			    }
 	 }
 	 return decision;
 	 
 }
+
 public static double[] FSK_mod4(int f1,int f2, int f3, int f4, int[] r){
- 	double[] signal = new double[no_samp_period*r.length];
+ 	double[] signal = new double[no_samp_period*r.length/2];
  	
     int current = 0;
     int[] r_two = new int [2];
@@ -1233,22 +1239,22 @@ public static double[] FSK_mod4(int f1,int f2, int f3, int f4, int[] r){
 	 	    
 	 	    String data_concatenated = concatenated.toString();
  		   int a=i/2;
-	 	   if(data_concatenated=="00"){
+	 	   if(data_concatenated.equals("00")){
 				 for(int ii=a*no_samp_period;ii<no_samp_period*(a+1)-1;ii++){
 					 signal[ii]=cosf1[ii-a*no_samp_period];
 					  }
 			 }
-			 else if(data_concatenated=="01"){
+			 else if(data_concatenated.equals("10")){
 				 for(int ii=a*no_samp_period;ii<no_samp_period*(a+1)-1;ii++){
 					 signal[ii]= cosf2[ii-a*no_samp_period];
 				 }
 			 }
-			 else if(data_concatenated=="11"){
+			 else if(data_concatenated.equals("11")){
 				 for(int ii=a*no_samp_period;ii<no_samp_period*(a+1)-1;ii++){
 					 signal[ii]= cosf3[ii-a*no_samp_period];
 				 }
 			 }
-			 else if(data_concatenated=="10"){
+			 else if(data_concatenated.equals("01")){
 				 for(int ii=a*no_samp_period;ii<no_samp_period*(a+1)-1;ii++){
 					 signal[ii]= cosf4[ii-a*no_samp_period];
 				 }

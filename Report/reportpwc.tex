@@ -86,8 +86,14 @@
 \begin{minipage}{0.4\textwidth}
 \begin{flushleft} \large
 \emph{Authors:}\\
+Alan \textsc{Anter} \\
+Daniel \textsc{Bredstedt}\\
+Sergio \textsc{Chávez Cárdenas}\\
+Henrik \textsc{Forsell}\\
+Johan \textsc{Ottersten}\\
+Francisco \textsc{Rosário}\\
+Jue \textsc{Zhang}\\
 
-Francisco \textsc{Rosário}
 \end{flushleft}
 \end{minipage}
 \vfill
@@ -165,7 +171,7 @@ In terms of demodulation, coherent and noncoherent methods exist and they depend
 
 
 It is expected that the error performance of the non-coherent receivers is inferior to that of the coherent ones. However, the degradation in only a fraction of dB. Other options for demodulation are available such as the use of FFT schemes for peak picking or bandpass filtering at the used frequencies. 
-The main advantages of this modulating scheme are the insensitiveness to amplitude variations in the channel, its compatibility with non-linear transmitter and receiver systems and an absolute frequency accuracy is not a requirement for correct demodulation (making it tolerant to local oscillators drifts and Doppler shifts). The drawbacks are the fact that is less bandwidth efficient when compared with other schemes such as ASK or PSK. To avoid undesirable spectral characteristics which could cause adjacent channel interference, continuous phase FSK is required (for comparison, see figure \ref{comparecpfsk}.
+The main advantages of this modulating scheme are the insensitiveness to amplitude variations in the channel, its compatibility with non-linear transmitter and receiver systems and an absolute frequency accuracy is not a requirement for correct demodulation (making it tolerant to local oscillators drifts and Doppler shifts). The drawbacks are the fact that is less bandwidth efficient when compared with other schemes such as ASK or PSK. To avoid undesirable spectral characteristics which could cause adjacent channel interference, continuous phase FSK is required (for comparison, see figure \ref{comparecpfsk}).
 
  \begin{figure}[h]
  \centering
@@ -215,7 +221,7 @@ In the last section, the fundamentals of each modulation scheme were introduced.
 
 FSK systems enjoy the highest power efficiencies among the available modulation schemes but are accompanied by the lowest bandwidth (BW) efficiency. In the following lines, we purpose a scheme of using M-ary FSK system modulation with orthogonal envelopes to improve BW efficiency of MFSK modulation. In M-ary FSK schemes, the modulated signals can be represented by:
 
-\[{s_m}(t) = A{\varphi _m}(t),0 \le t \le T\],
+\[{s_m}(t) = A{\varphi _m}(t),0 \le t \le T_s\],
 
 where $T_s$ is the period of the input symbol stream and A the amplitude of the basis function $\varphi_m$. This basis function can be described by:
 
@@ -296,13 +302,13 @@ The different windows characteristics can be seen in figure \ref{wc} and their e
 
 \subsection{Efficient MFSK Demodulation}
 
-The demodulators presented in part \ref{fsk} are interesting from a theory point of view. However, for real time, software based applications there exist other methods for efficient demodulation. One of these methods is the Discrete Fourier Transform (DFT) which evaluates the amplitude and phase for each frequency present in the received signal. Since we are using a MFSK modulation scheme, a tone/frequency detector such as DFT for a symbol period is a powerful tool for correct efficient demodulation. However, we are only interested in detecting one or more tones in an audio signal and at the same time we are constrained to the CPU horsepower provided by the smartphone. Taking this into account, we purpose a much faster method, when compared with FFT for instance, which is the Goertzel algorithm. 
+The demodulators presented in part \ref{fsk} are interesting from a theory point of view. However, for real time, software based applications there are other methods for efficient demodulation. One of these methods is the Discrete Fourier Transform (DFT) which evaluates the amplitude and phase for each frequency present in the received signal. Since we are using a MFSK modulation scheme, a tone/frequency detector such as DFT for a symbol period is a powerful tool for correct efficient demodulation. However, we are only interested in detecting one or more tones in an audio signal and at the same time we are constrained to the CPU horsepower provided by the smartphone. Taking this into account, we purpose a much faster method, when compared with FFT for instance, which is the Goertzel algorithm. 
 
 \subsection{Goertzel Algorithm}
 
-There are various to detect the presence of a special known frequency in a received signal. The DFT algorithm is a simplistic way to check whether the desired frequency is present and a FFT produces the same numerical result for a single frequency of interest, making it a better choice for tone detection. The Goertzel algorithm is a DFT in disguise, with some numerical tricks to eliminate complex number arithmetic, increasing the efficiency over the FFT under some constraints. This section aims to present the Goertzel algorithm.
+There are various ways to detect the presence of a special known frequency in a received signal. The DFT algorithm is a simplistic way to check whether the desired frequency is present and a FFT produces the same numerical result for a single frequency of interest, making it a better choice for tone detection. The Goertzel algorithm is a DFT in disguise, with some numerical tricks to eliminate complex number arithmetic, increasing the efficiency over the FFT under some constraints. This section aims to present the Goertzel algorithm.
 
-The idea is to transform an ordinary N samples DFT into a Goertzel filter form. Defining $W_{N}^{k}={e^{ - j2\pi k/N}}$, noting that ${W_N}^{ - Nk} = 1$, we have for the DFT:
+The idea is to transform an ordinary N samples DFT into a Goertzel filter form. Defining $W_{N}^{k}={e^{ - j2\pi k/N}}$ and noting that ${W_N}^{ - Nk} = 1$, we have for the DFT:
 \[X(k) = \sum\limits_{n = 0}^{N - 1} {x(n){W^{nk}}_N}  = \sum\limits_{n = 0}^{N - 1} {x(n){W_N}^{ - Nk}{W^{nk}}_N}  = \sum\limits_{n = 0}^{N - 1} {x(n){W_N}^{ - (N - n)k}} \]
 An efficient way to evaluate this polynomial is the nested form:
 \[X(k)=\bigg(\big(({W^{ - k}_N}x(0) + x(1)\big){W_N}^{ - k} + x(2)){W_N}^{ - k} + ... + x(N - 1)\bigg){W_N}^{ - k}\]
@@ -310,7 +316,7 @@ An efficient way to evaluate this polynomial is the nested form:
 The last expression can be written in terms of a recursive difference equation:
 \[y(n) = {W^{ - k}_N}y(n - 1) + x(n)\]
 
-Expressing the difference equation as z-transform and multiplying both numerator and denominator by gives the transfer function:
+Expressing the difference equation as z-transform and multiplying both numerator and denominator by (${1 - {W_N}^{ - k}{z^{ - 1}}}$) gives the transfer function:
 
 \[\frac{{Y(z)}}{{X(z)}} = H(z) = \frac{1}{{1 - {W_N}^{ - k}{z^{ - 1}}}} = \frac{{1 - {W_N}^{ - k}{z^{ - 1}}}}{{1 - (2\cos (\frac{{2\pi k}}{N}){z^{ - 1}} - {z^{ - 2}})}}\]
 

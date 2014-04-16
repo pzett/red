@@ -17,6 +17,17 @@ Nb=21000; %Number of bits to transmit.
       error('Use a number of bits that is divisible by 2');
   end
 
+%% -------- Binary FSK parameters-----------
+%uncomment to use BFSK
+% Tb = 25/fs; %Bit period
+% % Frequency component for bit 1
+% f1 = 1/(3*Tb);%5000+4*fs/200; 
+% % Frequency component for bit 0 
+% f2 = 1/(6*Tb);
+% gb_length=10; %length of guard band
+% ts_length=20; %length of training sequence
+% save('FSK.mat','f1','f2','Tb','gb_length','ts_length')
+% bits_per_symbol = 1;
 
 %% --------- MFSK paarameters with Hanning window -------------
 Tb=102/fs;  %Bit/symbol period + guard period between symbols
@@ -29,8 +40,6 @@ for(m=1:M)
     alfa(m)=(m-1)*fs/multiple; % different frequencies are separated by
     f(m)=fs/multiple+alfa(m)-300;  % fs/multiple
 end
-
-%Fill in FDM carriers
 f1=f;
 f2=f+4*fs/multiple;
 f3=f+8*fs/multiple;
@@ -52,6 +61,11 @@ save('MFSK.mat','f','Tb','t','bits_per_symbol','M') %save variables for
 
 
 %% ------------Pilot signal-----------
+% tsequence =[0 0 0 0 1 1 0 1]; %length 8
+% tsequence =[0 0 1 1 0 0 0 0 0 1 0 1]; %length 12
+% tsequence =[0 0 0 0 0 1 1 0 0 1 1 0 1 0 1 1]; %length 16
+% tsequence =[ 0 0 0 1 0 0 0 1 1 1 1 1 0 0 1 0 1 1 0 1]; %length 20
+% tsequence =[0 0 0 1 1 1 1 1 1 0 0 1 0 0 0 0 1 1 0 0 1 0 1 0]; %length 24
 ts_length=200; % Number of training sequence bits
 tsequence = round(rand(1,ts_length)); %Generate tsequence randomly
 
@@ -68,20 +82,20 @@ d_length = 17; %bits allocated to transmit the length of the file.
 
 save('pilot.mat','f1_ts','f2_ts','gb_length','d_length');
 
-% ----------Get file from pc----------------
-%   s_name='data5kB.txt'; % name of source file
-%   encodeASCII(s_name,'encoded.bin'); 
-%   bin_fid=fopen('encoded.bin'); 
-%   data=fscanf(bin_fid,'%1d'); %binary form
-%   data=data';
-%   fclose(bin_fid); %stop the pointers
-%   Nb = length(data)
 
-% ---------Generate random data---------
+
+% ---------Generate data---------
 data_raw = round(rand(1,Nb)); % Generate bits randomly for data
 data = data_raw;
-
+k0 = 3;
+g1 = [0 0 1 0 1 1];
+g2 = [0 1 0 1 0 1];
+g3 = [1 1 0 0 0 1];
+g4 = [1 0 0 1 1 1];
+g = [g1;g2;g3;g4];
+data=cnv_encd(g,k0,data);
 Nb=length(data);
+%data=markovsource(0.05,0.05,Nb); %Generate pseudo random bits.
 l=length(data)/7;
 if rem(length(l),7) > 1
   data=[data,zeros(size(1:7-rem(length(data),7)))];
@@ -92,13 +106,22 @@ for k=1:l;
     DATA(k)=data(k);
 end
 data=DATA;
-save('FDM.mat','f1','f2','f3','f4','f5','f6','f7');
-
+save('FDM.mat','f1','f2','f3','f4','f5','f6','f7','g','k0');
+% ----------Coding----------------
+%   s_name='data5kB.txt'; % name of source file
+%   encodeASCII(s_name,'encoded.bin'); 
+%   bin_fid=fopen('encoded.bin'); 
+%   data=fscanf(bin_fid,'%1d'); %binary form
+%   data=data';
+%   fclose(bin_fid); %stop the pointers
+%   Nb = length(data)
 
 % ----------Modulation------------
 [mod_pilot mod_ts] = pilot_modulator(tsequence,Nb,gb_length,Tb,fs,f1_ts,f2_ts,f3_ts,f4_ts,d_length);
 save('mod_ts.mat','mod_ts')
 
+%mod_signal = FSK_modulation(data,fs,f1,f2,Tb,gb_length,tsequence);  
+%mod_signal = MFSK_modulation(data);
 mod_signal1 = MFSKwindow_modulation(DATA(1,:), fs,f1,Tb,gb_length,t,tsequence);
 mod_signal2 = MFSKwindow_modulation(DATA(2,:), fs,f2,Tb,gb_length,t,tsequence);
 mod_signal3 = MFSKwindow_modulation(DATA(3,:), fs,f3,Tb,gb_length,t,tsequence);
@@ -115,8 +138,10 @@ save('tx_file.mat','fs','Nb','data','mod_signal','data_raw'); % Save modulated s
 
 
 % ---------- File transfer to phone----------
+%wavwrite(mod_signal, fs, 'mod_signal.wav');
 create_file_of_shorts('test_signal.dat',mod_signal*2^14)
 copy_file_from_working_directory_to_sdcard( 'test_signal.dat' );
+
 mod_signal_length = length(mod_signal)/fs; % Length of modulated signal in seconds
 
 fprintf('Modulated signal: %g seconds long \n',mod_signal_length)

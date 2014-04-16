@@ -332,7 +332,8 @@ public class StudentCode extends StudentCodeBase {
     	
         // Call the function to be tested 
     	   out_values=goertzel(in_values);
-		   // out_values=square(in_values);
+		   //out_values=convencode(in_values);
+    	   // out_values=square(in_values);
     	
     	// Write file on sdcard 
     	for(int i=0; i<out_values.length; i++){
@@ -409,7 +410,37 @@ public class StudentCode extends StudentCodeBase {
 	 return mag1;
     }
    
-
+   
+   /* private double[] convencode (int [] code, int rate ){
+    int k;
+    double[][] G=new double [3][6];
+    //int [] encoded[(code.length)*2];	
+    	switch (rate)
+    	{
+    		case 0:
+        //Fill in G matrix [15,17]
+    	G[0][0]=1; 	G[0][1]=1; G[0][2]=0; G[0][3]=1;  //15
+    	G[1][0]=1; 	G[1][1]=1; G[1][2]=1; G[1][3]=1;  //17
+    	k=1;
+    		break;
+    		
+    		case 1:
+       //Fill in G matrix [27,75,72]
+    	G[0][0]=0; 	G[0][1]=1; G[0][2]=0; G[0][3]=1; G[0][4]=1; G[0][5]=1; //27
+    	G[1][0]=1; 	G[1][1]=1; G[1][2]=1; G[1][3]=1; G[1][4]=0; G[1][5]=1; //75
+    	G[2][0]=1; 	G[2][1]=1; G[2][2]=1; G[2][3]=0; G[2][4]=1; G[2][5]=0;//72
+    	k=2;
+    		default:
+    	encoded=code;
+	break;
+    }
+    	    
+    
+    return encoded;
+    		
+    }
+    */
+    
 	public void playsoundexample(){
 		if (init_done && (!file_loaded) && (!(d_filename==null))) {
 			set_output_text(d_filename);

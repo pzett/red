@@ -92,20 +92,18 @@ public class StudentCode extends StudentCodeBase {
     final double inputxcorr[]={1,5.6,2.4,9.69, 15.7};
     final double inputycorr[]={1,2};
     
-     final static int no_samp_period = 50;
-    final static int f1=mysampleRate/20;
-    final static int f2=mysampleRate/24;
-    final static int f3=mysampleRate/16;
-    final static int f4=mysampleRate/10;
+     final static int no_samp_period = 35;
+    final static int f1=2000;
+    final static int f2=4000;
+    final static int f3=6000;
+    final static int f4=8000;
     final static int ts_f1=mysampleRate/20;
     final static int ts_f2=mysampleRate/15;
     
-    final static double[] cosf1 =initCosine(f1, mysampleRate,no_samp_period);
-    final static double[] cosf2 =initCosine(f2, mysampleRate,no_samp_period);
-    final static double[] cosf3 =initCosine(f3, mysampleRate,no_samp_period);
-    final static double[] cosf4 =initCosine(f4, mysampleRate,no_samp_period);
-    
-    
+    final static double[] cosf1 =initCosine(f1, mysampleRate, no_samp_period);
+    final static double[] cosf2 =initCosine(f2, mysampleRate, no_samp_period);
+    final static double[] cosf3 =initCosine(f3, mysampleRate, no_samp_period);
+    final static double[] cosf4 =initCosine(f4, mysampleRate, no_samp_period);
     
     final static double[] cosf1ts =initCosine(ts_f1, mysampleRate,no_samp_period);
     final static double[] cosf2ts =initCosine(ts_f2, mysampleRate,no_samp_period);
@@ -148,6 +146,9 @@ public class StudentCode extends StudentCodeBase {
 	final int FIRST = 0;
 	final int SECOND = 1;
     
+	final int length_titleFile = 1024;
+	final int length_sizeFile  = 512;
+	
 	AudioTrack atp; 
  
 	
@@ -300,7 +301,8 @@ public class StudentCode extends StudentCodeBase {
         	  }
         	  
         	  int index = maxXcorr(Arrays.copyOfRange(rx_bufferdouble, 1, block_length),ts_mod); //find where training sequence begins
-        	  
+        	  add_output_text_line("index="+index);
+        	   
         	  //send received data to goertzel algorithm, copy only data part
         	  //int decision[]=goertzel(f1,f2,no_samp_period, Arrays.copyOfRange(rx_bufferdouble,index+no_samp_period*ts_length,rx_buffer.length));
         	  int decision[]=goertzel2(f1,f2,f3,f4,no_samp_period, Arrays.copyOfRange(rx_bufferdouble,index+no_samp_period*ts_length,rx_buffer.length));
@@ -314,7 +316,9 @@ public class StudentCode extends StudentCodeBase {
         	  //clear_output_text();
         	  
         	  //readFile("received.txt");
-        	  add_output_text_line("stopped listening");
+        	  add_output_text_line("stopped listening and file decoded");
+        	  double R = 2 *((double) mysampleRate) /( (double) no_samp_period);
+        	  add_output_text_line("achieved rate= "+R);
           	  trigger=-1;
         	  state=-1;
         	  d_filename = null;
@@ -956,7 +960,7 @@ public int[] data_buffer_bits(){
 			//add_output_text_line("size_b="+sizeofFile_s);
 			byte[] sizeofFile_b = sizeofFile_s.getBytes();
 			//sizeofFile = new int[8*sizeofFile_b.length];
-			sizeofFile = new int[128];
+			sizeofFile = new int[length_sizeFile];
 			//sizeofFile = new int[128];
 			for (int k=0;k<sizeofFile_b.length;k++) {				
      		    for (int k1=0; k1<8; k1++){
@@ -967,7 +971,7 @@ public int[] data_buffer_bits(){
 			// Store name and extension, d_filename, in int[] of bits
 			byte[] titleofFile_b = (d_filename.getBytes());	
 			//titleofFile = new int[8*titleofFile_b.length];
-			titleofFile = new int[512];
+			titleofFile = new int[length_titleFile];
 			for (int k=0;k<titleofFile_b.length;k++) {				
      		    for (int k1=0; k1<8; k1++){
 			    // Turn each byte into its corresponding bits
@@ -1013,7 +1017,7 @@ public void retrieveData(int[] received){
 	   //int m;
 	   byte[] data_buffer_received = new byte[received.length/8];
 	   int receivedBitstemp[] = new int [8];
-	   Byte b1;
+	   
 	   //data_buffer_bits = new int[numberBits/8];
 	   state_two=FIRST;
 	   //data_buffer = new byte [the_file_contents.length];
@@ -1046,37 +1050,37 @@ public void retrieveData(int[] received){
 	   case SECOND:
 	   
 	    // Get title of file
-	    byte[] data_buffer_received_title = new byte[16*4];
-	    for (int k=0;k<16*4;k++){
+	    byte[] data_buffer_received_title = new byte[length_titleFile/8];
+	    for (int k=0;k<length_titleFile/8;k++){
 	    	if(data_buffer_received[k]!=0){
 		    data_buffer_received_title[k]=data_buffer_received[k];
 		    }
 	    }
-	    byte[] data_buffer_received_size = new byte[16];
+	    byte[] data_buffer_received_size = new byte[length_sizeFile/8];
 	    
-	    int counter=64;
+	    int counter=length_titleFile/8;
 	    //for (int k=64;k<80;k++){
 	    	while(data_buffer_received[counter]!=0){
-		    data_buffer_received_size[counter-64]=data_buffer_received[counter];
+		    data_buffer_received_size[counter-length_titleFile/8]=data_buffer_received[counter];
 		    counter++;
 		    //b1 = data_buffer_received_size[k];
 		    //b1.intValue();
 		    }
 	    //}
 	    String data_buffer_received_size_c="";
-	    for (int k=64;k<counter;k++){
-		    data_buffer_received_size_c += (char) data_buffer_received_size[k-64];
+	    for (int k=length_titleFile/8;k<counter;k++){
+		    data_buffer_received_size_c += (char) data_buffer_received_size[k-length_titleFile/8];
 		    }
 	    
-	    int size_i=(byte) Integer.parseInt(data_buffer_received_size_c,2);
-	    add_output_text_line("size ="+size_i);
+	    int size_i= Integer.parseInt(data_buffer_received_size_c,2);
+	    add_output_text_line("size of received="+size_i);
 	    // Get data, remove size and title of file from the received buffer
 	    //byte[] data_buffer_received = null;
 	   
 	    
-	    byte[] data_buffer_received_n = new byte[(received.length/8)-80];
-	    for (int k=80;k<80+size_i;k++){ //received.length/8
-		  data_buffer_received_n[k-80]=data_buffer_received[k];
+	    byte[] data_buffer_received_n = new byte[(received.length/8)-(length_titleFile+length_sizeFile)/8];
+	    for (int k=(length_titleFile+length_sizeFile)/8;k<(length_titleFile+length_sizeFile)/8+size_i;k++){ //received.length/8
+		  data_buffer_received_n[k-(length_titleFile+length_sizeFile)/8]=data_buffer_received[k];
 		}
 	    
 	    // Convert the buffer containing the title into characters
@@ -1106,7 +1110,7 @@ public void retrieveData(int[] received){
 		FileOutputStream outFile;		
 		//d_filename="received";
 		File out = new File(Environment.getExternalStorageDirectory().getPath());
-		add_output_text_line("name ="+data_buffer_received_title_n);
+		add_output_text_line("title of received file="+data_buffer_received_title_n);
 		// The file name to be written and stored
 		String filename_title = new String(out+"/"+data_buffer_received_title_n+"."+data_buffer_received_ext);
 		
@@ -1128,6 +1132,11 @@ public void retrieveData(int[] received){
 
 
 
+
+	  
+
+
+
 public void readFile(String received)
 {
 	SimpleInputFile in = new SimpleInputFile();
@@ -1140,17 +1149,17 @@ public void readFile(String received)
 }
 
 public static int[] goertzel2(int f1, int f2, int f3, int f4, int n, double r[]){
-	 int fs=44100;
+	 double fs=44100;
 	 
 	 double k1=0.5+ n*f1/fs;
 	 double k2=0.5+ n*f2/fs;
 	 double k3=0.5+ n*f3/fs;
 	 double k4=0.5+ n*f4/fs;
-	 
-	 double coeff1=2*Math.cos(2 * Math.PI / n * k1);
-	 double coeff2=2*Math.cos(2 * Math.PI / n * k2);
-	 double coeff3=2*Math.cos(2 * Math.PI / n * k3);
-	 double coeff4=2*Math.cos(2 * Math.PI / n * k4);
+	 double n1= (double) n;
+	 double coeff1=2*Math.cos(2 * Math.PI / n1 * k1);
+	 double coeff2=2*Math.cos(2 * Math.PI / n1 * k2);
+	 double coeff3=2*Math.cos(2 * Math.PI / n1 * k3);
+	 double coeff4=2*Math.cos(2 * Math.PI / n1 * k4);
 	 
 	 double[] P =new double[3];
 	 double[] Q =new double[3];
@@ -1166,15 +1175,15 @@ public static int[] goertzel2(int f1, int f2, int f3, int f4, int n, double r[])
 	 for(int l=0;l<r.length;l++) {
 		 P[0]=coeff1*P[1]-P[2]+r[l];
 		 Q[0]=coeff2*Q[1]-Q[2]+r[l];
-		 R[0]=coeff3*R[1]-R[2]+r[1];
-		 S[0]=coeff4*S[1]-S[2]+r[1];
+		 R[0]=coeff3*R[1]-R[2]+r[l];
+		 S[0]=coeff4*S[1]-S[2]+r[l];
 		 
 		 Q[2]=Q[1]; Q[1]=Q[0];
 		 P[2]=P[1]; P[1]=P[0];
 		 R[2]=R[1]; R[1]=R[0];
 		 S[2]=S[1]; S[1]=S[0];
 		 	
-		 if((l+1)%n==0){
+		 if((l+1)%n1==0){
 			 mag1[aux]=P[1]*P[1]+P[2]*P[2]-P[1]*P[2]*coeff1;
 			 mag2[aux]=Q[1]*Q[1]+Q[2]*Q[2]-Q[1]*Q[2]*coeff2;
 			 mag3[aux]=R[1]*R[1]+R[2]*R[2]-R[1]*R[2]*coeff3;
@@ -1191,18 +1200,27 @@ public static int[] goertzel2(int f1, int f2, int f3, int f4, int n, double r[])
 	 }
 	 
 	 int[] decision= new int[2*aux];
-	 
+	 int counter = 0;
 	 for(int l=0;l<2*aux;l=l+2){
 			 
-			 ArrayList <Double> v = new ArrayList <Double>();
-                int b=l/2;
-			    v.add(Double.valueOf(mag1[b]));
-			    v.add(Double.valueOf(mag2[b]));
-			    v.add(Double.valueOf(mag3[b]));
-			    v.add(Double.valueOf(mag4[b]));
-			    Double value = Collections.max(v);
+			 //ArrayList <Double> v = new ArrayList <Double>();
+               
+	//		    v.add(Double.valueOf(mag1[b]));
+		//	    v.add(Double.valueOf(mag2[b]));
+			//    v.add(Double.valueOf(mag3[b]));
+			  //  v.add(Double.valueOf(mag4[b]));
+			   // Double value = Collections.max(v);
 			    // Might need a += instead
-			    if(value==mag1[b]){
+			    
+		
+		 double max=mag1[counter];
+		 int ind=1;
+		 if(mag2[counter]>max){ max=mag2[counter]; ind=2; }
+		 if(mag3[counter]>max){ max=mag3[counter]; ind=3; }
+		 if(mag4[counter]>max){ max=mag4[counter]; ind=4; }
+		
+		 /*
+                if(value==mag1[b]){
 			    	decision[b]=Integer.parseInt("0");
 			    	decision[b+1]=Integer.parseInt("0");
 			    }
@@ -1217,7 +1235,25 @@ public static int[] goertzel2(int f1, int f2, int f3, int f4, int n, double r[])
 			    else if(value==mag4[b]){
 			    	decision[b]=Integer.parseInt("0");
 			    	decision[b+1]=Integer.parseInt("1");
-			    }
+			    }*/
+		 if(ind==1){
+		    	decision[l]=Integer.parseInt("0");
+		    	decision[l+1]=Integer.parseInt("0");
+		    }
+		 else if(ind==2){
+		    	decision[l]=Integer.parseInt("1");
+		    	decision[l+1]=Integer.parseInt("0");
+		    }
+		 else if(ind==3){
+		    	decision[l]=Integer.parseInt("1");
+		    	decision[l+1]=Integer.parseInt("1");
+		    }
+		 else if(ind==4){
+		    	decision[l]=Integer.parseInt("0");
+		    	decision[l+1]=Integer.parseInt("1");
+		    }
+		 counter++;
+		      
 	 }
 	 return decision;
 	 

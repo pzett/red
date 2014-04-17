@@ -106,6 +106,7 @@ public class StudentCode extends StudentCodeBase {
     final static double[] cosf4 =initCosine(f4, mysampleRate,no_samp_period);
     
     
+       
     
     final static double[] cosf1ts =initCosine(ts_f1, mysampleRate,no_samp_period);
     final static double[] cosf2ts =initCosine(ts_f2, mysampleRate,no_samp_period);
@@ -148,6 +149,8 @@ public class StudentCode extends StudentCodeBase {
 	final int FIRST = 0;
 	final int SECOND = 1;
     
+	final int length_titleFile = 1024;
+	final int length_sizeFile  = 512;
 	AudioTrack atp; 
  
 	
@@ -160,6 +163,7 @@ public class StudentCode extends StudentCodeBase {
            set_output_text("Hello World! Press menu for options!");
            // Add sensors your project will use
            if(a==0){ useSensors =  SOUND_OUT; // CAMERA;CAMERA_RGB;//WIFI_SCAN | SOUND_OUT; //GYROSCOPE;//SOUND_IN|SOUND_OUT;//WIFI_SCAN | ACCELEROMETER | MAGNETIC_FIELD | PROXIMITY | LIGHT;//TIME_SYNC|SOUND_IN;//TIME_SYNC | ACCELEROMETER | MAGNETIC_FIELD | PROXIMITY | LIGHT | SOUND_IN;
+           clear_output_text();
            add_output_text_line("TX side");
            side=0;
            }
@@ -206,7 +210,7 @@ public class StudentCode extends StudentCodeBase {
            
            bufferInt = new byte[SAMPLE_BUFFER_SIZE * BYTES_PER_SAMPLE];
            
-           int length_rxb =no_samp_period*2000*4;
+           int length_rxb =no_samp_period*2000*10;
            rx_buffer = new short[length_rxb];
           
                      
@@ -430,7 +434,7 @@ public class StudentCode extends StudentCodeBase {
     
 	public void stringFromBrowseForFile(String filename){
 		d_filename=filename;
-		add_output_text_line("you chose "+d_filename+" for sending");
+		//add_output_text_line("you chose "+d_filename+" for sending");
 	}
    
     public void stringFromUser(String user_input)
@@ -686,7 +690,7 @@ private double [] square(double [] in_values) {
  }
  
  public static int[] goertzel(int f1, int f2, int n, double r[]){
-	 int fs=44100;
+	 double fs=44100;
 	 
 	 double k1=0.5+ n*f1/fs;
 	 double k2=0.5+ n*f2/fs;
@@ -965,7 +969,7 @@ public int[] data_buffer_bits(){
 			//add_output_text_line("size_b="+sizeofFile_s);
 			byte[] sizeofFile_b = sizeofFile_s.getBytes();
 			//sizeofFile = new int[8*sizeofFile_b.length];
-			sizeofFile = new int[128];
+			sizeofFile = new int[length_sizeFile];
 			//sizeofFile = new int[128];
 			for (int k=0;k<sizeofFile_b.length;k++) {				
      		    for (int k1=0; k1<8; k1++){
@@ -973,17 +977,19 @@ public int[] data_buffer_bits(){
 				sizeofFile [8*k+k1]=(sizeofFile_b[k] >> (7-k1) & 1);
 				}
 			}
+			
 			// Store name and extension, d_filename, in int[] of bits
 			byte[] titleofFile_b = (d_filename.getBytes());	
 			//titleofFile = new int[8*titleofFile_b.length];
-			titleofFile = new int[512];
+			titleofFile = new int[length_titleFile];
 			for (int k=0;k<titleofFile_b.length;k++) {				
      		    for (int k1=0; k1<8; k1++){
 			    // Turn each byte into its corresponding bits
 				titleofFile [8*k+k1]=(titleofFile_b[k] >> (7-k1) & 1);
 				}
 			}
-			
+			add_output_text_line("size of chosen file="+sizeofFile_s+"(length="+the_file_contents.length+")");
+			add_output_text_line("title of chosen file="+d_filename);
             // Convert the data in file to bits
 			the_file_contents_bb=ByteBuffer.wrap(the_file_contents); // Wrapper to easier access content.
 			the_file_contents_bb.order(ByteOrder.LITTLE_ENDIAN);
@@ -1022,7 +1028,7 @@ public void retrieveData(int[] received){
 	   //int m;
 	   byte[] data_buffer_received = new byte[received.length/8];
 	   int receivedBitstemp[] = new int [8];
-	   Byte b1;
+	   
 	   //data_buffer_bits = new int[numberBits/8];
 	   state_two=FIRST;
 	   //data_buffer = new byte [the_file_contents.length];
@@ -1055,37 +1061,37 @@ public void retrieveData(int[] received){
 	   case SECOND:
 	   
 	    // Get title of file
-	    byte[] data_buffer_received_title = new byte[16*4];
-	    for (int k=0;k<16*4;k++){
+	    byte[] data_buffer_received_title = new byte[length_titleFile/8];
+	    for (int k=0;k<length_titleFile/8;k++){
 	    	if(data_buffer_received[k]!=0){
 		    data_buffer_received_title[k]=data_buffer_received[k];
 		    }
 	    }
-	    byte[] data_buffer_received_size = new byte[16];
+	    byte[] data_buffer_received_size = new byte[length_sizeFile/8];
 	    
-	    int counter=64;
+	    int counter=length_titleFile/8;
 	    //for (int k=64;k<80;k++){
 	    	while(data_buffer_received[counter]!=0){
-		    data_buffer_received_size[counter-64]=data_buffer_received[counter];
+		    data_buffer_received_size[counter-length_titleFile/8]=data_buffer_received[counter];
 		    counter++;
 		    //b1 = data_buffer_received_size[k];
 		    //b1.intValue();
 		    }
 	    //}
 	    String data_buffer_received_size_c="";
-	    for (int k=64;k<counter;k++){
-		    data_buffer_received_size_c += (char) data_buffer_received_size[k-64];
+	    for (int k=length_titleFile/8;k<counter;k++){
+		    data_buffer_received_size_c += (char) data_buffer_received_size[k-length_titleFile/8];
 		    }
 	    
-	    int size_i=(byte) Integer.parseInt(data_buffer_received_size_c,2);
-	    add_output_text_line("size ="+size_i);
+	    int size_i= Integer.parseInt(data_buffer_received_size_c,2);
+	    add_output_text_line("size of received="+size_i);
 	    // Get data, remove size and title of file from the received buffer
 	    //byte[] data_buffer_received = null;
 	   
 	    
-	    byte[] data_buffer_received_n = new byte[(received.length/8)-80];
-	    for (int k=80;k<80+size_i;k++){ //received.length/8
-		  data_buffer_received_n[k-80]=data_buffer_received[k];
+	    byte[] data_buffer_received_n = new byte[(received.length/8)-(length_titleFile+length_sizeFile)/8];
+	    for (int k=(length_titleFile+length_sizeFile)/8;k<(length_titleFile+length_sizeFile)/8+size_i;k++){ //received.length/8
+		  data_buffer_received_n[k-(length_titleFile+length_sizeFile)/8]=data_buffer_received[k];
 		}
 	    
 	    // Convert the buffer containing the title into characters
@@ -1115,7 +1121,7 @@ public void retrieveData(int[] received){
 		FileOutputStream outFile;		
 		//d_filename="received";
 		File out = new File(Environment.getExternalStorageDirectory().getPath());
-		add_output_text_line("name ="+data_buffer_received_title_n);
+		add_output_text_line("title of received file="+data_buffer_received_title_n);
 		// The file name to be written and stored
 		String filename_title = new String(out+"/"+data_buffer_received_title_n+"."+data_buffer_received_ext);
 		

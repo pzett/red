@@ -979,6 +979,14 @@ String(Environment.getExternalStorageDirectory() + "/" + name);
 	
 	public void browseForFile(){ frameWork.openFile(); };
 	
+	public void open_text_file(String filename){ 
+		//AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+		
+		File dir = new File(Environment.getExternalStorageDirectory().getPath());
+		String filename_with_path = new String(dir+"/"+filename);
+		//add_output_text_line("filename="+filename);
+		frameWork.open_text_file(filename_with_path); 
+		};
 };
 
 

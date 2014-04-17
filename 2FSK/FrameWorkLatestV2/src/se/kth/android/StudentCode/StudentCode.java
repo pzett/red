@@ -49,7 +49,7 @@ import com.google.zxing.qrcode.detector.Detector;
 
 
 
-//import se.kth.android.FrameWork.FrameWork;
+import se.kth.android.FrameWork.FrameWork;
 import se.kth.android.FrameWork.StudentCodeBase;
 
 
@@ -93,8 +93,8 @@ public class StudentCode extends StudentCodeBase {
     final double inputycorr[]={1,2};
     
      final static int no_samp_period = 30;
-    final static int f1=mysampleRate/4;
-    final static int f2=mysampleRate/6;
+    final static int f1=1500;
+    final static int f2=4000;
     final static int f3=mysampleRate/7;
     final static int f4=mysampleRate/8;
     final static int ts_f1=mysampleRate/20;
@@ -104,10 +104,7 @@ public class StudentCode extends StudentCodeBase {
     final static double[] cosf2 =initCosine(f2, mysampleRate,no_samp_period);
     final static double[] cosf3 =initCosine(f3, mysampleRate,no_samp_period);
     final static double[] cosf4 =initCosine(f4, mysampleRate,no_samp_period);
-    
-    
-       
-    
+   
     final static double[] cosf1ts =initCosine(ts_f1, mysampleRate,no_samp_period);
     final static double[] cosf2ts =initCosine(ts_f2, mysampleRate,no_samp_period);
     
@@ -123,7 +120,7 @@ public class StudentCode extends StudentCodeBase {
     private static short[] rx_buffer;
     private static int rx_ind=0;
     private static int ts_length = 100;
-    private static int gb_length = 30;
+    private static int gb_length = 40;
     private static double[] ts_mod;
     private static int side=-1;
     
@@ -313,14 +310,20 @@ public class StudentCode extends StudentCodeBase {
         	  //compare(decision);
         	  
         	  // Convert binary stream back into a file
-        	  retrieveData(decision);
+        	  String rx_filename = retrieveData(decision);
+        	  
+        	  
         	  //clear_output_text();
         	  
         	  //readFile("received.txt");
-        	  add_output_text_line("stopped listening");
+        	  add_output_text_line("stopped listening and file decoded: opening:"+rx_filename);
+        	  double R = 1 *((double) mysampleRate) /( (double) no_samp_period);
+        	  add_output_text_line("achieved rate = "+R);
           	  trigger=-1;
         	  state=-1;
         	  d_filename = null;
+        	  
+        	 // open_text_file(rx_filename);
         	  //stop();
           }
     	}
@@ -434,22 +437,23 @@ public class StudentCode extends StudentCodeBase {
     
 	public void stringFromBrowseForFile(String filename){
 		d_filename=filename;
+		
 		//add_output_text_line("you chose "+d_filename+" for sending");
 	}
    
     public void stringFromUser(String user_input)
     {
-        
-         SimpleOutputFile out = new SimpleOutputFile();
-        //Call the function to be tested 
-         out.open("message.txt");
-         out.writeString(user_input);
-    	// Write file on sdcard 
-    	  d_filename="message.txt";
-//    	       trigger=0;  
-//    	       side=0;
-//    	       init(0);
-    	    out.close(); 
+    	open_text_file(user_input);
+//         SimpleOutputFile out = new SimpleOutputFile();
+//        //Call the function to be tested 
+//         out.open("message.txt");
+//         out.writeString(user_input);
+//    	// Write file on sdcard 
+//    	  d_filename="message.txt";
+////    	       trigger=0;  
+////    	       side=0;
+////    	       init(0);
+//    	    out.close(); 
     }
 
    
@@ -1020,7 +1024,7 @@ public int[] data_buffer_bits(){
 		return data_buffer_bits;	
 }
 
-public void retrieveData(int[] received){
+public String retrieveData(int[] received){
 	   //receivedBits = new int [numberBits];
 	   //the_file_contents=read_data_from_file(d_filename);
 	   //int[] data_test = received;
@@ -1124,9 +1128,10 @@ public void retrieveData(int[] received){
 		add_output_text_line("title of received file="+data_buffer_received_title_n);
 		// The file name to be written and stored
 		String filename_title = new String(out+"/"+data_buffer_received_title_n+"."+data_buffer_received_ext);
+		String filename_w_ext =new String(data_buffer_received_title_n+"."+data_buffer_received_ext);
 		
 		try {
-			File file = new File(filename_title);
+			File file = new File(out+"/"+data_buffer_received_title_n+"."+data_buffer_received_ext);
 			long fileLength = file.length();
 			//dataBuffer = new byte[(int) fileLength];
 			//dataFile = new FileInputStream(file);
@@ -1137,8 +1142,9 @@ public void retrieveData(int[] received){
 		} catch (IOException e) {
 			e.printStackTrace();
 		};
-		
+		return filename_w_ext;
 	   }
+	   return null;
 }
 
 

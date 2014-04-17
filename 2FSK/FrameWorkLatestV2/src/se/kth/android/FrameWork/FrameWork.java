@@ -24,7 +24,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
 import android.app.AlertDialog;
 import android.media.AudioManager;
-
+//import java.net.URI;
 import edu.dhbw.andar.CameraPreviewHandler;
 
 import se.kth.android.GroupRed20142FSK.R;
@@ -56,6 +56,7 @@ import android.media.AudioTrack;
 import android.media.MediaRecorder;
 import android.media.AudioRecord.OnRecordPositionUpdateListener;
 import android.media.AudioTrack.OnPlaybackPositionUpdateListener;
+import android.net.Uri;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
@@ -1290,7 +1291,58 @@ public class FrameWork extends Activity implements OnRecordPositionUpdateListene
 
 	}
 	
+	public void open_text_file(final String filename){ 
+		
+
 	
+//		runOnUiThread(new Runnable() {
+//            @Override
+//            public void run() {
+//        		AlertDialog.Builder builder = new AlertDialog.Builder(getApplicationContext());
+//        		builder.setMessage("You received"+filename+". Do you want to open it?")
+//        		       .setCancelable(false)
+//        		       .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+//        		           public void onClick(DialogInterface dialog, int id) {
+//        		        	   File file = new File(filename);
+//        		       		Intent intent = new Intent();
+//        		       		intent.setAction(android.content.Intent.ACTION_VIEW);
+//        		       		intent.setDataAndType(Uri.fromFile(file), "*/*");
+//        		       		//intent.setData(Uri.fromFile(file));
+//        		       		startActivity(intent); 
+//        		           }
+//        		       })
+//        		       .setNegativeButton("Cancel",new DialogInterface.OnClickListener() {
+//        		           public void onClick(DialogInterface dialog, int id) {
+//        		        	  dialog.cancel();
+//        		           }
+//        		       });
+//        		AlertDialog alert = builder.create();
+//        		alert.show();
+//            }
+//        });
+		  File file = new File(filename);
+     		Intent intent = new Intent();
+     		intent.setAction(android.content.Intent.ACTION_VIEW);
+     		intent.setDataAndType(Uri.fromFile(file), "*/*");
+     		//intent.setData(Uri.fromFile(file));
+     		startActivity(intent);
+		
+		
+		
+//		File videoFile2Play = new File("/sdcard/nice_movie.mpeg");
+//		Intent i = new Intent();
+//		i.setAction(android.content.Intent.ACTION_VIEW);
+//		i.setDataAndType(Uri.fromFile(videoFile2Play), "video/mpeg");
+//		startActivity(i);
+//		Intent intent = new Intent();
+//		intent.setAction(android.content.Intent.ACTION_VIEW);
+//		File file = new File("/sdcard/test.mp3");
+//		intent.setDataAndType(Uri.fromFile(file), "audio/*");
+//		startActivity(intent); 
+		
+		
+		
+	}
 	
 
 

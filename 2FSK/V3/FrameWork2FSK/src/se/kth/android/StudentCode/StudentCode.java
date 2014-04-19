@@ -147,7 +147,7 @@ public class StudentCode extends StudentCodeBase {
 	final int SECOND = 1;
     
 	final int length_titleFile = 1024;
-	final int length_sizeFile  = 512;
+	final int length_sizeFile  = 2048;
 	String rx_filename;
 	AudioTrack atp; 
  
@@ -208,7 +208,7 @@ public class StudentCode extends StudentCodeBase {
            
            bufferInt = new byte[SAMPLE_BUFFER_SIZE * BYTES_PER_SAMPLE];
            
-           int length_rxb =no_samp_period*2000*10;
+           int length_rxb =no_samp_period*2000*20;
            rx_buffer = new short[length_rxb];
           
                      
@@ -303,7 +303,7 @@ public class StudentCode extends StudentCodeBase {
         	      rx_bufferdouble[j] = (double)rx_buffer[j]; //convert received samples to doubles.
         	  }
         	  
-        	  int index = maxXcorr(Arrays.copyOfRange(rx_bufferdouble, 1, block_length),ts_mod); //find where training sequence begins
+        	  int index = maxXcorr(Arrays.copyOfRange(rx_bufferdouble, 0, block_length),ts_mod); //find where training sequence begins
         	  
         	  //send received data to goertzel algorithm, copy only data part
         	  int decision[]=goertzel(f1,f2,no_samp_period, Arrays.copyOfRange(rx_bufferdouble,index+no_samp_period*ts_length,rx_bufferdouble.length));
@@ -767,12 +767,12 @@ private double [] square(double [] in_values) {
  	
  for(int i=0;i<r.length;i++){
 	 if(r[i]==1){
-		 for(int ii=i*no_samp_period;ii<no_samp_period*(i+1)-1;ii++){
+		 for(int ii=i*no_samp_period;ii<no_samp_period*(i+1);ii++){
 			 signal[ii]=cosf1[ii-i*no_samp_period];
 			  }
 	 }
 	 else{
-		 for(int ii=i*no_samp_period;ii<no_samp_period*(i+1)-1;ii++){
+		 for(int ii=i*no_samp_period;ii<no_samp_period*(i+1);ii++){
 			 signal[ii]= cosf2[ii-i*no_samp_period];
 		 }
 	 }
@@ -886,7 +886,7 @@ public static void play(double in, AudioTrack at) {
     }
 }
 
-public static short[] send_to_buffer(short[] rx_buffer, int length, short[] samples) {
+public short[] send_to_buffer(short[] rx_buffer, int length, short[] samples) {
 	//copy buffer
 	for (int i=0;i<length;i++){
 		rx_buffer[i+rx_ind]=samples[i];
@@ -895,9 +895,9 @@ public static short[] send_to_buffer(short[] rx_buffer, int length, short[] samp
 	rx_ind=rx_ind+length;
 	//add_output_text_line("rx_ind"+rx_ind);
 	}else{
-		//add_output_text_line("reached the end of buffer");
+		add_output_text_line("reached the end of buffer");
 		trigger=2;
-		
+		state=RECEIVED;
 	}
 	return rx_buffer;
 }
@@ -997,7 +997,7 @@ public int[] data_buffer_bits(){
 				titleofFile [8*k+k1]=(titleofFile_b[k] >> (7-k1) & 1);
 				}
 			}
-			add_output_text_line("size of chosen file="+sizeofFile_s+"(length="+the_file_contents.length+")");
+			add_output_text_line("size of chosen file="+sizeofFile_s+"(length="+the_file_contents.length+"bytes)");
 			add_output_text_line("title of chosen file="+d_filename);
             // Convert the data in file to bits
 			the_file_contents_bb=ByteBuffer.wrap(the_file_contents); // Wrapper to easier access content.
@@ -1100,7 +1100,7 @@ public String retrieveData(int[] received){
 		    }
 	    
 	    int size_i= Integer.parseInt(data_buffer_received_size_c,2);
-	    add_output_text_line("size of received="+size_i+"buffer rx size="+((double)(received.length/8)-(length_titleFile+length_sizeFile)/8));
+	    add_output_text_line("size of received in bytes="+size_i);
 	    // Get data, remove size and title of file from the received buffer
 	    //byte[] data_buffer_received = null;
 	   

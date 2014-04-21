@@ -27,7 +27,7 @@ import android.media.AudioManager;
 //import java.net.URI;
 import edu.dhbw.andar.CameraPreviewHandler;
 import android.webkit.MimeTypeMap;
-import se.kth.android.GroupRed20142FSK.R;
+import se.kth.android.GroupRed2014MQAM.R;
 import se.kth.android.StudentCode.StudentCode;
 import android.webkit.MimeTypeMap;
 import android.app.Activity;

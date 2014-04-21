@@ -124,6 +124,7 @@ public class StudentCode extends StudentCodeBase {
     private static int gb_length = 40;
     private static double[] ts_mod;
     private static double[][] ts_mod_const;
+    private static double[] window;
     
     private static int side=-1;
     private static double[] ts_modQAM;
@@ -223,8 +224,8 @@ public class StudentCode extends StudentCodeBase {
                    AudioFormat.ENCODING_PCM_16BIT, bufferInt.length,
                    AudioTrack.MODE_STREAM);
           
-          
-          add_output_text_line("f1= "+f1+" f2= "+f2+" k= "+no_samp_period);
+          window =create_window(1);
+          add_output_text_line("MQAM  f="+f1);
          
 
     }
@@ -826,7 +827,7 @@ private double [] square(double [] in_values) {
 void send_data(){
 	int Nb = 5000;
     int[] bit_stream = new int[Nb];
-	int[] guard_stream = new int[gb_length];
+	int[] guard_stream = new int[gb_length*2*levels];
 	
 	
 	//int[] size_data_signal = new int [100];
@@ -845,7 +846,7 @@ void send_data(){
 //	double[] size_data_signal = FSK_mod(f1,f2,sizeofFile);
 //	double[] title_data_signal = FSK_mod(f1,f2,titleofFile);
 	// Size of total signal to be transmitted
-	double[] tx_signal =new double[guard_signal.length+data_signal.length+ts_modQAM.length+bufferInt.length];//+title_data_signal.length+size_data_signal.length];
+	double[] tx_signal =new double[2*guard_signal.length+data_signal.length+ts_modQAM.length+bufferInt.length];//+title_data_signal.length+size_data_signal.length];
 	
 	int current_position=0;
 	for(int i=0;i<guard_signal.length;i++){
@@ -853,7 +854,7 @@ void send_data(){
 		current_position++;
 	}
 	for(int i=0; i<ts_modQAM.length; i++){
-		tx_signal[current_position]=ts_mod[i];
+		tx_signal[current_position]=ts_modQAM[i];
 		current_position++;
 	}
 //	for(int i=0; i<title_data_signal.length; i++){
@@ -868,10 +869,15 @@ void send_data(){
 		tx_signal[current_position]=data_signal[i];
 		current_position++;
 	}
+	for(int i=0;i<guard_signal.length;i++){
+		tx_signal[current_position]=guard_signal[i];
+		current_position++;
+	}
 //	for(int i=0;i<bufferInt.length-current_position%bufferInt.length+1;i++){
 //		tx_signal[current_position+i]=0;
 //	}
 //	
+	
 	final AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
             mysampleRate, AudioFormat.CHANNEL_OUT_MONO,
             AudioFormat.ENCODING_PCM_16BIT, bufferInt.length,
@@ -925,7 +931,7 @@ public static short[] send_to_buffer(short[] rx_buffer, int length, short[] samp
 public double[] modulate_ts(int length, int f1, int f2){
 	
 	SimpleInputFile in = new SimpleInputFile();
-    in.open("ts.txt"); 
+    in.open("ts2.txt"); 
 	final int [] ts = new int[length];
 	   // Read file from sdcard
     for(int i=0; i<ts.length; i++){
@@ -1406,7 +1412,7 @@ public static double[] MQAMmod(int f, int[] bits){
 	double[] signal = new double[L/(2*levels)*no_samp_period];
 	double[][] mconst = mod_const(bit_stream, L, levels);
 
-	for(int i=0;i<L/2*levels;i++){
+	for(int i=0;i<L/(2*levels);i++){
 		for(int ii=i*no_samp_period;ii<no_samp_period*(i+1);ii++){
 			signal[ii]=mconst[ii][0]*cosf1[ii-i*no_samp_period]-mconst[ii][1]*sinf1[ii-i*no_samp_period];
 		}
@@ -1418,7 +1424,7 @@ public static double[] MQAMmod(int f, int[] bits){
 
 public double[] modulateQAM_ts(int length,int f,int levels){
 	SimpleInputFile in = new SimpleInputFile();
-    in.open("ts.txt"); 
+    in.open("ts2.txt"); 
 	final int [] ts = new int[length*2*levels];
 	   // Read file from sdcard
     for(int i=0; i<ts.length; i++){
@@ -1461,6 +1467,7 @@ public int[] MQAMreceiver(int f,int n_sym,double[] r){
 	
 	//start here
 	int decision[] =null;
+	
 	return decision;
 	
 }
@@ -1505,9 +1512,9 @@ public int synchronize(double Hx[],double Hy[],double[][] ts_const,int Q){
 	double[] c= new double[mconst.length-tsconst.length+2];
 	double maxc=0;
 	
-	for(int i = 0; i < mconst.length-tsconst.length+2;i++){
+	for(int i = 0; i < mconst.length-tsconst.length+1;i++){
 		c[i]=0;
-		for(int ii=0;ii<tsconst.length;ii++){
+		for(int ii=0;ii<tsconst.length-1;ii++){
 			aux = mconst[ii+i].times(tsconst[ii].conjugate());
 			c[i]=c[i]+aux.abs();
 		}
@@ -1525,6 +1532,31 @@ public int synchronize(double Hx[],double Hy[],double[][] ts_const,int Q){
 	return n_samp;
 
 
+}
+
+public double[] create_window(int mode){
+	double[] window = new double[no_samp_period];
+	if(mode==0){ 
+		for(int k=0;k<window.length;k++){
+			window[k]=1;
+		}
+		return window;
+	}else{
+		if(mode==1){
+			SimpleInputFile in = new SimpleInputFile();
+			in.open("window.txt");
+			int length = in.readInt();
+			if(length==no_samp_period){
+				// Read file from sd card
+				for(int i=0; i<window.length; i++){
+					window[i]=in.readDouble(); 
+				}
+				in.close();
+				return window;
+			}else{ create_window(0);}
+		}
+	}
+	return window;
 }
 
 

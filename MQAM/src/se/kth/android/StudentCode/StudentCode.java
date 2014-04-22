@@ -121,7 +121,7 @@ public class StudentCode extends StudentCodeBase {
     private static short[] rx_buffer;
     private static int rx_ind=0;
     private static int ts_length = 100;
-    private static int gb_length = 200;
+    private static int gb_length = 30;
     private static double[] ts_mod;
     private static double[][] ts_mod_const;
     private static double[] window;
@@ -332,7 +332,7 @@ public class StudentCode extends StudentCodeBase {
         	  add_output_text_line("achieved rate = "+R);
           	  trigger=-1;
         	  state=-1;
-        	  d_filename = null;
+        	//  d_filename = null;
         	  
           }
     	}
@@ -890,13 +890,19 @@ void send_data(){
             mysampleRate, AudioFormat.CHANNEL_OUT_MONO,
             AudioFormat.ENCODING_PCM_16BIT, bufferInt.length,
             AudioTrack.MODE_STREAM);
+	double max = 0;
+	for(int i = 0;i<tx_signal.length;i++){
+		if(tx_signal[i]>max) max=tx_signal[i];
+	}
 	
 	
     for (int i = 0; i < tx_signal.length; i++) {
+    	tx_signal[i]=tx_signal[i]/max;
         play(tx_signal[i], audioTrack);
     }
     add_output_text_line("done with buffering of transmission");
     state=-1;
+    d_filename = null;
     //add_output_text_line("tx_signal[1]"+tx_signal);
    
 }
@@ -1473,6 +1479,7 @@ public int[] MQAMreceiver(int f,int n_sym,double[] r){
 	
 }
 
+@SuppressLint("NewApi")
 public double[] LPfir(double[] input){
 	SimpleInputFile in = new SimpleInputFile();
     in.open("coeffs.txt");
@@ -1483,11 +1490,12 @@ public double[] LPfir(double[] input){
            coeffs[i]=in.readDouble(); 
     };
     in.close();
-	
+	double ext_input[]=new double[input.length+length];
+	ext_input = Arrays.copyOfRange(input, 0, input.length);
     FIR filter =new FIR(coeffs);
     double[] out = new double[input.length+length];
     for(int k=0;k<input.length+length;k++){
-    	out[k] = filter.getOutputSample(input[k]);
+    	out[k] = filter.getOutputSample(ext_input[k]);
     }
     
 	return out;

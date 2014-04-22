@@ -1,4 +1,6 @@
 %MQAM
+% Note: The function rcosdesign 
+% may not work in older MATLAB versions
 
 %Set up variables and workspace.
 close all;

@@ -1534,7 +1534,7 @@ public int synchronize(double Hx[],double Hy[],double[][] ts_const,int Q){
 
 }
 
-public double[] create_window(int mode){
+public double[] create_window(int mode){ //MODE 0->RECT MODE 1->WINDOW.TXT
 	double[] window = new double[no_samp_period];
 	if(mode==0){ 
 		for(int k=0;k<window.length;k++){

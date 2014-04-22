@@ -128,6 +128,7 @@ public class StudentCode extends StudentCodeBase {
     
     private static int side=-1;
     private static double[] ts_modQAM;
+    
     // Variables for function: int[] data_buffer_bits() and void retrieveData(int[] received)
     byte[] the_file_contents=null;
     ByteBuffer the_file_contents_bb=null;
@@ -223,10 +224,9 @@ public class StudentCode extends StudentCodeBase {
                    mysampleRate, AudioFormat.CHANNEL_OUT_MONO,
                    AudioFormat.ENCODING_PCM_16BIT, bufferInt.length,
                    AudioTrack.MODE_STREAM);
-          
-          window =create_window(1);
-          add_output_text_line("MQAM  f="+f1);
-         
+           // Specify type of window function, 0 -> rect window, 1 -> Hanning window 
+           window =create_window(1);
+           add_output_text_line("MQAM  f="+f1);
 
     }
 
@@ -244,13 +244,12 @@ public class StudentCode extends StudentCodeBase {
     	 //int corr = maxXcorr(inputxcorr,inputycorr); 
     	//add_output_text_line("index="+corr);
     	
-    	
     }
      
     // This is called when the user presses stop in the menu, do any post processing here
     public void stop()      
     {
-    	
+    	  // The user has the option to open the file received
     	  if(side==1) open_text_file(rx_filename);
           trigger=-1;
           rx_ind=0;
@@ -270,18 +269,17 @@ public class StudentCode extends StudentCodeBase {
     String screenData;
     String messageData;
     String wifi_ap = "Start value";
-//    FFT x,y,z;
    
     // Fill in the process function that will be called according to interval above
     @SuppressLint("NewApi")
 	public void process()
     {  
-    	//Complex[] y =   fft(input);
+    	//Complex[] y = fft(input);
     	
-    	//z=FFT.cconvolve(x, y)   ;
+    	//z=FFT.cconvolve(x, y);
     	
-    	  //Complex a =new Complex(2,3);
-          //Complex b =new Complex(1,6);
+    	//Complex a =new Complex(2,3);
+        //Complex b =new Complex(1,6);
     	
         if(d_filename != null) state=GETDATA; //file has been picked
     	
@@ -312,16 +310,17 @@ public class StudentCode extends StudentCodeBase {
         	  
         	  int index = maxXcorr(Arrays.copyOfRange(rx_bufferdouble, 0, block_length),ts_modQAM); //find where training sequence begins
         	  
-        	  //send received data to goertzel algorithm, copy only data part
-        	int decision[] =MQAMreceiver(f1,no_samp_period,Arrays.copyOfRange(rx_bufferdouble,index-margin,rx_bufferdouble.length));
-        	  //  int decision[]=goertzel(f1,f2,no_samp_period, Arrays.copyOfRange(rx_bufferdouble,index+no_samp_period*ts_length,rx_bufferdouble.length));
+        	  //send received data to decision algorithm, copy only data part
+        	  int decision[] = MQAMreceiver(f1,no_samp_period,Arrays.copyOfRange(rx_bufferdouble,index-margin,rx_bufferdouble.length));
+        	  // int decision[]=goertzel(f1,f2,no_samp_period, Arrays.copyOfRange(rx_bufferdouble,index+no_samp_period*ts_length,rx_bufferdouble.length));
+        	  
         	  //save decision to file
         	  save_to_file("decision.txt", decision,decision.length);
         	  
         	  //compare(decision);
         	  
         	  // Convert binary stream back into a file
-        	 rx_filename = retrieveData(decision);
+        	  rx_filename = retrieveData(decision);
         	  
         	  
         	  //clear_output_text();
@@ -334,8 +333,6 @@ public class StudentCode extends StudentCodeBase {
         	  state=-1;
         	  d_filename = null;
         	  
-        	 // open_text_file(rx_filename);
-        	  //stop();
           }
     	}
 
@@ -447,9 +444,8 @@ public class StudentCode extends StudentCodeBase {
     }
     
 	public void stringFromBrowseForFile(String filename){
+		// Store name and extension of file in d_filename
 		d_filename=filename;
-		
-		//add_output_text_line("you chose "+d_filename+" for sending");
 	}
    
     public void stringFromUser(String user_input)
@@ -633,8 +629,8 @@ private double [] square(double [] in_values) {
                   sound_out(buffer,buffer.length); // Send buffer to player                    
            };            
     };
+    
 //Task 3 generate a mono tone of specified frequency
-
  void genTone(int freq){
      // fill out the array
      for (int i = 0; i < numSamples; ++i) {
@@ -825,6 +821,7 @@ private double [] square(double [] in_values) {
  }
  
 void send_data(){
+	// Generate a random stream of bits for testing
 	int Nb = 5000;
     int[] bit_stream = new int[Nb];
 	int[] guard_stream = new int[gb_length*2*levels];
@@ -840,11 +837,13 @@ void send_data(){
 //	bit_stream = load_from_file("data_test.txt",Nb);
 //	save_to_file("data.txt",bit_stream,Nb);
 	
+	// Modulate the guard and data signal
 	double[] guard_signal = MQAMmod(f1,guard_stream);
 	double[] data_signal = MQAMmod(f1,bit_stream);
 	
 //	double[] size_data_signal = FSK_mod(f1,f2,sizeofFile);
 //	double[] title_data_signal = FSK_mod(f1,f2,titleofFile);
+	
 	// Size of total signal to be transmitted
 	double[] tx_signal =new double[2*guard_signal.length+data_signal.length+ts_modQAM.length+bufferInt.length];//+title_data_signal.length+size_data_signal.length];
 	
@@ -1058,9 +1057,6 @@ public int[] data_buffer_bits(){
 public String retrieveData(int[] received){
 	   //receivedBits = new int [numberBits];
 	   //the_file_contents=read_data_from_file(d_filename);
-	   //int[] data_test = received;
-	   //double[] data_temp = null;
-	   //int m;
 	   byte[] data_buffer_received = new byte[received.length/8];
 	   int receivedBitstemp[] = new int [8];
 	   add_output_text_line("received length / 8 ="+((double) received.length/8)+"rx length"+received.length);
@@ -1069,32 +1065,27 @@ public String retrieveData(int[] received){
 	   //data_buffer = new byte [the_file_contents.length];
 	   //Convert bits to bytes, note: LITTLE_ENDIAN
 	   switch(state_two){
+	   
 	   case FIRST:
-	   for (int k=0;k<received.length/8;k++){
-	//	   m=7;
-		   //data_buffer[k] = (byte) ()
+	   
+		   for (int k=0;k<received.length/8;k++){
+
 		   StringBuilder concatenated = new StringBuilder(8);
 		   for (int k1=0;k1<8;k1++){
 			   receivedBitstemp[k1]=received[8*k+k1];
 			   concatenated.append(receivedBitstemp[k1]);
-			//   data_temp[k]=data_temp[k]+(receivedBitstemp[k+k1]*Math.pow(2, m));
-			//		   m=m-1;
 		   }
 		   String data_concatenated = concatenated.toString();
-		 //  data_buffer_received[k] = (byte) data_temp[k];
-
+		   // data_buffer_received[k] = (byte) data_temp[k];
 		     
-		   //Integer.valueOf(concatenated.toString());
-		   
-		  // int receivedBitstemp_test = receivedBitstemp[0] receivedBitstemp[1] receivedBitstemp[2] ;
+		   // Integer.valueOf(concatenated.toString());
+
 		   try {
 			   data_buffer_received[k]= (byte) Integer.parseInt(data_concatenated,2);
 			  } catch (NumberFormatException e) {
 				  add_output_text_line("Something went wrong. Please try again.");
 			     return null;
 			  }
-		   
-		   
 	   
 	   }
 
@@ -1109,6 +1100,7 @@ public String retrieveData(int[] received){
 		    data_buffer_received_title[k]=data_buffer_received[k];
 		    }
 	    }
+	    // Get size of file
 	    byte[] data_buffer_received_size = new byte[length_sizeFile/8];
 	    
 	    int counter=length_titleFile/8;
@@ -1116,8 +1108,6 @@ public String retrieveData(int[] received){
 	    	while(data_buffer_received[counter]!=0){
 		    data_buffer_received_size[counter-length_titleFile/8]=data_buffer_received[counter];
 		    counter++;
-		    //b1 = data_buffer_received_size[k];
-		    //b1.intValue();
 		    }
 	    //}
 	    String data_buffer_received_size_c="";
@@ -1127,10 +1117,8 @@ public String retrieveData(int[] received){
 	    
 	    int size_i= Integer.parseInt(data_buffer_received_size_c,2);
 	    add_output_text_line("size of received="+size_i+"buffer rx size="+((double)(received.length/8)-(length_titleFile+length_sizeFile)/8));
-	    // Get data, remove size and title of file from the received buffer
-	    //byte[] data_buffer_received = null;
-	   
 	    
+	    // Get data, remove size and title of file from the received buffer
 	    byte[] data_buffer_received_n = new byte[(received.length/8)-(length_titleFile+length_sizeFile)/8];
 	    for (int k=(length_titleFile+length_sizeFile)/8;k<(length_titleFile+length_sizeFile)/8+size_i;k++){ //received.length/8
 		  data_buffer_received_n[k-(length_titleFile+length_sizeFile)/8]=data_buffer_received[k];
@@ -1527,10 +1515,7 @@ public int synchronize(double Hx[],double Hy[],double[][] ts_const,int Q){
 		}
 	}
 
-
-
 	return n_samp;
-
 
 }
 
@@ -1558,8 +1543,13 @@ public double[] create_window(int mode){
 	}
 	return window;
 }
-
-
+/*
+public double[] phase_estimation(double[][] mconst, double[][] mconst_ts){
+	
+	return phihat;
+}
+*/
+//
 }
 
 //	

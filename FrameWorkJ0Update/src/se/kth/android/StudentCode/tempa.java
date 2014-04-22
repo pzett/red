@@ -8,11 +8,14 @@
 package se.kth.android.StudentCode;
 import java.io.BufferedReader;
 
+import java.util.ArrayList;
 //import java.util.ArrayList;
 //import java.util.Arrays;
 //import java.util.Date;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Vector;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.io.File;
@@ -306,6 +309,8 @@ public class StudentCode extends StudentCodeBase {
         	  
         	  //send received data to goertzel algorithm, copy only data part
         	  int decision[]=goertzel(f1,f2,no_samp_period, Arrays.copyOfRange(rx_bufferdouble,index+no_samp_period*ts_length,rx_buffer.length));
+        	  //int decision[]=goertzel2(f1,f2,f3,f4,no_samp_period, Arrays.copyOfRange(rx_bufferdouble,index+no_samp_period*ts_length,rx_buffer.length));
+        	  
         	  //save decision to file
         	  save_to_file("decision.txt", decision,decision.length);
         	  
@@ -758,29 +763,58 @@ private double [] square(double [] in_values) {
 		 if((l+1)%n==0){
 			 mag1[aux]=P[1]*P[1]+P[2]*P[2]-P[1]*P[2]*coeff1;
 			 mag2[aux]=Q[1]*Q[1]+Q[2]*Q[2]-Q[1]*Q[2]*coeff2;
-			 mag3[aux]=P[1]*P[1]+P[2]*P[2]-P[1]*P[2]*coeff1;
-			 mag4[aux]=Q[1]*Q[1]+Q[2]*Q[2]-Q[1]*Q[2]*coeff2;
+			 mag3[aux]=R[1]*R[1]+R[2]*R[2]-R[1]*R[2]*coeff3;
+			 mag4[aux]=S[1]*S[1]+S[2]*S[2]-S[1]*S[2]*coeff4;
 			 aux++;
 			//reset
 			 Q[2]=0;Q[1]=0;Q[0]=0;
 			 P[2]=0;P[1]=0;P[0]=0;
+			 R[2]=0;R[1]=0;R[0]=0;
+			 S[2]=0;S[1]=0;S[0]=0;
 		 }
 			
 		 
 	 }
 	 
 	 int[] decision= new int[aux];
+	 
 	 for(int l=0;l<aux;l++){
-		 if(mag1[l]>mag2[l]){
-			 decision[l]=1;
-		 }else{
-			 decision[l]=0;
-		 }
+			 
+			 ArrayList <Double> v = new ArrayList <Double>();
+
+			    v.add(new Double(mag1[l]));
+			    v.add(new Double(mag2[l]));
+			    v.add(new Double(mag3[l]));
+			    v.add(new Double(mag4[l]));
+			    Double value = Collections.max(v);
+			    // Might need a += instead
+			    if(value==mag1[l]){
+			    	decision[l]=Integer.parseInt("00");
+			    }
+			    else if(value==mag2[l]){
+			    	decision[l]=Integer.parseInt("10");
+			    }
+			    else if(value==mag3[l]){
+			    	decision[l]=Integer.parseInt("11");
+			    }
+			    else if(value==mag4[l]){
+			    	decision[l]=Integer.parseInt("01");
+			    }
 	 }
  	 return decision;
 	 
  }
- 
+	 /*
+	 for(int l=0;l<aux;l++){
+		 if(Math.mag1[l]>mag2[l]){
+			 decision[l]=Integer.parseInt("00");
+		 }
+		 else if(mag1[l]>mag2[l]){
+			 decision[l]=0;
+		 }
+		 
+	 }
+	 */
  
  
  public static int maxXcorr(double[] x,double[] y){
@@ -825,37 +859,38 @@ return signal;
 
  public static double[] FSK_mod4(int f1,int f2, int f3, int f4, int[] r){
 	 	double[] signal = new double[no_samp_period*r.length];
-	 	StringBuilder concatenated = new StringBuilder(2);
+	 	
         int current = 0;
-	    int[] r_two;
+	    int[] r_two = new int [2];
         
 	 	for(int i=0;i<r.length;i=i+2){
-	 		for(int k1=current;k1<current+2;k1++){
-	 			r_two[i+k1]=r[current+k1];
+	 		StringBuilder concatenated = new StringBuilder(2);
+	 		for(int k1=0;k1<2;k1++){
+	 			r_two[k1]=r[i+k1];
 	 			current++;
-	 			concatenated.append(r_two[i+k1]);
+	 			concatenated.append(r_two[k1]);
 	 		}
 		 	    
 		 	    String data_concatenated = concatenated.toString();
-	 		
+	 		   int a=i/2;
 		 	   if(data_concatenated=="00"){
-					 for(int ii=i*no_samp_period;ii<no_samp_period*(i+1)-1;ii++){
-						 signal[ii]=cosf1[ii-i*no_samp_period];
+					 for(int ii=a*no_samp_period;ii<no_samp_period*(a+1)-1;ii++){
+						 signal[ii]=cosf1[ii-a*no_samp_period];
 						  }
 				 }
 				 else if(data_concatenated=="01"){
-					 for(int ii=i*no_samp_period;ii<no_samp_period*(i+1)-1;ii++){
-						 signal[ii]= cosf2[ii-i*no_samp_period];
-					 }
-				 }
-				 else if(data_concatenated=="10"){
-					 for(int ii=i*no_samp_period;ii<no_samp_period*(i+1)-1;ii++){
-						 signal[ii]= cosf3[ii-i*no_samp_period];
+					 for(int ii=a*no_samp_period;ii<no_samp_period*(a+1)-1;ii++){
+						 signal[ii]= cosf2[ii-a*no_samp_period];
 					 }
 				 }
 				 else if(data_concatenated=="11"){
-					 for(int ii=i*no_samp_period;ii<no_samp_period*(i+1)-1;ii++){
-						 signal[ii]= cosf4[ii-i*no_samp_period];
+					 for(int ii=a*no_samp_period;ii<no_samp_period*(a+1)-1;ii++){
+						 signal[ii]= cosf3[ii-a*no_samp_period];
+					 }
+				 }
+				 else if(data_concatenated=="10"){
+					 for(int ii=a*no_samp_period;ii<no_samp_period*(a+1)-1;ii++){
+						 signal[ii]= cosf4[ii-a*no_samp_period];
 					 }
 				 }
 	 		

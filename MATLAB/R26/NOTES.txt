@@ -1,6 +1,0 @@
-This code should achieve 26kbps using the current parameters and the following function MQAMtx and MQAMrx.
-
-Further improvements:
-...I'm too tired to write them :)
-
-Chico

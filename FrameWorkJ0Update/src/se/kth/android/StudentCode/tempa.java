@@ -6,7 +6,6 @@
 * for how information on how to cite. */ 
 
 package se.kth.android.StudentCode;
-
 import java.io.BufferedReader;
 
 import java.util.ArrayList;
@@ -50,7 +49,7 @@ import com.google.zxing.qrcode.detector.Detector;
 
 
 
-import se.kth.android.FrameWork.FrameWork;
+//import se.kth.android.FrameWork.FrameWork;
 import se.kth.android.FrameWork.StudentCodeBase;
 
 
@@ -93,21 +92,22 @@ public class StudentCode extends StudentCodeBase {
     final double inputxcorr[]={1,5.6,2.4,9.69, 15.7};
     final double inputycorr[]={1,2};
     
-     final static int no_samp_period = 30;
-    final static int f1=mysampleRate/5;
-    final static int f2=7350;
-    final static int f3=mysampleRate/7;
+    final static int no_samp_period = 30;
+    final static int f1=mysampleRate/4;
+    final static int f2=mysampleRate/6;
+    final static int f3=mysampleRate/2;
     final static int f4=mysampleRate/8;
     final static int ts_f1=mysampleRate/20;
     final static int ts_f2=mysampleRate/15;
     
     final static double[] cosf1 =initCosine(f1, mysampleRate,no_samp_period);
-    final static double[] sinf1 =initSinusoid(f1, mysampleRate,no_samp_period);
-    final static int levels = 2;
+    final static double[] cosf2 =initCosine(f2, mysampleRate,no_samp_period);
+    final static double[] cosf3 =initCosine(f3, mysampleRate,no_samp_period);
+    final static double[] cosf4 =initCosine(f4, mysampleRate,no_samp_period);
     
-   
     final static double[] cosf1ts =initCosine(ts_f1, mysampleRate,no_samp_period);
     final static double[] cosf2ts =initCosine(ts_f2, mysampleRate,no_samp_period);
+    
     
     private static final double MAX_16_BIT = Short.MAX_VALUE; 
     private static final int SAMPLE_BUFFER_SIZE = 4096;
@@ -120,14 +120,10 @@ public class StudentCode extends StudentCodeBase {
     public static int trigger = 0; //0 -> listening and waiting 1 -> listening and received 2 -> done listening -1 ->processed
     private static short[] rx_buffer;
     private static int rx_ind=0;
-    private static int ts_length = 100;
-    private static int gb_length = 40;
+    private static int ts_length = 50;
+    private static int gb_length = 30;
     private static double[] ts_mod;
-    private static double[][] ts_mod_const;
-    private static double[] window;
-    
     private static int side=-1;
-    private static double[] ts_modQAM;
     
     // Variables for function: int[] data_buffer_bits() and void retrieveData(int[] received)
     byte[] the_file_contents=null;
@@ -141,8 +137,8 @@ public class StudentCode extends StudentCodeBase {
     int[] bit_buffer;
     int state=-1;
 	int state_two = 0;
-	int[] sizeofFile; 
-	int[] titleofFile; 
+	int[] sizeofFile; //= new int [128];
+	int[] titleofFile;  //= new int [16];
 	final int GETDATA = 0; 
 	final int RECEIVED = 1;
 	final int SEND = 2;
@@ -151,9 +147,13 @@ public class StudentCode extends StudentCodeBase {
 	final int FIRST = 0;
 	final int SECOND = 1;
     
-	final int length_titleFile = 1024;
-	final int length_sizeFile  = 512;
-	String rx_filename;
+	// Variables used in FSK_mod4
+	int state_three_fsk = -1;
+	final int zerozero = 0;
+	final int zeroone = 1;
+	final int onezero = 2;
+	final int oneone = 3;
+	
 	AudioTrack atp; 
  
 	
@@ -166,7 +166,6 @@ public class StudentCode extends StudentCodeBase {
            set_output_text("Hello World! Press menu for options!");
            // Add sensors your project will use
            if(a==0){ useSensors =  SOUND_OUT; // CAMERA;CAMERA_RGB;//WIFI_SCAN | SOUND_OUT; //GYROSCOPE;//SOUND_IN|SOUND_OUT;//WIFI_SCAN | ACCELEROMETER | MAGNETIC_FIELD | PROXIMITY | LIGHT;//TIME_SYNC|SOUND_IN;//TIME_SYNC | ACCELEROMETER | MAGNETIC_FIELD | PROXIMITY | LIGHT | SOUND_IN;
-           clear_output_text();
            add_output_text_line("TX side");
            side=0;
            }
@@ -213,20 +212,20 @@ public class StudentCode extends StudentCodeBase {
            
            bufferInt = new byte[SAMPLE_BUFFER_SIZE * BYTES_PER_SAMPLE];
            
-           int length_rxb =no_samp_period*2000*10;
+           int length_rxb =no_samp_period*2000*5;
            rx_buffer = new short[length_rxb];
           
                      
            ts_mod = modulate_ts(ts_length,ts_f1,ts_f2);
-           ts_modQAM = modulateQAM_ts(ts_length,f1,levels);
-          
+           
            atp = new AudioTrack(AudioManager.STREAM_MUSIC,
                    mysampleRate, AudioFormat.CHANNEL_OUT_MONO,
                    AudioFormat.ENCODING_PCM_16BIT, bufferInt.length,
                    AudioTrack.MODE_STREAM);
-           // Specify type of window function, 0 -> rect window, 1 -> Hanning window 
-           window =create_window(1);
-           add_output_text_line("MQAM  f="+f1);
+          
+          
+          add_output_text_line("f1= "+f1+" f2= "+f2+" k= "+no_samp_period);
+         
 
     }
 
@@ -244,13 +243,12 @@ public class StudentCode extends StudentCodeBase {
     	 //int corr = maxXcorr(inputxcorr,inputycorr); 
     	//add_output_text_line("index="+corr);
     	
+    	
     }
      
     // This is called when the user presses stop in the menu, do any post processing here
     public void stop()      
     {
-    	  // The user has the option to open the file received
-    	  if(side==1) open_text_file(rx_filename);
           trigger=-1;
           rx_ind=0;
           clear_output_text();
@@ -269,19 +267,20 @@ public class StudentCode extends StudentCodeBase {
     String screenData;
     String messageData;
     String wifi_ap = "Start value";
+//    FFT x,y,z;
    
     // Fill in the process function that will be called according to interval above
     @SuppressLint("NewApi")
 	public void process()
     {  
-    	//Complex[] y = fft(input);
+    	//Complex[] y =   fft(input);
     	
-    	//z=FFT.cconvolve(x, y);
+    	//z=FFT.cconvolve(x, y)   ;
     	
-    	//Complex a =new Complex(2,3);
-        //Complex b =new Complex(1,6);
+    	  //Complex a =new Complex(2,3);
+          //Complex b =new Complex(1,6);
     	
-        if(d_filename != null) state=GETDATA; //file has been picked
+        if(d_filename != null) state=0; //file has been picked
     	
     	switch(state){
     	
@@ -299,20 +298,18 @@ public class StudentCode extends StudentCodeBase {
     	if(trigger==2){
     		add_output_text_line("stopped listening, decoding");
         	  //useSensors =  SOUND_OUT;
-    		int margin = 50;
-        	  int block_length=2*levels*no_samp_period*(gb_length+ts_length+margin); //block to do autocorrelation
-        	  double[] rx_bufferdouble = new double[rx_ind+4096-rx_ind%4096]; //buffer of doubles
-        	  add_output_text_line("buffer length="+rx_buffer.length+"rx_ind+ = "+(rx_ind+4096-rx_ind%4096));
-        	  for (int j=0;j<rx_ind;j++){
-        	      rx_bufferdouble[j] = (double) rx_buffer[j]; //convert received samples to doubles.
+        	  int block_length=no_samp_period*(gb_length+ts_length+20); //block to do autocorrelation
+        	  double[] rx_bufferdouble = new double[rx_buffer.length]; //buffer of doubles
+        	  add_output_text_line("buffer length="+rx_buffer.length);
+        	  for (int j=0;j<rx_ind;j++) {
+        	      rx_bufferdouble[j] = (double)rx_buffer[j]; //convert received samples to doubles.
         	  }
         	  
+        	  int index = maxXcorr(Arrays.copyOfRange(rx_bufferdouble, 1, block_length),ts_mod); //find where training sequence begins
         	  
-        	  int index = maxXcorr(Arrays.copyOfRange(rx_bufferdouble, 0, block_length),ts_modQAM); //find where training sequence begins
-        	  
-        	  //send received data to decision algorithm, copy only data part
-        	  int decision[] = MQAMreceiver(f1,no_samp_period,Arrays.copyOfRange(rx_bufferdouble,index-margin,rx_bufferdouble.length));
-        	  // int decision[]=goertzel(f1,f2,no_samp_period, Arrays.copyOfRange(rx_bufferdouble,index+no_samp_period*ts_length,rx_bufferdouble.length));
+        	  //send received data to goertzel algorithm, copy only data part
+        	  int decision[]=goertzel(f1,f2,no_samp_period, Arrays.copyOfRange(rx_bufferdouble,index+no_samp_period*ts_length,rx_buffer.length));
+        	  //int decision[]=goertzel2(f1,f2,f3,f4,no_samp_period, Arrays.copyOfRange(rx_bufferdouble,index+no_samp_period*ts_length,rx_buffer.length));
         	  
         	  //save decision to file
         	  save_to_file("decision.txt", decision,decision.length);
@@ -320,19 +317,15 @@ public class StudentCode extends StudentCodeBase {
         	  //compare(decision);
         	  
         	  // Convert binary stream back into a file
-        	  rx_filename = retrieveData(decision);
+        	  retrieveData(decision);
+        	  clear_output_text();
         	  
-        	  
-        	  //clear_output_text();
-        	  
-        	  //readFile("received.txt");
-        	  add_output_text_line("stopped listening and file decoded: opening:"+rx_filename);
-        	  double R = 1 *((double) mysampleRate) /( (double) no_samp_period);
-        	  add_output_text_line("achieved rate = "+R);
+        	  readFile("received.txt");
+        	  add_output_text_line("stopped listening");
           	  trigger=-1;
         	  state=-1;
         	  d_filename = null;
-        	  
+        	  //stop();
           }
     	}
 
@@ -386,7 +379,7 @@ public class StudentCode extends StudentCodeBase {
    
     public void sound_in(long time, final short[] samples, int length)
     { 
-    	final int threshold = 100;
+    	final int threshold = 200;
     	int continue_listening = 0; //variable to verify if transmission is done (detect only noise in buffer)
     	if(trigger==0){
     	set_output_text("only noise for the moment");
@@ -444,23 +437,12 @@ public class StudentCode extends StudentCodeBase {
     }
     
 	public void stringFromBrowseForFile(String filename){
-		// Store name and extension of file in d_filename
 		d_filename=filename;
+		add_output_text_line("you chose"+d_filename+"for sending");
 	}
    
     public void stringFromUser(String user_input)
-    {
-    	open_text_file(user_input);
-//         SimpleOutputFile out = new SimpleOutputFile();
-//        //Call the function to be tested 
-//         out.open("message.txt");
-//         out.writeString(user_input);
-//    	// Write file on sdcard 
-//    	  d_filename="message.txt";
-////    	       trigger=0;  
-////    	       side=0;
-////    	       init(0);
-//    	    out.close(); 
+    {       
     }
 
    
@@ -629,8 +611,8 @@ private double [] square(double [] in_values) {
                   sound_out(buffer,buffer.length); // Send buffer to player                    
            };            
     };
-    
 //Task 3 generate a mono tone of specified frequency
+
  void genTone(int freq){
      // fill out the array
      for (int i = 0; i < numSamples; ++i) {
@@ -701,11 +683,10 @@ private double [] square(double [] in_values) {
  }
  
  public static int[] goertzel(int f1, int f2, int n, double r[]){
-	 double fs=44100;
+	 int fs=44100;
 	 
-	 double k1=0.5+ (double) (n*f1)/ ((double) fs);
-	 double k2=0.5+ (double) (n*f2)/ ((double) fs);
-	 
+	 double k1=0.5+ n*f1/fs;
+	 double k2=0.5+ n*f2/fs;
 	 double coeff1=2*Math.cos(2 * Math.PI / n * k1);
 	 double coeff2=2*Math.cos(2 * Math.PI / n * k2);
 	 double[] P =new double[3];
@@ -732,8 +713,7 @@ private double [] square(double [] in_values) {
 		 
 	 }
 	 
-	 int[] decision= new int[aux+8-aux%8];
-	 
+	 int[] decision= new int[aux];
 	 for(int l=0;l<aux;l++){
 		 if(mag1[l]>mag2[l]){
 			 decision[l]=1;
@@ -745,450 +725,7 @@ private double [] square(double [] in_values) {
 	 
  }
  
- public static int maxXcorr(double[] x,double[] y){
-	 double[] c= new double[x.length-y.length+2];
-	 double maxc=0;
-	 int index=0;
-	 for(int i = 0; i < x.length-y.length+1;i++){
-		 c[i]=0;
-		 for(int ii=0;ii<y.length-1;ii++){
-			 c[i]=c[i]+x[ii+i]*y[ii];
-		 }
-	 }
-	 
-	 for(int i=0;i<c.length;i++){
-		 if(c[i]>maxc){
-			 index=i;
-			 maxc=c[i];
-		 }
-	 }
-	 
-	 return index;
- }
- 
-// public static double[] FSK_mod(int f1,int f2, int[] r){
-// 	double[] signal = new double[no_samp_period*r.length];
-// 	
-// for(int i=0;i<r.length;i++){
-//	 if(r[i]==1){
-//		 for(int ii=i*no_samp_period;ii<no_samp_period*(i+1)-1;ii++){
-//			 signal[ii]=cosf1[ii-i*no_samp_period];
-//			  }
-//	 }
-//	 else{
-//		 for(int ii=i*no_samp_period;ii<no_samp_period*(i+1)-1;ii++){
-//			 signal[ii]= cosf2[ii-i*no_samp_period];
-//		 }
-//	 }
-//	 
-// }
-//return signal;
-//}
- 
- public static double[] FSK_mod_ts(int f1,int f2, int[] r){
-	 	double[] signal = new double[no_samp_period*r.length];
-	 	
-	 for(int i=0;i<r.length;i++){
-		 if(r[i]==1){
-			 for(int ii=i*no_samp_period;ii<no_samp_period*(i+1)-1;ii++){
-				 signal[ii]=cosf1ts[ii-i*no_samp_period];
-				  }
-		 }
-		 else{
-			 for(int ii=i*no_samp_period;ii<no_samp_period*(i+1)-1;ii++){
-				 signal[ii]= cosf2ts[ii-i*no_samp_period];
-			 }
-		 }
-		 
-	 }
-	return signal;
-	}
- 
- public static double[] initCosine(int f, int fs,int N){
-	 double cosf[]=new double[N];
-	 for(int k=0;k<N;k++){
-		 cosf[k] = Math.cos(2 * Math.PI * f * k / (fs));
-	 }
-	 return cosf;
- }
- 
- public static double[] initSinusoid(int f, int fs,int N){
-	 double sinf[]=new double[N];
-	 for(int k=0;k<N;k++){
-		 sinf[k] = Math.sin(2 * Math.PI * f * k / (fs));
-	 }
-	 return sinf;
- }
- 
-void send_data(){
-	// Generate a random stream of bits for testing
-	int Nb = 5000;
-    int[] bit_stream = new int[Nb];
-	int[] guard_stream = new int[gb_length*2*levels];
-	
-	
-	//int[] size_data_signal = new int [100];
-	for(int i = 0;i<Nb;i++){
-		bit_stream[i]=Math.round((float) Math.random());
-		}
-	for(int i = 0;i<gb_length*2*levels;i++){
-		guard_stream[i]=Math.round((float) Math.random());
-	}
-//	bit_stream = load_from_file("data_test.txt",Nb);
-//	save_to_file("data.txt",bit_stream,Nb);
-	
-	// Modulate the guard and data signal
-	double[] guard_signal = MQAMmod(f1,guard_stream);
-	double[] data_signal = MQAMmod(f1,bit_stream);
-	
-//	double[] size_data_signal = FSK_mod(f1,f2,sizeofFile);
-//	double[] title_data_signal = FSK_mod(f1,f2,titleofFile);
-	
-	// Size of total signal to be transmitted
-	double[] tx_signal =new double[2*guard_signal.length+data_signal.length+ts_modQAM.length+bufferInt.length];//+title_data_signal.length+size_data_signal.length];
-	
-	int current_position=0;
-	for(int i=0;i<guard_signal.length;i++){
-		tx_signal[current_position]=guard_signal[i];
-		current_position++;
-	}
-	for(int i=0; i<ts_modQAM.length; i++){
-		tx_signal[current_position]=ts_modQAM[i];
-		current_position++;
-	}
-//	for(int i=0; i<title_data_signal.length; i++){
-//		tx_signal[current_position]=title_data_signal[i];
-//		current_position++;
-//	}
-//	for(int i=0; i<size_data_signal.length; i++){
-//		tx_signal[current_position]=size_data_signal[i];
-//		current_position++;
-//	}
-	for(int i=0;i<data_signal.length;i++){
-		tx_signal[current_position]=data_signal[i];
-		current_position++;
-	}
-	for(int i=0;i<guard_signal.length;i++){
-		tx_signal[current_position]=guard_signal[i];
-		current_position++;
-	}
-//	for(int i=0;i<bufferInt.length-current_position%bufferInt.length+1;i++){
-//		tx_signal[current_position+i]=0;
-//	}
-//	
-	
-	final AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
-            mysampleRate, AudioFormat.CHANNEL_OUT_MONO,
-            AudioFormat.ENCODING_PCM_16BIT, bufferInt.length,
-            AudioTrack.MODE_STREAM);
-	
-	
-    for (int i = 0; i < tx_signal.length; i++) {
-        play(tx_signal[i], audioTrack);
-    }
-    add_output_text_line("done with buffering of transmission");
-    state=-1;
-    //add_output_text_line("tx_signal[1]"+tx_signal);
-   
-}
-
-public static void play(double in, AudioTrack at) {
-
-    // clip if outside [-1, +1]
-    if (in < -1.0) in = -1.0;
-    if (in > +1.0) in = +1.0;
-
-    // convert to bytes
-    short s = (short) ( MAX_16_BIT * in);
-    bufferInt[bufferSize++] = (byte) s;
-    bufferInt[bufferSize++] = (byte) (s >> 8);   // little Endian
-
-    // send to sound card if buffer is full        
-    if (bufferSize >= bufferInt.length ) {
-    	at.write(bufferInt, 0, bufferInt.length);
-        bufferSize = 0;
-        at.play();
-    }
-}
-
-public static short[] send_to_buffer(short[] rx_buffer, int length, short[] samples) {
-	//copy buffer
-	for (int i=0;i<length;i++){
-		rx_buffer[i+rx_ind]=samples[i];
-	}
-	if(rx_ind+2*length<=rx_buffer.length){
-	rx_ind=rx_ind+length;
-	//add_output_text_line("rx_ind"+rx_ind);
-	}else{
-		//add_output_text_line("reached the end of buffer");
-		trigger=2;
-		
-	}
-	return rx_buffer;
-}
-
-public double[] modulate_ts(int length, int f1, int f2){
-	
-	SimpleInputFile in = new SimpleInputFile();
-    in.open("ts2.txt"); 
-	final int [] ts = new int[length];
-	   // Read file from sdcard
-    for(int i=0; i<ts.length; i++){
-           ts[i]=in.readInt(); 
-    };
-   //add_output_text_line("ts(0,1)="+ts[0]+""+ts[1]);
-    in.close();
-	final double[] mod_ts =FSK_mod_ts(f1,f2,ts);
-	
-	return mod_ts;
-}
-
-public void save_to_file(String filename,int[] data,int length){
-	SimpleOutputFile out = new SimpleOutputFile();
-	out.open(filename);
-	out.writeInt(length);
-	for(int i=0; i<data.length; i++){
-      out.writeInt(data[i]);
-	}
-	out.close();
-	
-	
-}
-
-public int[] load_from_file(String filename,int mode){
-	 
-	SimpleInputFile in = new SimpleInputFile();
-	in.open(filename);  
-	int[] length=new int[1];
-	length[0] = in.readInt(); 
-	if(mode==0) return length;
-    int[] in_values = new int[length[0]];
-   
-    
-    // Read file from sdcard
-    for(int i=0; i<in_values.length; i++){
-           in_values[i]=in.readInt(); 
-    };
-    return in_values;
-	
-}
-
-public void compare(int decision[]){
-	int[] length_vec=load_from_file("data_test.txt",0);
-	float length = length_vec[0];
-	add_output_text_line("length of tx_seq"+length);
-	int tx_seq[];
-	tx_seq=load_from_file("data_test.txt",1);
-	float e = 0;
-	for (int a = 0; a < length; a++) {
-
-        if (tx_seq[a] == decision[a]) {
-            e=e;
-            } else {
-            e++;
-        }
-	}
-	double BER =e/length;
-	add_output_text_line("BER="+BER);
-	
-}
-
-public int[] data_buffer_bits(){
-	   if (init_done && (!file_loaded) && (!(d_filename==null))) {
-			
-			the_file_contents=read_data_from_file(d_filename); // Read file from plain file of samples in form of shorts
-			
-			// Store length of file in int[] of bits
-			String sizeofFile_s = Integer.toBinaryString(the_file_contents.length);
-			//add_output_text_line("size_b="+sizeofFile_s);
-			byte[] sizeofFile_b = sizeofFile_s.getBytes();
-			//sizeofFile = new int[8*sizeofFile_b.length];
-			sizeofFile = new int[length_sizeFile];
-			//sizeofFile = new int[128];
-			for (int k=0;k<sizeofFile_b.length;k++) {				
-     		    for (int k1=0; k1<8; k1++){
-			    // Turn each byte into its corresponding bits
-				sizeofFile [8*k+k1]=(sizeofFile_b[k] >> (7-k1) & 1);
-				}
-			}
-			
-			// Store name and extension, d_filename, in int[] of bits
-			byte[] titleofFile_b = (d_filename.getBytes());	
-			//titleofFile = new int[8*titleofFile_b.length];
-			titleofFile = new int[length_titleFile];
-			for (int k=0;k<titleofFile_b.length;k++) {				
-     		    for (int k1=0; k1<8; k1++){
-			    // Turn each byte into its corresponding bits
-				titleofFile [8*k+k1]=(titleofFile_b[k] >> (7-k1) & 1);
-				}
-			}
-			add_output_text_line("size of chosen file="+sizeofFile_s+"(length="+the_file_contents.length+")");
-			add_output_text_line("title of chosen file="+d_filename);
-            // Convert the data in file to bits
-			the_file_contents_bb=ByteBuffer.wrap(the_file_contents); // Wrapper to easier access content.
-			the_file_contents_bb.order(ByteOrder.LITTLE_ENDIAN);
-			file_loaded=true;
-			};
-			
-		if (file_loaded){
-			// Number of bits is 8 times the byte buffer length
-			numberBits = 8*the_file_contents.length;
-			
-			data_buffer_bits = new int[numberBits];
-			data_buffer = new byte [the_file_contents.length];
-
-		for (int k=0;k<the_file_contents.length;k++) {				
-			// Extract each byte from buffer
-			data_buffer[k]=the_file_contents_bb.get(k); 
-			
-		    for (int k1=0; k1<8; k1++){
-		    // Turn each byte into its corresponding bits
-			data_buffer_bits[8*k+k1]=(data_buffer[k] >> (7-k1) & 1);
-			};
-		}
-		};
-        // When the file is converted to bits, set state to send
-		state=SEND;
-		d_filename=null;
-		// Return bits
-		return data_buffer_bits;	
-}
-
-public String retrieveData(int[] received){
-	   //receivedBits = new int [numberBits];
-	   //the_file_contents=read_data_from_file(d_filename);
-	   byte[] data_buffer_received = new byte[received.length/8];
-	   int receivedBitstemp[] = new int [8];
-	   add_output_text_line("received length / 8 ="+((double) received.length/8)+"rx length"+received.length);
-	   //data_buffer_bits = new int[numberBits/8];
-	   state_two=FIRST;
-	   //data_buffer = new byte [the_file_contents.length];
-	   //Convert bits to bytes, note: LITTLE_ENDIAN
-	   switch(state_two){
-	   
-	   case FIRST:
-	   
-		   for (int k=0;k<received.length/8;k++){
-
-		   StringBuilder concatenated = new StringBuilder(8);
-		   for (int k1=0;k1<8;k1++){
-			   receivedBitstemp[k1]=received[8*k+k1];
-			   concatenated.append(receivedBitstemp[k1]);
-		   }
-		   String data_concatenated = concatenated.toString();
-		   // data_buffer_received[k] = (byte) data_temp[k];
-		     
-		   // Integer.valueOf(concatenated.toString());
-
-		   try {
-			   data_buffer_received[k]= (byte) Integer.parseInt(data_concatenated,2);
-			  } catch (NumberFormatException e) {
-				  add_output_text_line("Something went wrong. Please try again.");
-			     return null;
-			  }
-	   
-	   }
-
-	   state_two = 1;
-	   
-	   case SECOND:
-	   
-	    // Get title of file
-	    byte[] data_buffer_received_title = new byte[length_titleFile/8];
-	    for (int k=0;k<length_titleFile/8;k++){
-	    	if(data_buffer_received[k]!=0){
-		    data_buffer_received_title[k]=data_buffer_received[k];
-		    }
-	    }
-	    // Get size of file
-	    byte[] data_buffer_received_size = new byte[length_sizeFile/8];
-	    
-	    int counter=length_titleFile/8;
-	    //for (int k=64;k<80;k++){
-	    	while(data_buffer_received[counter]!=0){
-		    data_buffer_received_size[counter-length_titleFile/8]=data_buffer_received[counter];
-		    counter++;
-		    }
-	    //}
-	    String data_buffer_received_size_c="";
-	    for (int k=length_titleFile/8;k<counter;k++){
-		    data_buffer_received_size_c += (char) data_buffer_received_size[k-length_titleFile/8];
-		    }
-	    
-	    int size_i= Integer.parseInt(data_buffer_received_size_c,2);
-	    add_output_text_line("size of received="+size_i+"buffer rx size="+((double)(received.length/8)-(length_titleFile+length_sizeFile)/8));
-	    
-	    // Get data, remove size and title of file from the received buffer
-	    byte[] data_buffer_received_n = new byte[(received.length/8)-(length_titleFile+length_sizeFile)/8];
-	    for (int k=(length_titleFile+length_sizeFile)/8;k<(length_titleFile+length_sizeFile)/8+size_i;k++){ //received.length/8
-		  data_buffer_received_n[k-(length_titleFile+length_sizeFile)/8]=data_buffer_received[k];
-		}
-	    
-	    // Convert the buffer containing the title into characters
-	    String data_buffer_received_title_n="";
-	    String data_buffer_received_ext="";
-	    // Separate the title and the extension
-	    counter=0;
-	    // Get title of file
-	    while (data_buffer_received_title[counter]!=46){
-	    	 data_buffer_received_title_n += (char) data_buffer_received_title[counter];
-	         counter++;
-	    }
-	    // Get extension of file
-	    for(int l=counter+1;l<data_buffer_received_title.length;l++){
-	    	data_buffer_received_ext += (char) data_buffer_received_title[l];
-	    }
-	    add_output_text_line("title of received file="+data_buffer_received_title_n);
-	    /*
-	    String data_buffer_received_title_n = "";
-	    for (int i=0;i<data_buffer_received_title.length;i++){
-	      data_buffer_received_title_n += new String(Byte.toString(data_buffer_received_title[i]));
-	    }
-	    */
-	    
-	    
-	    //String sizeofFile_s = Integer.(the_file_contents.length);
-	    // Create file
-		FileOutputStream outFile;		
-		//d_filename="received";
-		File out = new File(Environment.getExternalStorageDirectory().getPath());
-		
-		// The file name to be written and stored
-		String filename_title = new String(out+"/"+data_buffer_received_title_n+"."+data_buffer_received_ext);
-		String filename_w_ext =new String(data_buffer_received_title_n+"."+data_buffer_received_ext);
-		
-		try {
-			File file = new File(out+"/"+data_buffer_received_title_n+"."+data_buffer_received_ext);
-			long fileLength = file.length();
-			//dataBuffer = new byte[(int) fileLength];
-			//dataFile = new FileInputStream(file);
-			outFile = new FileOutputStream(file);
-			outFile.write(data_buffer_received_n); // Write whole buffer
-			outFile.flush();
-			outFile.close();
-			//state=2;
-		} catch (IOException e) {
-			e.printStackTrace();
-		};
-		return filename_w_ext;
-	   }
-	   return null;
-}
-
-
-
-public void readFile(String received)
-{
-	SimpleInputFile in = new SimpleInputFile();
-	in.open(received);
-	String result = in.readString();
-	while(result != null){
-		add_output_text_line("line="+result);
-		result = in.readString();
-	}
-}
-
-public static int[] goertzel2(int f1, int f2, int f3, int f4, int n, double r[]){
+ public static int[] goertzel2(int f1, int f2, int f3, int f4, int n, double r[]){
 	 int fs=44100;
 	 
 	 double k1=0.5+ n*f1/fs;
@@ -1264,325 +801,438 @@ public static int[] goertzel2(int f1, int f2, int f3, int f4, int n, double r[])
 			    	decision[l]=Integer.parseInt("01");
 			    }
 	 }
-	 return decision;
+ 	 return decision;
 	 
+ }
+	 /*
+	 for(int l=0;l<aux;l++){
+		 if(Math.mag1[l]>mag2[l]){
+			 decision[l]=Integer.parseInt("00");
+		 }
+		 else if(mag1[l]>mag2[l]){
+			 decision[l]=0;
+		 }
+		 
+	 }
+	 */
+ 
+ 
+ public static int maxXcorr(double[] x,double[] y){
+	 double[] c= new double[x.length-y.length+2];
+	 double maxc=0;
+	 int index=0;
+	 for(int i = 0; i < x.length-y.length+1;i++){
+		 c[i]=0;
+		 for(int ii=0;ii<y.length-1;ii++){
+			 c[i]=c[i]+x[ii+i]*y[ii];
+		 }
+	 }
+	 
+	 for(int i=0;i<c.length;i++){
+		 if(c[i]>maxc){
+			 index=i;
+			 maxc=c[i];
+		 }
+	 }
+	 
+	 return index;
+ }
+ 
+ public static double[] FSK_mod(int f1,int f2, int[] r){
+ 	double[] signal = new double[no_samp_period*r.length];
+ 	
+ for(int i=0;i<r.length;i++){
+	 if(r[i]==1){
+		 for(int ii=i*no_samp_period;ii<no_samp_period*(i+1)-1;ii++){
+			 signal[ii]=cosf1[ii-i*no_samp_period];
+			  }
+	 }
+	 else{
+		 for(int ii=i*no_samp_period;ii<no_samp_period*(i+1)-1;ii++){
+			 signal[ii]= cosf2[ii-i*no_samp_period];
+		 }
+	 }
+	 
+ }
+return signal;
 }
 
-public static double[][] mod_const(int bit_stream[], int L,int levels){
-	double xi = 0;
-	double yi = 0;
-	double mconst[][] =new double[((int) ( (double) L/((double) 2*levels)*no_samp_period))][2];
-	int current_position=0;
-	
-	
-	for(int n=0;n<L-2*levels;n=n+2*levels){
-		xi=0;
-		yi=0;
-		for(int m=0;m<2*levels;m=m+2){
-			if(bit_stream[n+m]==0){      
-				xi=xi+(2^((m)/2));
-
-			}else{
-				xi=xi-(2^((m)/2));
-			}     
-			if(bit_stream[n+m+1]==0){
-				yi=yi+(2^((m)/2));
-
-			}else{
-				yi=yi-(2^((m)/2));
-			}
-
-
-		}
-
-		for(int k=0;k<no_samp_period;k++){
-			mconst[current_position+k][0]=1*xi;
-		}
-
-		for(int k=0;k<no_samp_period;k++){
-			mconst[current_position+k][1]=1*yi;
-		}
-
-		current_position=current_position+no_samp_period;
-	}
-		
-	
-	return mconst;
-	
-}
-
-public static double[][] mod_const_ts(int ts_stream[], int L,int levels){
-	double xi = 0;
-	double yi = 0;
-	double mconst[][] =new double[((int) ( (double) L/((double) 2*levels)*no_samp_period))][2];
-	int current_position=0;
-
-
-	for(int n=0;n<L-2*levels;n=n+2*levels){
-		xi=0;
-		yi=0;
-		for(int m=0;m<2*levels;m=m+2){
-			if(ts_stream[n+m]==0){      
-				xi=xi+(2^((m)/2));
-
-			}else{
-				xi=xi-(2^((m)/2));
-			}     
-			if(ts_stream[n+m+1]==0){
-				yi=yi+(2^((m)/2));
-
-			}else{
-				yi=yi-(2^((m)/2));
-			}
-
-
-		}
-
-
-		mconst[current_position][0]=1*xi;
-		mconst[current_position][1]=1*yi;
-		current_position++;
-	}
-
-	return mconst;	
-}
-
-public static double[] demod_const(double Hx[],double Hy[], int L,int levels){
-	double th_x;
-	double th_y;
-	double i_x;
-	double i_y;
-	double mdem[]=new double[Hx.length*2*levels]; 
-	int current_position=0;
-	for(int m=0;m<Hx.length;m++){
-		int sym[]=new int[2*levels];
-		int sym_pos=0;
-		th_x=0;th_y=0;
-		i_x=0;i_y=0;
-
-		for(int n=0;n<levels;n++){
-			if (Hy[m] > th_y ){ //compare with border of decision region
-				sym[sym_pos]=0;
-				i_y=1;
-			}else{
-				sym[sym_pos]=1;
-				i_y=-1;
-			}
-			sym_pos++;
-
-			if(Hx[m] > th_x){
-				sym[sym_pos]=0;
-				i_x=1;
-			}else{
-				sym[sym_pos]=1;
-				i_x=-1;
-			}
-			sym_pos++;
-			th_y = th_y + i_y*(2^(levels-n+1));
-			th_x = th_x + i_x*(2^(levels-n+1));
-		}
-
-		
-		for(int k=0;k<sym_pos;k++){
-			mdem[current_position+k]=sym[sym_pos-k-1];
-		}
-		current_position = current_position +sym_pos;
-		
-	}
-	return mdem;
-}
-
-@SuppressLint("NewApi")
-public static double[] MQAMmod(int f, int[] bits){
-	int L=bits.length+2*levels-(bits.length%(2*levels));
-	int bit_stream[] = new int[L];
-	bit_stream = Arrays.copyOfRange(bits, 0, bits.length);
-	double[] signal = new double[L/(2*levels)*no_samp_period];
-	double[][] mconst = mod_const(bit_stream, L, levels);
-
-	for(int i=0;i<L/(2*levels);i++){
-		for(int ii=i*no_samp_period;ii<no_samp_period*(i+1);ii++){
-			signal[ii]=mconst[ii][0]*cosf1[ii-i*no_samp_period]-mconst[ii][1]*sinf1[ii-i*no_samp_period];
-		}
-	}
+ public static double[] FSK_mod4(int f1,int f2, int f3, int f4, int[] r){
+	 	double[] signal = new double[no_samp_period*r.length];
+	 	
+        int current = 0;
+	    int[] r_two = new int [2];
+        
+	 	for(int i=0;i<r.length;i=i+2){
+	 		StringBuilder concatenated = new StringBuilder(2);
+	 		for(int k1=0;k1<2;k1++){
+	 			r_two[k1]=r[i+k1];
+	 			current++;
+	 			concatenated.append(r_two[k1]);
+	 		}
+		 	    
+		 	    String data_concatenated = concatenated.toString();
+	 		   int a=i/2;
+		 	   if(data_concatenated=="00"){
+					 for(int ii=a*no_samp_period;ii<no_samp_period*(a+1)-1;ii++){
+						 signal[ii]=cosf1[ii-a*no_samp_period];
+						  }
+				 }
+				 else if(data_concatenated=="01"){
+					 for(int ii=a*no_samp_period;ii<no_samp_period*(a+1)-1;ii++){
+						 signal[ii]= cosf2[ii-a*no_samp_period];
+					 }
+				 }
+				 else if(data_concatenated=="11"){
+					 for(int ii=a*no_samp_period;ii<no_samp_period*(a+1)-1;ii++){
+						 signal[ii]= cosf3[ii-a*no_samp_period];
+					 }
+				 }
+				 else if(data_concatenated=="10"){
+					 for(int ii=a*no_samp_period;ii<no_samp_period*(a+1)-1;ii++){
+						 signal[ii]= cosf4[ii-a*no_samp_period];
+					 }
+				 }
+	 		
+	 	}
 
 	return signal;
-
+	}
+ 
+ 
+ 
+ public static double[] FSK_mod_ts(int f1,int f2, int[] r){
+	 	double[] signal = new double[no_samp_period*r.length];
+	 	
+	 for(int i=0;i<r.length;i++){
+		 if(r[i]==1){
+			 for(int ii=i*no_samp_period;ii<no_samp_period*(i+1)-1;ii++){
+				 signal[ii]=cosf1ts[ii-i*no_samp_period];
+				  }
+		 }
+		 else{
+			 for(int ii=i*no_samp_period;ii<no_samp_period*(i+1)-1;ii++){
+				 signal[ii]= cosf2ts[ii-i*no_samp_period];
+			 }
+		 }
+		 
+	 }
+	return signal;
+	}
+ 
+ public static double[] initCosine(int f, int fs,int N){
+	 double cosf[]=new double[N];
+	 for(int k=0;k<N;k++){
+		 cosf[k] = Math.cos(2 * Math.PI * f * k / (fs));
+	 }
+	 return cosf;
+ }
+ 
+void send_data(){
+	int Nb = 5000;
+//	int[] bit_stream = new int[Nb];
+	int[] guard_stream = new int[gb_length];
+	int current_position=0;
+	
+	//int[] size_data_signal = new int [100];
+//	for(int i = 0;i<Nb;i++){
+//		bit_stream[i]=Math.round((float) Math.random());
+//		}
+//	bit_stream = load_from_file("data_test.txt",Nb);
+//	save_to_file("data.txt",bit_stream,Nb);
+	
+	double[] guard_signal = FSK_mod(f1,f2,guard_stream);
+	double[] data_signal = FSK_mod(f1,f2,bit_buffer);
+	double[] size_data_signal = FSK_mod(f1,f2,sizeofFile);
+	double[] title_data_signal = FSK_mod(f1,f2,titleofFile);
+	// Size of total signal to be transmitted
+	double[] tx_signal =new double[guard_signal.length+data_signal.length+ts_mod.length+bufferInt.length+size_data_signal.length+title_data_signal.length];
+	
+	for(int i=0;i<guard_signal.length;i++){
+		tx_signal[current_position]=guard_signal[i];
+		current_position++;
+	}
+	for(int i=0; i<ts_mod.length; i++){
+		tx_signal[current_position]=ts_mod[i];
+		current_position++;
+	}
+	for(int i=0; i<title_data_signal.length; i++){
+		tx_signal[current_position]=title_data_signal[i];
+		current_position++;
+	}
+	for(int i=0; i<size_data_signal.length; i++){
+		tx_signal[current_position]=size_data_signal[i];
+		current_position++;
+	}
+	for(int i=0;i<data_signal.length;i++){
+		tx_signal[current_position]=data_signal[i];
+		current_position++;
+	}
+	for(int i=current_position%bufferInt.length;i<bufferInt.length;i++){
+		tx_signal[current_position]=0;
+	}
+	
+	
+	final AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
+            mysampleRate, AudioFormat.CHANNEL_OUT_MONO,
+            AudioFormat.ENCODING_PCM_16BIT, bufferInt.length,
+            AudioTrack.MODE_STREAM);
+	
+	
+    for (int i = 0; i < tx_signal.length; i++) {
+        play(tx_signal[i], audioTrack);
+    }
+    add_output_text_line("done with buffering of transmission");
+    state=-1;
+    //add_output_text_line("tx_signal[1]"+tx_signal);
+   
 }
 
-public double[] modulateQAM_ts(int length,int f,int levels){
+public static void play(double in, AudioTrack at) {
+
+    // clip if outside [-1, +1]
+    if (in < -1.0) in = -1.0;
+    if (in > +1.0) in = +1.0;
+
+    // convert to bytes
+    short s = (short) ( MAX_16_BIT * in);
+    bufferInt[bufferSize++] = (byte) s;
+    bufferInt[bufferSize++] = (byte) (s >> 8);   // little Endian
+
+    // send to sound card if buffer is full        
+    if (bufferSize >= bufferInt.length ) {
+    	at.write(bufferInt, 0, bufferInt.length);
+        bufferSize = 0;
+        at.play();
+    }
+}
+
+public static short[] send_to_buffer(short[] rx_buffer, int length, short[] samples) {
+	//copy buffer
+	for (int i=0;i<length;i++){
+		rx_buffer[i+rx_ind]=samples[i];
+	}
+	if(rx_ind+2*length<=rx_buffer.length){
+	rx_ind=rx_ind+length;
+	//add_output_text_line("rx_ind"+rx_ind);
+	}else{
+		//add_output_text_line("reached the end of buffer");
+		trigger=2;
+		
+	}
+	return rx_buffer;
+}
+
+public double[] modulate_ts(int length, int f1, int f2){
+	
 	SimpleInputFile in = new SimpleInputFile();
-    in.open("ts2.txt"); 
-	final int [] ts = new int[length*2*levels];
+    in.open("ts.txt"); 
+	final int [] ts = new int[length];
 	   // Read file from sdcard
     for(int i=0; i<ts.length; i++){
            ts[i]=in.readInt(); 
     };
    //add_output_text_line("ts(0,1)="+ts[0]+""+ts[1]);
     in.close();
-	final double[] mod_ts =MQAMmod(f,ts);
-	ts_mod_const = mod_const_ts(ts,ts.length,levels);
+	final double[] mod_ts =FSK_mod_ts(f1,f2,ts);
 	
 	return mod_ts;
 }
-	
 
-@SuppressLint("NewApi")
-public int[] MQAMreceiver(int f,int n_sym,double[] r){
-	double Vx[]=new double[r.length];
-	double Vy[]=new double[r.length];
-	
-	for(int k=0;k<r.length;k++){
-		Vx[k]=r[k]*cosf1[k%no_samp_period];
-		Vy[k]=-r[k]*sinf1[k%no_samp_period];
+public void save_to_file(String filename,int[] data,int length){
+	SimpleOutputFile out = new SimpleOutputFile();
+	out.open(filename);
+	out.writeInt(length);
+	for(int i=0; i<data.length; i++){
+      out.writeInt(data[i]);
 	}
+	out.close();
 	
-	double Hx[] =LPfir(Vx);
-	double Hy[] =LPfir(Vy);
-	
-	int margin = 100;
-	int block_length = (margin+ts_length)*no_samp_period;
-	int n_samp = synchronize(Arrays.copyOfRange(Hx,0,block_length),Arrays.copyOfRange(Hy,0,block_length),
-							 ts_mod_const,no_samp_period);
-	double Hxs[] = null;
-	double Hys[] = null;
-	int current_position =0;
-	for(int k=n_samp;k<Hx.length;k=k+no_samp_period){
-		Hxs[current_position] = Hx[k];
-		Hys[current_position] = Hy[k];
-		current_position++;
-	}
-	
-	//start here
-	int decision[] =null;
-	// Phase estimation
-	//phase_estimation(r,ts_modQAM);
-	
-	return decision;
 	
 }
 
-public double[] LPfir(double[] input){
+public int[] load_from_file(String filename,int mode){
+	 
 	SimpleInputFile in = new SimpleInputFile();
-    in.open("coeffs.txt");
-    int length = in.readInt();
-	final double [] coeffs = new double[length];
-	   // Read file from sdcard
-    for(int i=0; i<coeffs.length; i++){
-           coeffs[i]=in.readDouble(); 
-    };
-    in.close();
-	
-    FIR filter =new FIR(coeffs);
-    double[] out = new double[input.length+length];
-    for(int k=0;k<input.length+length;k++){
-    	out[k] = filter.getOutputSample(input[k]);
-    }
+	in.open(filename);  
+	int[] length=new int[1];
+	length[0] = in.readInt(); 
+	if(mode==0) return length;
+    int[] in_values = new int[length[0]];
+   
     
-	return out;
+    // Read file from sdcard
+    for(int i=0; i<in_values.length; i++){
+           in_values[i]=in.readInt(); 
+    };
+    return in_values;
 	
 }
 
-public int synchronize(double Hx[],double Hy[],double[][] ts_const,int Q){
-	int n_samp=0;
-	Complex mconst[] = new Complex[Hx.length];
-	int current = 0;
-	for(int k=0;k<Hx.length;k++){
-		mconst[k] = new Complex(Hx[k],Hy[k]);
-	}
-	Complex tsconst[] = new Complex[ts_const.length*Q];
+public void compare(int decision[]){
+	int[] length_vec=load_from_file("data_test.txt",0);
+	float length = length_vec[0];
+	add_output_text_line("length of tx_seq"+length);
+	int tx_seq[];
+	tx_seq=load_from_file("data_test.txt",1);
+	float e = 0;
+	for (int a = 0; a < length; a++) {
 
-	for(int k=0;k<Q*ts_const.length;k++){
-		if(k%Q==0) {tsconst[k] = new Complex(ts_const[current][0],ts_const[current][1]); current++; 
-		}else{
-			tsconst[k] = new Complex(0,0);
-		}
+        if (tx_seq[a] == decision[a]) {
+            e=e;
+            } else {
+            e++;
+        }
 	}
-	Complex aux = new Complex(0,0);
-	double[] c= new double[mconst.length-tsconst.length+2];
-	double maxc=0;
+	double BER =e/length;
+	add_output_text_line("BER="+BER);
 	
-	for(int i = 0; i < mconst.length-tsconst.length+1;i++){
-		c[i]=0;
-		for(int ii=0;ii<tsconst.length-1;ii++){
-			aux = mconst[ii+i].times(tsconst[ii].conjugate());
-			c[i]=c[i]+aux.abs();
-		}
-	}
-
-	for(int i=0;i<c.length;i++){
-		if(c[i]>maxc){
-			n_samp=i;
-			maxc=c[i];
-		}
-	}
-
-	return n_samp;
-
 }
 
-public double[] create_window(int mode){ //MODE 0->RECT MODE 1->WINDOW.TXT
-	double[] window = new double[no_samp_period];
-	if(mode==0){ 
-		for(int k=0;k<window.length;k++){
-			window[k]=1;
-		}
-		return window;
-	}else{
-		if(mode==1){
-			SimpleInputFile in = new SimpleInputFile();
-			in.open("window.txt");
-			int length = in.readInt();
-			if(length==no_samp_period){
-				// Read file from sd card
-				for(int i=0; i<window.length; i++){
-					window[i]=in.readDouble(); 
+public int[] data_buffer_bits(){
+	   if (init_done && (!file_loaded) && (!(d_filename==null))) {
+			
+			the_file_contents=read_data_from_file(d_filename); // Read file from plain file of samples in form of shorts
+			
+			// Store length of file in int[] of bits
+			String sizeofFile_s = Integer.toBinaryString(the_file_contents.length);
+			byte[] sizeofFile_b = sizeofFile_s.getBytes();
+			//sizeofFile = new int[8*sizeofFile_b.length];
+			sizeofFile = new int[128];
+			//sizeofFile = new int[128];
+			for (int k=0;k<sizeofFile_b.length;k++) {				
+     		    for (int k1=0; k1<8; k1++){
+			    // Turn each byte into its corresponding bits
+				sizeofFile [8*k+k1]=(sizeofFile_b[k] >> (7-k1) & 1);
 				}
-				in.close();
-				return window;
-			}else{ create_window(0);}
+			}
+			// Store name and extension, d_filename, in int[] of bits
+			byte[] titleofFile_b = (d_filename.getBytes());	
+			//titleofFile = new int[8*titleofFile_b.length];
+			titleofFile = new int[128];
+			for (int k=0;k<titleofFile_b.length;k++) {				
+     		    for (int k1=0; k1<8; k1++){
+			    // Turn each byte into its corresponding bits
+				titleofFile [8*k+k1]=(titleofFile_b[k] >> (7-k1) & 1);
+				}
+			}
+			
+            // Convert the data in file to bits
+			the_file_contents_bb=ByteBuffer.wrap(the_file_contents); // Wrapper to easier access content.
+			the_file_contents_bb.order(ByteOrder.LITTLE_ENDIAN);
+			file_loaded=true;
+			};
+			
+		if (file_loaded){
+			// Number of bits is 8 times the byte buffer length
+			numberBits = 8*the_file_contents.length;
+			
+			data_buffer_bits = new int[numberBits];
+			data_buffer = new byte [the_file_contents.length];
+
+		for (int k=0;k<the_file_contents.length;k++) {				
+			// Extract each byte from buffer
+			data_buffer[k]=the_file_contents_bb.get(k); 
+			
+		    for (int k1=0; k1<8; k1++){
+		    // Turn each byte into its corresponding bits
+			data_buffer_bits[8*k+k1]=(data_buffer[k] >> (7-k1) & 1);
+			};
 		}
+		};
+        // When the file is converted to bits, set state to send
+		state=SEND;
+		d_filename=null;
+		// Return bits
+		return data_buffer_bits;	
+}
+
+public void retrieveData(int[] received){
+	   //receivedBits = new int [numberBits];
+	   //the_file_contents=read_data_from_file(d_filename);
+	   //int[] data_test = received;
+	   //double[] data_temp = null;
+	   //int m;
+	   byte[] data_buffer_received = new byte[received.length/8];
+	   int receivedBitstemp[] = new int [8];
+	   
+	   //data_buffer_bits = new int[numberBits/8];
+	   state_two=FIRST;
+	   //data_buffer = new byte [the_file_contents.length];
+	   //Convert bits to bytes, note: LITTLE_ENDIAN
+	   switch(state_two){
+	   case FIRST:
+	   for (int k=0;k<received.length/8;k++){
+	//	   m=7;
+		   //data_buffer[k] = (byte) ()
+		   StringBuilder concatenated = new StringBuilder(8);
+		   for (int k1=0;k1<8;k1++){
+			   receivedBitstemp[k1]=received[8*k+k1];
+			   concatenated.append(receivedBitstemp[k1]);
+			//   data_temp[k]=data_temp[k]+(receivedBitstemp[k+k1]*Math.pow(2, m));
+			//		   m=m-1;
+		   }
+		   String data_concatenated = concatenated.toString();
+		 //  data_buffer_received[k] = (byte) data_temp[k];
+
+		     
+		   //Integer.valueOf(concatenated.toString());
+		   
+		  // int receivedBitstemp_test = receivedBitstemp[0] receivedBitstemp[1] receivedBitstemp[2] ;
+		
+		   data_buffer_received[k]= (byte) Integer.parseInt(data_concatenated,2);
+	   }
+
+	   state_two = 1;
+	  
+	   case SECOND:
+	   
+	    // Get title of file
+	    byte[] data_buffer_received_title = new byte [16];
+	    for (int k=0;k<16;k++){
+		  data_buffer_received_title[k]=data_buffer_received[k];
+		}
+	   
+	    // Get data, remove size and title of file from the received buffer
+	    //byte[] data_buffer_received = null;
+	    for (int k=32;k<received.length/8;k++){
+		  data_buffer_received[k]=data_buffer_received[k];
+		}
+	   
+	    //String data_buffer_received_title = new String(data_buffer_received_title, "UTF-8");
+	    // Create file
+		FileOutputStream outFile;		
+		//d_filename="received";
+		File out = new File(Environment.getExternalStorageDirectory().getPath());
+		String filename_title = new String(out+"/"+data_buffer_received_title);
+		
+		try {
+			File file = new File(filename_title);
+			long fileLength = file.length();
+			//dataBuffer = new byte[(int) fileLength];
+			//dataFile = new FileInputStream(file);
+			outFile = new FileOutputStream(file);
+			outFile.write(data_buffer_received);
+			outFile.close();
+			//state=2;
+		} catch (IOException e) {
+			e.printStackTrace();
+		};
+		
+	   }
+}
+
+
+
+public void readFile(String received)
+{
+	SimpleInputFile in = new SimpleInputFile();
+	in.open(received);
+	String result = in.readString();
+	while(result != null){
+		add_output_text_line("line="+result);
+		result = in.readString();
 	}
-	return window;
-}
-
-public double[] phase_estimation(double[] r, double[][] mconst_ts){
-	// Initialize variables
-	int ref = 0;
-	int arg_sum = 0;
-	
-	Complex mconst[] = new Complex[r.length];
-	
-	for (int i=0;i<mconst_ts.length;i++){
-		int x = (r[i]*mconst_ts[i].conjugate());
-		argx = x.phase();
-		arg_sum=arg_sum+argx;
-		int aux = (r[i]/mconst_ts[i].abs()).abs();
-		ref = ref+aux;
-	}
-	
-	ref = ref/mconst_ts.length;
-	phihat = arg_sum/mconst_ts.length;
-	
-	return phihat; 
 }
 
 }
-
-//	
-//for(int i=0;i<r.length;i++){
-// if(r[i]==1){
-//	 for(int ii=i*no_samp_period;ii<no_samp_period*(i+1)-1;ii++){
-//		 signal[ii]=cosf1[ii-i*no_samp_period];
-//		  }
-// }
-// else{
-//	 for(int ii=i*no_samp_period;ii<no_samp_period*(i+1)-1;ii++){
-//		 signal[ii]= cosf2[ii-i*no_samp_period];
-//	 }
-// }
-// 
-//}
-//return signal;
-//}
-

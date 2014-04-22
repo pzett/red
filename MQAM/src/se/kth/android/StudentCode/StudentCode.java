@@ -1455,6 +1455,8 @@ public int[] MQAMreceiver(int f,int n_sym,double[] r){
 	
 	//start here
 	int decision[] =null;
+	// Phase estimation
+	//phase_estimation(r,ts_modQAM);
 	
 	return decision;
 	
@@ -1543,13 +1545,28 @@ public double[] create_window(int mode){
 	}
 	return window;
 }
-/*
-public double[] phase_estimation(double[][] mconst, double[][] mconst_ts){
+
+public double[] phase_estimation(double[] r, double[][] mconst_ts){
+	// Initialize variables
+	int ref = 0;
+	int arg_sum = 0;
 	
-	return phihat;
+	Complex mconst[] = new Complex[r.length];
+	
+	for (int i=0;i<mconst_ts.length;i++){
+		int x = (r[i]*mconst_ts[i].conjugate());
+		argx = x.phase();
+		arg_sum=arg_sum+argx;
+		int aux = (r[i]/mconst_ts[i].abs()).abs();
+		ref = ref+aux;
+	}
+	
+	ref = ref/mconst_ts.length;
+	phihat = arg_sum/mconst_ts.length;
+	
+	return phihat; 
 }
-*/
-//
+
 }
 
 //	

@@ -103,7 +103,7 @@ public class StudentCode extends StudentCodeBase {
     
     final static double[] cosf1 =initCosine(f1, mysampleRate,no_samp_period);
     final static double[] sinf1 =initSinusoid(f1, mysampleRate,no_samp_period);
-    final static int levels = 3;
+    final static int levels = 2;
     
    
     final static double[] cosf1ts =initCosine(ts_f1, mysampleRate,no_samp_period);
@@ -298,12 +298,12 @@ public class StudentCode extends StudentCodeBase {
         // Receiver part
     	case RECEIVED:
     	if(trigger==2){
-    		add_output_text_line("stopped listening, decoding");
+    		add_output_text_line("Stopped listening, decoding");
         	  //useSensors =  SOUND_OUT;
     		int margin = 20;
     		int block_length=2*levels*no_samp_period*(gb_length+ts_length+margin); //block to do crosscorrelation
     		double[] rx_bufferdouble = new double[rx_ind+4096-rx_ind%4096]; //buffer of doubles
-    		add_output_text_line("buffer length="+rx_buffer.length+"rx_ind+ = "+(rx_ind+4096-rx_ind%4096));
+    		//add_output_text_line("buffer length="+rx_buffer.length+"rx_ind+ = "+(rx_ind+4096-rx_ind%4096));
     		for (int j=0;j<rx_ind;j++){
     			rx_bufferdouble[j] = (double) rx_buffer[j]; //convert received samples to doubles.
     		}
@@ -316,7 +316,7 @@ public class StudentCode extends StudentCodeBase {
     		// int decision[]=goertzel(f1,f2,no_samp_period, Arrays.copyOfRange(rx_bufferdouble,index+no_samp_period*ts_length,rx_bufferdouble.length));
         	  
         	  //save decision to file
-        	  //save_to_file("decision.txt", decision,decision.length);
+        	  save_to_file("decision.txt", decision,decision.length);
         	  
         	  compare(decision);
         	  
@@ -327,7 +327,7 @@ public class StudentCode extends StudentCodeBase {
         	  //clear_output_text();
         	  
         	  //readFile("received.txt");
-        	  add_output_text_line("stopped listening and file decoded: opening:"+rx_filename);
+        	  add_output_text_line("File decoded. Opening:"+rx_filename);
         	  double R = 1 *((double) mysampleRate) /( (double) no_samp_period);
         	  add_output_text_line("achieved rate = "+R);
           	  trigger=-1;
@@ -959,12 +959,12 @@ public double[] modulate_ts(int length, int f1, int f2){
 	return mod_ts;
 }
 
-public void save_to_file(String filename,double[] data,int length){
+public void save_to_file(String filename,int[] data,int length){
 	SimpleOutputFile out = new SimpleOutputFile();
 	out.open(filename);
 	out.writeInt(length);
 	for(int i=0; i<length; i++){
-      out.writeDouble(data[i]);
+      out.writeInt(data[i]);
 	}
 	out.close();
 	
@@ -1012,7 +1012,7 @@ public void compare(int decision[]){
         }
 	}
 	double BER =e/max;
-	add_output_text_line("BER="+BER);
+	add_output_text_line("errors,BER="+e+"  ,  "+BER);
 	
 }
 
@@ -1206,7 +1206,7 @@ public void readFile(String received)
 	in.open(received);
 	String result = in.readString();
 	while(result != null){
-		add_output_text_line("line="+result);
+		//add_output_text_line("line="+result);
 		result = in.readString();
 	}
 }
@@ -1425,7 +1425,7 @@ public static double[] MQAMmod(int f, int[] bits){
 		L=bits.length;
 	}
 	int bit_stream[] = new int[L];
-	bit_stream = Arrays.copyOfRange(bits, 0, bits.length);
+	bit_stream = Arrays.copyOfRange(bits, 0, bit_stream.length);
 	double[] signal = new double[L/(2*levels)*no_samp_period];
 	double[][] mconst = mod_const(bit_stream, L, levels);
 
@@ -1497,8 +1497,7 @@ public int[] MQAMreceiver(int f,int n_sym,double[] r){
 		Hys[current_position] = Hy[k];
 		current_position++;
 	}
-add_output_text_line("current="+current_position);
-add_output_text_line("Hx.length="+Hx.length);	
+	
 	// Phase estimation
 	Complex mconst[] = phase_estimation(Arrays.copyOfRange(Hxs, 0, current_position),Arrays.copyOfRange(Hys, 0, current_position),ts_mod_const,current_position);
 	
@@ -1598,20 +1597,20 @@ public double[] create_window(int mode){ //MODE 0->RECT MODE 1->WINDOW.TXT
 
 public Complex[] phase_estimation(double[] Hx,double[] Hy, double[][] mconst_ts,int length){
 	
-	// Save input variables to file for debugging purposes
-	save_to_file("Hx.txt", Hx , length);
-	save_to_file("Hy.txt", Hy,  length);
-	double[] ts_real = new double [mconst_ts.length];
-	double[] ts_imag = new double [mconst_ts.length];
-	
-	// Extract real and imaginary parts of mconst_ts
-	for (int i=0;i<mconst_ts.length;i++){
-		ts_real[i] = mconst_ts[i][0]; 
-		ts_imag[i] = mconst_ts[i][1];
-	}
-	
-	save_to_file("ts_real.txt",ts_real,ts_real.length);
-	save_to_file("ts_imag.txt", ts_imag,ts_imag.length);
+//	// Save input variables to file for debugging purposes
+//	save_to_file("Hx.txt", Hx , length);
+//	save_to_file("Hy.txt", Hy,  length);
+//	double[] ts_real = new double [mconst_ts.length];
+//	double[] ts_imag = new double [mconst_ts.length];
+//	
+//	// Extract real and imaginary parts of mconst_ts
+//	for (int i=0;i<mconst_ts.length;i++){
+//		ts_real[i] = mconst_ts[i][0]; 
+//		ts_imag[i] = mconst_ts[i][1];
+//	}
+//	
+//	save_to_file("ts_real.txt",ts_real,ts_real.length);
+//	save_to_file("ts_imag.txt", ts_imag,ts_imag.length);
 	
 	// Initialize variables
 	double ref = 0;
@@ -1636,10 +1635,10 @@ public Complex[] phase_estimation(double[] Hx,double[] Hy, double[][] mconst_ts,
 	}
 
 	ref = ref/mconst_ts.length;
-	add_output_text_line("ref="+ref);
+	//add_output_text_line("ref="+ref);
 	
 	double phihat = arg_sum /(double) mconst_ts.length;
-	add_output_text_line("phihat="+phihat);
+	//add_output_text_line("phihat="+phihat);
 	
 	
 	
@@ -1658,16 +1657,16 @@ public Complex[] phase_estimation(double[] Hx,double[] Hy, double[][] mconst_ts,
 	
 	// Initialize real and imag
 	
-	double[] real2 = new double [mconst_sym.length];
-	double[] imag2 = new double [mconst_sym.length];
-	// Extract real and imaginary parts of the complex values
-	for (int i=0;i<mconst_sym.length;i++){
-		real2[i] = mconst_sym[i].re();
-		imag2[i] = mconst_sym[i].im();
-	}
+//	double[] real2 = new double [mconst_sym.length];
+//	double[] imag2 = new double [mconst_sym.length];
+//	// Extract real and imaginary parts of the complex values
+//	for (int i=0;i<mconst_sym.length;i++){
+//		real2[i] = mconst_sym[i].re();
+//		imag2[i] = mconst_sym[i].im();
+//	}
 	// Save output variables to file for debugging purposes
-	save_to_file("out_real.txt", real2,real2.length);
-	save_to_file("out_imag.txt", imag2,imag2.length);
+//	save_to_file("out_real.txt", real2,real2.length);
+//	save_to_file("out_imag.txt", imag2,imag2.length);
 	
 	return mconst_sym;
 	

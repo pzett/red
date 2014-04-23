@@ -227,7 +227,7 @@ public class StudentCode extends StudentCodeBase {
            // Specify type of window function, 0 -> rect window, 1 -> Hanning window 
            window =create_window(0);
            add_output_text_line("MQAM f="+f1);
-
+           d_filename = null;
     }
 
     // This is called when the user presses start in the menu, reinitialize any data if needed
@@ -300,20 +300,20 @@ public class StudentCode extends StudentCodeBase {
     	if(trigger==2){
     		add_output_text_line("stopped listening, decoding");
         	  //useSensors =  SOUND_OUT;
-    		int margin = 50;
-        	  int block_length=2*levels*no_samp_period*(gb_length+ts_length+margin); //block to do autocorrelation
-        	  double[] rx_bufferdouble = new double[rx_ind+4096-rx_ind%4096]; //buffer of doubles
-        	  add_output_text_line("buffer length="+rx_buffer.length+"rx_ind+ = "+(rx_ind+4096-rx_ind%4096));
-        	  for (int j=0;j<rx_ind;j++){
-        	      rx_bufferdouble[j] = (double) rx_buffer[j]; //convert received samples to doubles.
-        	  }
-        	  
-        	  
-        	  int index = maxXcorr(Arrays.copyOfRange(rx_bufferdouble, 0, block_length),ts_modQAM); //find where training sequence begins
-        	  
-        	  //send received data to decision algorithm, copy only data part
-        	  int decision[] = MQAMreceiver(f1,no_samp_period,Arrays.copyOfRange(rx_bufferdouble,index-margin,rx_bufferdouble.length));
-        	  // int decision[]=goertzel(f1,f2,no_samp_period, Arrays.copyOfRange(rx_bufferdouble,index+no_samp_period*ts_length,rx_bufferdouble.length));
+    		int margin = 20;
+    		int block_length=2*levels*no_samp_period*(gb_length+ts_length+margin); //block to do crosscorrelation
+    		double[] rx_bufferdouble = new double[rx_ind+4096-rx_ind%4096]; //buffer of doubles
+    		add_output_text_line("buffer length="+rx_buffer.length+"rx_ind+ = "+(rx_ind+4096-rx_ind%4096));
+    		for (int j=0;j<rx_ind;j++){
+    			rx_bufferdouble[j] = (double) rx_buffer[j]; //convert received samples to doubles.
+    		}
+
+
+    		int index = maxXcorr(Arrays.copyOfRange(rx_bufferdouble, 0, block_length),ts_modQAM); //find where training sequence begins
+
+    		//send received data to decision algorithm, copy only data part
+    		int decision[] = MQAMreceiver(f1,no_samp_period,Arrays.copyOfRange(rx_bufferdouble,index-margin,rx_bufferdouble.length));
+    		// int decision[]=goertzel(f1,f2,no_samp_period, Arrays.copyOfRange(rx_bufferdouble,index+no_samp_period*ts_length,rx_bufferdouble.length));
         	  
         	  //save decision to file
         	  save_to_file("decision.txt", decision,decision.length);
@@ -385,7 +385,8 @@ public class StudentCode extends StudentCodeBase {
           
     }
    
-    public void sound_in(long time, final short[] samples, int length)
+    @SuppressLint("NewApi")
+	public void sound_in(long time, final short[] samples, int length)
     { 
     	final int threshold = 100;
     	int continue_listening = 0; //variable to verify if transmission is done (detect only noise in buffer)
@@ -399,7 +400,7 @@ public class StudentCode extends StudentCodeBase {
     			clear_output_text();
     			trigger=1;
     			add_output_text_line("started listening");
-    			rx_buffer=send_to_buffer(rx_buffer,length-i-1,samples);
+    			rx_buffer=send_to_buffer(rx_buffer,length-i,Arrays.copyOfRange(samples, i, length));
     			break;
     	}
     	}
@@ -937,7 +938,7 @@ public  short[] send_to_buffer(short[] rx_buffer, int length, short[] samples) {
 	}else{
 		add_output_text_line("reached the end of buffer");
 		trigger=2;
-		
+		rx_ind=rx_ind+length;
 	}
 	return rx_buffer;
 }
@@ -995,7 +996,14 @@ public void compare(int decision[]){
 	int tx_seq[];
 	tx_seq=load_from_file("bits.txt",1);
 	float e = 0;
-	for (int a = 0; a < length; a++) {
+	float max = 0;
+	if(decision.length<length){
+		add_output_text_line("decision is smaller than transmitted !!");
+		max = decision.length; }
+	else{ max = length;
+	}
+	
+	for (int a = 0; a < max; a++) {
 
         if (tx_seq[a] == decision[a]) {
             e=e;
@@ -1003,7 +1011,7 @@ public void compare(int decision[]){
             e++;
         }
 	}
-	double BER =e/length;
+	double BER =e/max;
 	add_output_text_line("BER="+BER);
 	
 }
@@ -1290,21 +1298,21 @@ public static double[][] mod_const(int bit_stream[], int L,int levels){
 	int current_position=0;
 	
 	
-	for(int n=0;n<L-2*levels;n=n+2*levels){
+	for(int n=0;n<=L-2*levels;n=n+2*levels){
 		xi=0;
 		yi=0;
 		for(int m=0;m<2*levels;m=m+2){
 			if(bit_stream[n+m]==0){      
-				xi=xi+(2^((m)/2));
+				xi=xi+Math.pow(2, m/2);
 
 			}else{
-				xi=xi-(2^((m)/2));
+				xi=xi-Math.pow(2, m/2);
 			}     
 			if(bit_stream[n+m+1]==0){
-				yi=yi+(2^((m)/2));
+				yi=yi+Math.pow(2, m/2);
 
 			}else{
-				yi=yi-(2^((m)/2));
+				yi=yi-Math.pow(2, m/2);
 			}
 
 
@@ -1329,25 +1337,25 @@ public static double[][] mod_const(int bit_stream[], int L,int levels){
 public static double[][] mod_const_ts(int ts_stream[], int L,int levels){
 	double xi = 0;
 	double yi = 0;
-	double mconst[][] =new double[((int) ( (double) L/((double) 2*levels)*no_samp_period))][2];
+	double mconst[][] =new double[((int) ( (double) L/((double) 2*levels)))][2];
 	int current_position=0;
 
 
-	for(int n=0;n<L-2*levels;n=n+2*levels){
+	for(int n=0;n<=L-2*levels;n=n+2*levels){
 		xi=0;
 		yi=0;
 		for(int m=0;m<2*levels;m=m+2){
 			if(ts_stream[n+m]==0){      
-				xi=xi+(2^((m)/2));
+				xi=xi+Math.pow(2, m/2);
 
 			}else{
-				xi=xi-(2^((m)/2));
+				xi=xi-Math.pow(2, m/2);
 			}     
 			if(ts_stream[n+m+1]==0){
-				yi=yi+(2^((m)/2));
+				yi=yi+Math.pow(2, m/2);
 
 			}else{
-				yi=yi-(2^((m)/2));
+				yi=yi-Math.pow(2, m/2);
 			}
 
 
@@ -1369,7 +1377,8 @@ public int[] demod_const(Complex[] H, int levels){
 	double i_y;
 	int mdem[]=new int[H.length*2*levels]; 
 	int current_position=0;
-	for(int m=0;m<H.length;m++){
+	
+	for(int m=0;m<H.length-1;m++){
 		int sym[]=new int[2*levels];
 		int sym_pos=0;
 		th_x=0;th_y=0;
@@ -1393,15 +1402,15 @@ public int[] demod_const(Complex[] H, int levels){
 				i_x=-1;
 			}
 			sym_pos++;
-			th_y = th_y + i_y*(2^(levels-n+1));
-			th_x = th_x + i_x*(2^(levels-n+1));
+			th_y = th_y + i_y*Math.pow(2, levels-(n+1));
+			th_x = th_x + i_x*Math.pow(2, levels-(n+1));
 		}
 
 		
 		for(int k=0;k<sym_pos;k++){
 			mdem[current_position+k]=sym[sym_pos-k-1];
 		}
-		current_position = current_position +sym_pos;
+		current_position = current_position + sym_pos;
 		
 	}
 	return mdem;
@@ -1409,7 +1418,12 @@ public int[] demod_const(Complex[] H, int levels){
 
 @SuppressLint("NewApi")
 public static double[] MQAMmod(int f, int[] bits){
-	int L=bits.length+2*levels-(bits.length%(2*levels));
+	int L;
+	if(bits.length%(2*levels) != 0){
+		L=bits.length+2*levels-(bits.length%(2*levels));}
+	else{
+		L=bits.length;
+	}
 	int bit_stream[] = new int[L];
 	bit_stream = Arrays.copyOfRange(bits, 0, bits.length);
 	double[] signal = new double[L/(2*levels)*no_samp_period];
@@ -1435,7 +1449,7 @@ public double[] modulateQAM_ts(int length,int f,int levels){
     };
    //add_output_text_line("ts(0,1)="+ts[0]+""+ts[1]);
     in.close();
-	final double[] mod_ts =MQAMmod(f,ts);
+	final double[] mod_ts = MQAMmod(f,ts);
 	ts_mod_const = mod_const_ts(ts,ts.length,levels);
 	
 	return mod_ts;
@@ -1455,22 +1469,22 @@ public int[] MQAMreceiver(int f,int n_sym,double[] r){
 	double Hx[] =LPfir(Vx);
 	double Hy[] =LPfir(Vy);
 	
-	int margin = 100;
+	int margin = 200;
 	int block_length = (margin+ts_length)*no_samp_period;
 	int n_samp = synchronize(Arrays.copyOfRange(Hx,0,block_length),Arrays.copyOfRange(Hy,0,block_length),
 							 ts_mod_const,no_samp_period);
-	double Hxs[] = null;
-	double Hys[] = null;
+	double Hxs[] = new double[Hx.length];
+	double Hys[] = new double[Hx.length];
 	int current_position =0;
 	for(int k=n_samp;k<Hx.length;k=k+no_samp_period){
 		Hxs[current_position] = Hx[k];
 		Hys[current_position] = Hy[k];
 		current_position++;
 	}
-	
+add_output_text_line("current="+current_position);
 	
 	// Phase estimation
-	Complex mconst[] = phase_estimation(Hxs,Hys,ts_mod_const);
+	Complex mconst[] = phase_estimation(Arrays.copyOfRange(Hxs, 0, current_position),Arrays.copyOfRange(Hys, 0, current_position),ts_mod_const);
 	
 	int decision[] = demod_const(mconst,levels);
 	
@@ -1491,10 +1505,10 @@ public double[] LPfir(double[] input){
     };
     in.close();
 	double ext_input[]=new double[input.length+length];
-	ext_input = Arrays.copyOfRange(input, 0, input.length);
+	ext_input = Arrays.copyOfRange(input, 0, ext_input.length);
     FIR filter =new FIR(coeffs);
     double[] out = new double[input.length+length];
-    for(int k=0;k<input.length+length;k++){
+    for(int k=0;k<input.length+length-1;k++){
     	out[k] = filter.getOutputSample(ext_input[k]);
     }
     
@@ -1570,10 +1584,13 @@ public Complex[] phase_estimation(double[] Hx,double[] Hy, double[][] mconst_ts)
 	double ref = 0;
 	double arg_sum = 0;
 	Complex mconst[] = new Complex[mconst_ts.length];
-	Complex rx[]=new Complex[mconst_ts.length];
+	Complex rx[]=new Complex[Hx.length];
 
 	for(int k=0;k<mconst_ts.length;k++){
 		mconst[k] = new Complex(mconst_ts[k][0],mconst_ts[k][1]);
+	}
+
+	for(int k=0;k<Hx.length;k++){		
 		rx[k] = new Complex(Hx[k],Hy[k]);
 	}
 
@@ -1589,13 +1606,14 @@ public Complex[] phase_estimation(double[] Hx,double[] Hy, double[][] mconst_ts)
 	double phihat = arg_sum /(double) mconst_ts.length;
 	Complex complex_exp =new Complex(Math.cos(-phihat),Math.sin(-phihat));
 	Complex aux = new Complex(ref,0);
+	Complex mconst_sym[] = new Complex[Hx.length-mconst_ts.length+1];
+	
+	for(int k=mconst_ts.length;k<Hx.length;k++){
 
-	for(int k=0;k<mconst_ts.length;k++){
-
-		mconst[k] = mconst[k].times(complex_exp);
-		mconst[k] = mconst[k].divides(aux);
+		mconst_sym[k-mconst_ts.length] = rx[k].times(complex_exp);
+		mconst_sym[k-mconst_ts.length] = rx[k].divides(aux);
 	}
-	return mconst;
+	return mconst_sym;
 
 	
 }

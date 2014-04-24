@@ -93,7 +93,7 @@ public class StudentCode extends StudentCodeBase {
     final double inputxcorr[]={1,5.6,2.4,9.69, 15.7};
     final double inputycorr[]={1,2};
     
-     final static int no_samp_period = 30;
+     final static int no_samp_period = 8;
     final static int f1=mysampleRate/5;
     final static int f2=7350;
     final static int f3=mysampleRate/7;
@@ -120,8 +120,8 @@ public class StudentCode extends StudentCodeBase {
     public static int trigger = 0; //0 -> listening and waiting 1 -> listening and received 2 -> done listening -1 ->processed
     private static short[] rx_buffer;
     private static int rx_ind=0;
-    private static int ts_length = 100;
-    private static int gb_length = 100;
+    private static int ts_length = 1000;
+    private static int gb_length = 500;
     private static double[] ts_mod;
     private static double[][] ts_mod_const;
     private static double[] window;
@@ -215,16 +215,17 @@ public class StudentCode extends StudentCodeBase {
            
            int length_rxb =no_samp_period*2000*10;
            rx_buffer = new short[length_rxb];
+        // Specify type of window function, 0 -> rect window, 1 -> Hanning window 
            window =create_window(1);
                      
-           ts_mod = modulate_ts(ts_length,ts_f1,ts_f2);
+           //ts_mod = modulate_ts(ts_length,ts_f1,ts_f2);
            ts_modQAM = modulateQAM_ts(ts_length,f1,levels);
           
            atp = new AudioTrack(AudioManager.STREAM_MUSIC,
                    mysampleRate, AudioFormat.CHANNEL_OUT_MONO,
                    AudioFormat.ENCODING_PCM_16BIT, bufferInt.length,
                    AudioTrack.MODE_STREAM);
-           // Specify type of window function, 0 -> rect window, 1 -> Hanning window 
+           
            
            add_output_text_line("MQAM f="+f1);
            d_filename = null;
@@ -308,9 +309,10 @@ public class StudentCode extends StudentCodeBase {
     			rx_bufferdouble[j] = (double) rx_buffer[j]; //convert received samples to doubles.
     		}
 
-
-    		//rx_bufferdouble = EQ(rx_bufferdouble);
-
+    		//save_to_file("rx_b.txt",rx_bufferdouble,rx_bufferdouble.length);
+    		
+    		rx_bufferdouble = EQ(rx_bufferdouble);
+    		//save_to_file("rx_a.txt",rx_bufferdouble,rx_bufferdouble.length);
     		int index = maxXcorr(Arrays.copyOfRange(rx_bufferdouble, 0, block_length),ts_modQAM); //find where training sequence begins
 
     		//send received data to decision algorithm, copy only data part
@@ -318,7 +320,7 @@ public class StudentCode extends StudentCodeBase {
     		// int decision[]=goertzel(f1,f2,no_samp_period, Arrays.copyOfRange(rx_bufferdouble,index+no_samp_period*ts_length,rx_bufferdouble.length));
 
     		//save decision to file
-    		save_to_file("decision.txt", decision,decision.length);
+    	//	save_to_file("decision.txt", (double) decision,decision.length);
 
     		compare(decision);
 
@@ -944,12 +946,12 @@ public double[] modulate_ts(int length, int f1, int f2){
 	return mod_ts;
 }
 
-public void save_to_file(String filename,int[] data,int length){
+public void save_to_file(String filename,double[] data,int length){
 	SimpleOutputFile out = new SimpleOutputFile();
 	out.open(filename);
 	out.writeInt(length);
 	for(int i=0; i<length; i++){
-      out.writeInt(data[i]);
+      out.writeDouble(data[i]);
 	}
 	out.close();
 	
@@ -1455,7 +1457,7 @@ public int[] MQAMreceiver(int f,int n_sym,double[] r){
 	double Hx[] =LPfir(Vx);
 	double Hy[] =LPfir(Vy);
 	
-	int margin = 20;
+	int margin = 25;
 	int block_length = (margin+ts_length)*no_samp_period;
 	
 	
@@ -1476,7 +1478,7 @@ public int[] MQAMreceiver(int f,int n_sym,double[] r){
 	add_output_text_line("n_samp ="+n_samp);
 	double Hxs[] = new double[Hx.length];
 	double Hys[] = new double[Hx.length];
-	int current_position =0;
+	int current_position = 0;
 	for(int k=n_samp;k<Hx.length;k=k+no_samp_period){
 		Hxs[current_position] = Hx[k];
 		Hys[current_position] = Hy[k];
@@ -1488,10 +1490,11 @@ public int[] MQAMreceiver(int f,int n_sym,double[] r){
 	Complex mconst[] = phase_estimation(Arrays.copyOfRange(Hxs, 0, current_position),Arrays.copyOfRange(Hys, 0, current_position),ts_mod_const,current_position);
 	double theta = 0;
 	double Ts = (double) no_samp_period / (double) mysampleRate;
-	int batch_length = (int) Math.floor(0.05/Ts);
+	int batch_length = (int) Math.floor(0.5/Ts);
     int[] decision = new int[mconst.length*2*levels];
 	current_position = 0;
 	add_output_text_line("b_l="+batch_length);
+	
 	for(int k = 0;k<(int) Math.floor((double) mconst.length/(double) batch_length );k++){
 		Complex[] mconst_phi =new Complex[batch_length];
 		Complex complex_exp =new Complex(Math.cos(-theta),Math.sin(-theta));
@@ -1530,7 +1533,7 @@ public int[] MQAMreceiver(int f,int n_sym,double[] r){
 @SuppressLint("NewApi")
 public double[] LPfir(double[] input){
 	SimpleInputFile in = new SimpleInputFile();
-    in.open("coeffs.txt");
+    in.open("coeffs8.txt");
     int length = in.readInt();
 	final double [] coeffs = new double[length];
 	   // Read file from sdcard
@@ -1599,7 +1602,7 @@ public double[] create_window(int mode){ //MODE 0->RECT MODE 1->WINDOW.TXT
 	}else{
 		if(mode==1){
 			SimpleInputFile in = new SimpleInputFile();
-			in.open("window.txt");
+			in.open("window8.txt");
 			int length = in.readInt();
 			if(length==no_samp_period){
 				// Read file from sd card
@@ -1693,7 +1696,7 @@ public Complex[] phase_estimation(double[] Hx,double[] Hy, double[][] mconst_ts,
 
 public double[] EQ(double[] input){
 	SimpleInputFile in = new SimpleInputFile();
-    in.open("eqcoeffs.txt");
+    in.open("eqcoeffs8.txt");
     
 	final double [] a = new double[3];
 	final double [] b = new double[3];
@@ -1747,7 +1750,7 @@ public double offset_estimation(Complex[] mconst,int[] bit_stream){
 		arg_sum=arg_sum+argx;
 		
 	}
-	arg_sum = arg_sum/current_position;
+	arg_sum = arg_sum / current_position;
 	return arg_sum;
 	
 }	

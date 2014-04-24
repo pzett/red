@@ -17,6 +17,8 @@ public class IIR {
 	double[] getOutput(double[] input) {
 		double[] output = new double[input.length];
 		double[] aux = new double[2];
+		delayLine[0]=0;
+		delayLine[1]=0;
 		for(int n = 0;n<input.length;n++){
 			output[n] = b[0]*input[n]+delayLine[0];
 			aux[0]=delayLine[0];

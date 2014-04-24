@@ -8,7 +8,7 @@
 package se.kth.android.StudentCode;
 
 import java.io.BufferedReader;
-
+import java.lang.System;
 import java.util.ArrayList;
 //import java.util.ArrayList;
 //import java.util.Arrays;
@@ -103,7 +103,7 @@ public class StudentCode extends StudentCodeBase {
     
     final static double[] cosf1 =initCosine(f1, mysampleRate,no_samp_period);
     final static double[] sinf1 =initSinusoid(f1, mysampleRate,no_samp_period);
-    final static int levels = 2;
+    final static int levels = 3;
     
    
     final static double[] cosf1ts =initCosine(ts_f1, mysampleRate,no_samp_period);
@@ -121,7 +121,7 @@ public class StudentCode extends StudentCodeBase {
     private static short[] rx_buffer;
     private static int rx_ind=0;
     private static int ts_length = 100;
-    private static int gb_length = 30;
+    private static int gb_length = 100;
     private static double[] ts_mod;
     private static double[][] ts_mod_const;
     private static double[] window;
@@ -215,7 +215,7 @@ public class StudentCode extends StudentCodeBase {
            
            int length_rxb =no_samp_period*2000*10;
            rx_buffer = new short[length_rxb];
-          
+           window =create_window(1);
                      
            ts_mod = modulate_ts(ts_length,ts_f1,ts_f2);
            ts_modQAM = modulateQAM_ts(ts_length,f1,levels);
@@ -225,7 +225,7 @@ public class StudentCode extends StudentCodeBase {
                    AudioFormat.ENCODING_PCM_16BIT, bufferInt.length,
                    AudioTrack.MODE_STREAM);
            // Specify type of window function, 0 -> rect window, 1 -> Hanning window 
-           window =create_window(0);
+           
            add_output_text_line("MQAM f="+f1);
            d_filename = null;
     }
@@ -308,39 +308,39 @@ public class StudentCode extends StudentCodeBase {
     			rx_bufferdouble[j] = (double) rx_buffer[j]; //convert received samples to doubles.
     		}
 
-    		
-    		rx_bufferdouble = EQ(rx_bufferdouble);
-    		
+
+    		//rx_bufferdouble = EQ(rx_bufferdouble);
+
     		int index = maxXcorr(Arrays.copyOfRange(rx_bufferdouble, 0, block_length),ts_modQAM); //find where training sequence begins
 
     		//send received data to decision algorithm, copy only data part
     		int decision[] = MQAMreceiver(f1,no_samp_period,Arrays.copyOfRange(rx_bufferdouble,index-margin,rx_bufferdouble.length));
     		// int decision[]=goertzel(f1,f2,no_samp_period, Arrays.copyOfRange(rx_bufferdouble,index+no_samp_period*ts_length,rx_bufferdouble.length));
-        	  
-        	  //save decision to file
-        	  save_to_file("decision.txt", decision,decision.length);
-        	  
-        	  compare(decision);
-        	  
-        	  // Convert binary stream back into a file
-        	  //rx_filename = retrieveData(decision);
-        	  
-        	  
-        	  //clear_output_text();
-        	  
-        	  //readFile("received.txt");
-        	  add_output_text_line("File decoded. Opening:"+rx_filename);
-        	  double R = 1 *((double) mysampleRate) /( (double) no_samp_period);
-        	  add_output_text_line("achieved rate = "+R);
-          	  trigger=-1;
-        	  state=-1;
-        	//  d_filename = null;
-        	  
-          }
+
+    		//save decision to file
+    		save_to_file("decision.txt", decision,decision.length);
+
+    		compare(decision);
+
+    		// Convert binary stream back into a file
+    		//rx_filename = retrieveData(decision);
+
+
+    		//clear_output_text();
+
+    		//readFile("received.txt");
+    		add_output_text_line("File decoded. Opening:"+rx_filename);
+    		double R = 2*levels *((double) mysampleRate) /( (double) no_samp_period);
+    		add_output_text_line("achieved rate = "+R);
+    		trigger=-1;
+    		state=-1;
+    		//  d_filename = null;
+
+    	}
     	}
 
     };       
-     
+
    
   
 
@@ -1363,7 +1363,7 @@ public int[] demod_const(Complex[] H, int levels){
 	int mdem[]=new int[H.length*2*levels]; 
 	int current_position=0;
 	
-	for(int m=0;m<H.length-1;m++){
+	for(int m=0;m<H.length;m++){
 		int sym[]=new int[2*levels];
 		int sym_pos=0;
 		th_x=0;th_y=0;
@@ -1416,7 +1416,7 @@ public static double[] MQAMmod(int f, int[] bits){
 
 	for(int i=0;i<L/(2*levels);i++){
 		for(int ii=i*no_samp_period;ii<no_samp_period*(i+1);ii++){
-			signal[ii]=mconst[ii][0]*cosf1[ii-i*no_samp_period]-mconst[ii][1]*sinf1[ii-i*no_samp_period];
+			signal[ii]=window[ii-i*no_samp_period]*mconst[ii][0]*cosf1[ii-i*no_samp_period]-window[ii-i*no_samp_period]*mconst[ii][1]*sinf1[ii-i*no_samp_period];
 		}
 	}
 
@@ -1455,7 +1455,7 @@ public int[] MQAMreceiver(int f,int n_sym,double[] r){
 	double Hx[] =LPfir(Vx);
 	double Hy[] =LPfir(Vy);
 	
-	int margin = 30;
+	int margin = 20;
 	int block_length = (margin+ts_length)*no_samp_period;
 	
 	
@@ -1482,15 +1482,49 @@ public int[] MQAMreceiver(int f,int n_sym,double[] r){
 		Hys[current_position] = Hy[k];
 		current_position++;
 	}
-	
+
 	// Phase estimation
+	
 	Complex mconst[] = phase_estimation(Arrays.copyOfRange(Hxs, 0, current_position),Arrays.copyOfRange(Hys, 0, current_position),ts_mod_const,current_position);
+	double theta = 0;
+	double Ts = (double) no_samp_period / (double) mysampleRate;
+	int batch_length = (int) Math.floor(0.05/Ts);
+    int[] decision = new int[mconst.length*2*levels];
+	current_position = 0;
+	add_output_text_line("b_l="+batch_length);
+	for(int k = 0;k<(int) Math.floor((double) mconst.length/(double) batch_length );k++){
+		Complex[] mconst_phi =new Complex[batch_length];
+		Complex complex_exp =new Complex(Math.cos(-theta),Math.sin(-theta));
+		for(int q=(k*batch_length);q<(k+1)*batch_length;q++){
+			mconst_phi[q-k*batch_length]=mconst[q];
+			mconst_phi[q-k*batch_length]=mconst_phi[q-k*batch_length].times(complex_exp);
+		}
+		int decision_aux[] = demod_const(mconst_phi,levels);
+		
+		// copies an array from the specified source array
+		System.arraycopy(decision_aux, 0, decision, current_position , decision_aux.length);
+		current_position = current_position + decision_aux.length;
+		theta = offset_estimation(mconst_phi,decision_aux);
+		
+	}
+
+
+	int k=(int) Math.floor((double) mconst.length/ (double) batch_length);
+	Complex[] mconst_phi =new Complex[mconst.length-(k)*batch_length];
+	Complex complex_exp =new Complex(Math.cos(-theta),Math.sin(-theta));
+	for(int q=(k)*batch_length; q < mconst.length ;q++){
+		mconst_phi[q-(k)*batch_length] = mconst[q];
+		mconst_phi[q-(k)*batch_length]=mconst_phi[q-(k)*batch_length].times(complex_exp);
+	}
+	int decision_aux[] = demod_const(mconst_phi,levels);
+	// copies an array from the specified source array
+	System.arraycopy(decision_aux, 0, decision, current_position, decision_aux.length);
+	//current_position = current_position + decision_aux.length;
 	
-	int decision[] = demod_const(mconst,levels);
-	
-	
+
+	//	int decision[] = demod_const(mconst,levels);
 	return decision;
-	
+
 }
 
 @SuppressLint("NewApi")
@@ -1536,7 +1570,7 @@ public int synchronize(double Hx[],double Hy[],double[][] ts_const,int Q){
 	double[] c= new double[mconst.length-tsconst.length+2];
 	double maxc=0;
 	
-	for(int i = 0; i < mconst.length-tsconst.length+1;i++){
+	for(int i = 0; i < mconst.length-tsconst.length;i++){
 		c[i]=0;
 		for(int ii=0;ii<tsconst.length;ii++){
 			aux = mconst[ii+i].times(tsconst[ii].conjugate());
@@ -1679,6 +1713,44 @@ public double[] EQ(double[] input){
 	
 }
 
+public double offset_estimation(Complex[] mconst,int[] bit_stream){
+	Complex[] demconst = new Complex[bit_stream.length/(2*levels)];
+	double xi;
+	double yi;
+	int current_position = 0;
+	for(int n=0;n<=bit_stream.length-2*levels;n=n+2*levels){
+		xi=0;
+		yi=0;
+		for(int m=0;m<2*levels;m=m+2){
+			if(bit_stream[n+m]==0){      
+				xi=xi+Math.pow(2, m/2);
+
+			}else{
+				xi=xi-Math.pow(2, m/2);
+			}     
+			if(bit_stream[n+m+1]==0){
+				yi=yi+Math.pow(2, m/2);
+
+			}else{
+				yi=yi-Math.pow(2, m/2);
+			}
+
+
+		}
+		demconst[current_position]= new Complex(xi,yi); current_position++;
+}
+	
+	double arg_sum = 0;
+	for (int i=0;i<current_position;i++){
+		Complex x = mconst[i].times(demconst[i].conjugate());
+		double argx = x.phase();
+		arg_sum=arg_sum+argx;
+		
+	}
+	arg_sum = arg_sum/current_position;
+	return arg_sum;
+	
+}	
 
 
 }

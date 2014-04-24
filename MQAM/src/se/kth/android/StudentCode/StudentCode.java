@@ -308,7 +308,9 @@ public class StudentCode extends StudentCodeBase {
     			rx_bufferdouble[j] = (double) rx_buffer[j]; //convert received samples to doubles.
     		}
 
-
+    		
+    		rx_bufferdouble = EQ(rx_bufferdouble);
+    		
     		int index = maxXcorr(Arrays.copyOfRange(rx_bufferdouble, 0, block_length),ts_modQAM); //find where training sequence begins
 
     		//send received data to decision algorithm, copy only data part
@@ -768,24 +770,7 @@ private double [] square(double [] in_values) {
 	 return index;
  }
  
-// public static double[] FSK_mod(int f1,int f2, int[] r){
-// 	double[] signal = new double[no_samp_period*r.length];
-// 	
-// for(int i=0;i<r.length;i++){
-//	 if(r[i]==1){
-//		 for(int ii=i*no_samp_period;ii<no_samp_period*(i+1)-1;ii++){
-//			 signal[ii]=cosf1[ii-i*no_samp_period];
-//			  }
-//	 }
-//	 else{
-//		 for(int ii=i*no_samp_period;ii<no_samp_period*(i+1)-1;ii++){
-//			 signal[ii]= cosf2[ii-i*no_samp_period];
-//		 }
-//	 }
-//	 
-// }
-//return signal;
-//}
+
  
  public static double[] FSK_mod_ts(int f1,int f2, int[] r){
 	 	double[] signal = new double[no_samp_period*r.length];
@@ -1672,62 +1657,31 @@ public Complex[] phase_estimation(double[] Hx,double[] Hy, double[][] mconst_ts,
 	
 }
 
+public double[] EQ(double[] input){
+	SimpleInputFile in = new SimpleInputFile();
+    in.open("eqcoeffs.txt");
+    
+	final double [] a = new double[3];
+	final double [] b = new double[3];
+	   // Read file from sdcard
+    for(int i=0; i<b.length; i++){
+           b[i]=in.readDouble(); 
+    };
+    for(int i=0; i<a.length; i++){
+        a[i]=in.readDouble(); 
+ };
+    in.close();
+	IIR filter =new IIR(b,a);
+    double[] out = filter.getOutput(input);
+   
+    
+	return out;
+	
 }
 
-//public Complex[] phase_estimation(double[] Hx,double[] Hy, double[][] mconst_ts){
-//	// Initialize variables
-//	double ref = 0;
-//	double arg_sum = 0;
-//	Complex mconst[] = new Complex[mconst_ts.length];
-//	Complex rx[]=new Complex[Hx.length];
-//
-//	for(int k=0;k<mconst_ts.length;k++){
-//		mconst[k] = new Complex(mconst_ts[k][0],mconst_ts[k][1]);
-//	}
-//
-//	for(int k=0;k<Hx.length;k++){		
-//		rx[k] = new Complex(Hx[k],Hy[k]);
-//	}
-//
-//	for (int i=0;i<mconst_ts.length;i++){
-//		Complex x = rx[i].times(mconst[i].conjugate());
-//		double argx = x.phase();
-//		arg_sum=arg_sum+argx;
-//		double aux = (rx[i].abs())/(mconst[i].abs());
-//		ref = ref+aux;
-//	}
-//
-//	ref = ref/mconst_ts.length;
-//	double phihat = arg_sum /(double) mconst_ts.length;
-//	Complex complex_exp =new Complex(Math.cos(-phihat),Math.sin(-phihat));
-//	Complex aux = new Complex(ref,0);
-//	Complex mconst_sym[] = new Complex[Hx.length-mconst_ts.length+1];
-//	
-//	for(int k=mconst_ts.length;k<Hx.length;k++){
-//
-//		mconst_sym[k-mconst_ts.length] = rx[k].times(complex_exp);
-//		mconst_sym[k-mconst_ts.length] = rx[k].divides(aux);
-//	}
-//	return mconst_sym;
-//
-//	
-//}
-//
-//}
-////	
-////for(int i=0;i<r.length;i++){
-//// if(r[i]==1){
-////	 for(int ii=i*no_samp_period;ii<no_samp_period*(i+1)-1;ii++){
-////		 signal[ii]=cosf1[ii-i*no_samp_period];
-////		  }
-//// }
-//// else{
-////	 for(int ii=i*no_samp_period;ii<no_samp_period*(i+1)-1;ii++){
-////		 signal[ii]= cosf2[ii-i*no_samp_period];
-////	 }
-//// }
-//// 
-////}
-////return signal;
-////}
+
+
+}
+
+
 

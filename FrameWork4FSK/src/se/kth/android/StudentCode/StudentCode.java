@@ -844,7 +844,8 @@ void send_data(){
             mysampleRate, AudioFormat.CHANNEL_OUT_MONO,
             AudioFormat.ENCODING_PCM_16BIT, bufferInt.length,
             AudioTrack.MODE_STREAM);
-	
+	double time_tx= (tx_signal.length) /((double) mysampleRate);
+	add_output_text_line("Transmission will take "+Math.round(time_tx*100)/100.00+ " seconds.");
     for (int i = 0; i < tx_signal.length; i++) {
         play(tx_signal[i], audioTrack);
     }

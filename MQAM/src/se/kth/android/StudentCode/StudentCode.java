@@ -1144,10 +1144,13 @@ public String retrieveData(int[] received){
 	    	 data_buffer_received_title_n += (char) data_buffer_received_title[counter];
 	         counter++;
 	    }
-	    // Get extension of file
-	    for(int l=counter+1;l<data_buffer_received_title.length;l++){
-	    	data_buffer_received_ext += (char) data_buffer_received_title[l];
-	    }
+		// Get extension of file
+		int index_t = counter+1;
+		while(data_buffer_received_title[index_t]!=0){
+			data_buffer_received_ext += (char) data_buffer_received_title[index_t];
+			index_t++;
+		}
+	    
 	    add_output_text_line("title of received file="+data_buffer_received_title_n);
 	    /*
 	    String data_buffer_received_title_n = "";

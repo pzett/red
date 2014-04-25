@@ -141,6 +141,8 @@ public class StudentCode extends StudentCodeBase {
 	final int WRITE = 2;
 	final int FIRST = 0;
 	final int SECOND = 1;
+	
+	// variable keeping in track of any errors that might occur
 	boolean error = false;
     
 	final int length_titleFile = 1024;
@@ -1122,8 +1124,10 @@ public String retrieveData(int[] received){
 		}
 		
 		// Get extension of file
-		for(int l=counter+1;l<data_buffer_received_title.length;l++){
-			data_buffer_received_ext += (char) data_buffer_received_title[l];
+		int index_t = counter+1;
+		while(data_buffer_received_title[index_t]!=0){
+			data_buffer_received_ext += (char) data_buffer_received_title[index_t];
+			index_t++;
 		}
 		
 		//add_output_text_line("Title of received file = "+data_buffer_received_title_n);

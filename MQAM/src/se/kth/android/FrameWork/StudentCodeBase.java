@@ -902,7 +902,7 @@ public class SimpleOutputFile
     public void open(String name)
     {
         String fileName = new 
-String(Environment.getExternalStorageDirectory() + "/" + name);
+String(Environment.getExternalStorageDirectory()+"/"+"data"+"/"+name);
         stream = null;
         try {
             stream = new BufferedWriter(new FileWriter(fileName));

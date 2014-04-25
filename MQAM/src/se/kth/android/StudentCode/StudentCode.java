@@ -94,7 +94,7 @@ public class StudentCode extends StudentCodeBase {
     final double inputycorr[]={1,2};
     
      final static int no_samp_period = 8;
-    final static int f1=mysampleRate/5;
+    final static int f1=10000;
     final static int f2=7350;
     final static int f3=mysampleRate/7;
     final static int f4=mysampleRate/8;
@@ -104,7 +104,7 @@ public class StudentCode extends StudentCodeBase {
     final static double[] cosf1 =initCosine(f1, mysampleRate,no_samp_period);
     final static double[] sinf1 =initSinusoid(f1, mysampleRate,no_samp_period);
     final static int levels = 3;
-    
+    final static int A = 1;
    
     final static double[] cosf1ts =initCosine(ts_f1, mysampleRate,no_samp_period);
     final static double[] cosf2ts =initCosine(ts_f2, mysampleRate,no_samp_period);
@@ -120,8 +120,8 @@ public class StudentCode extends StudentCodeBase {
     public static int trigger = 0; //0 -> listening and waiting 1 -> listening and received 2 -> done listening -1 ->processed
     private static short[] rx_buffer;
     private static int rx_ind=0;
-    private static int ts_length = 1000;
-    private static int gb_length = 500;
+    private static int ts_length = 504;
+    private static int gb_length = 804;
     private static double[] ts_mod;
     private static double[][] ts_mod_const;
     private static double[] window;
@@ -309,7 +309,7 @@ public class StudentCode extends StudentCodeBase {
     			rx_bufferdouble[j] = (double) rx_buffer[j]; //convert received samples to doubles.
     		}
 
-    		//save_to_file("rx_b.txt",rx_bufferdouble,rx_bufferdouble.length);
+    		save_d_to_file("rx_signal.txt",rx_bufferdouble,rx_bufferdouble.length);
     		
     		rx_bufferdouble = EQ(rx_bufferdouble);
     		//save_to_file("rx_a.txt",rx_bufferdouble,rx_bufferdouble.length);
@@ -320,7 +320,7 @@ public class StudentCode extends StudentCodeBase {
     		// int decision[]=goertzel(f1,f2,no_samp_period, Arrays.copyOfRange(rx_bufferdouble,index+no_samp_period*ts_length,rx_bufferdouble.length));
 
     		//save decision to file
-    	//	save_to_file("decision.txt", (double) decision,decision.length);
+    		save_i_to_file("decision.txt", decision,decision.length);
 
     		compare(decision);
 
@@ -813,10 +813,10 @@ void send_data(){
 	// Generate a random stream of bits for testing
 	
 	SimpleInputFile in = new SimpleInputFile();
-    in.open("bits.txt"); 
+    in.open("data_test.txt"); 
     int Nb=in.readInt();
     int[] bit_stream = new int[Nb];
-	int[] guard_stream = new int[gb_length*2*levels];
+	
 	
 	
 	//int[] size_data_signal = new int [100];
@@ -827,15 +827,21 @@ void send_data(){
 	bit_stream[i]=in.readInt();
 	}
 	in.close();
+	in.open("gb_test.txt");
+	gb_length = in.readInt();
+	add_output_text_line("gb_length="+gb_length);
+	int[] guard_stream = new int[gb_length*2*levels];
 	for(int i = 0;i<gb_length*2*levels;i++){
-		guard_stream[i]=Math.round((float) Math.random());
+		guard_stream[i]=in.readInt();
+		//guard_stream[i]=Math.round((float) Math.random());
 	}
-	
+	in.close();
 //	bit_stream = load_from_file("data_test.txt",Nb);
 //	save_to_file("data.txt",bit_stream,Nb);
 	
 	// Modulate the guard and data signal
-	double[] guard_signal = MQAMmod(f1,guard_stream);
+	double[] guard_signal =  MQAMmod(f1 , guard_stream);
+	
 	double[] data_signal = MQAMmod(f1,bit_stream);
 	
 //	double[] size_data_signal = FSK_mod(f1,f2,sizeofFile);
@@ -880,26 +886,43 @@ void send_data(){
             AudioTrack.MODE_STREAM);
 	double max = 0;
 	for(int i = 0;i<tx_signal.length;i++){
-		if(tx_signal[i]>max) max=tx_signal[i];
+		if(Math.abs(tx_signal[i])>max) max=Math.abs(tx_signal[i]);
+	}
+	short[] tx_signal_s=new short[tx_signal.length];
+	save_d_to_file("tx_signal.txt",tx_signal,tx_signal.length);
+	for (int i = 0; i < tx_signal.length; i++) {
+		tx_signal[i]=tx_signal[i]/max;
+
+		//tx_signal_s[i]=(short) ( tx_signal[i]*Math.pow(2, 14));
+
+		play(tx_signal[i], audioTrack);
 	}
 	
 	
-    for (int i = 0; i < tx_signal.length; i++) {
-    	tx_signal[i]=tx_signal[i]/max;
-        play(tx_signal[i], audioTrack);
-    }
-    add_output_text_line("done with buffering of transmission");
-    state=-1;
-    d_filename = null;
-    //add_output_text_line("tx_signal[1]"+tx_signal);
-   
+//	byte[] sound_contents = double2Byte(tx_signal);
+//	ByteBuffer sound_contents_bb;
+//	short[] buffer1 = new short[sound_contents.length/8];
+//	sound_contents_bb = ByteBuffer.wrap(sound_contents);
+//	sound_contents_bb.order(ByteOrder.LITTLE_ENDIAN);
+//	for (int i1=0;i1<sound_contents.length/8;i1++) {                        
+//		buffer1[i1]=sound_contents_bb.getShort(); // Create a buffer of shorts
+//	};
+//	 sound_out(tx_signal_s,tx_signal_s.length); // Send buffer to player    
+
+	
+	add_output_text_line("done with buffering of transmission");
+	state=-1;
+	d_filename = null;
+	//add_output_text_line("tx_signal[1]"+tx_signal);
+
+
 }
 
-public static void play(double in, AudioTrack at) {
+public void play(double in, AudioTrack at) {
 
     // clip if outside [-1, +1]
-    if (in < -1.0) in = -1.0;
-    if (in > +1.0) in = +1.0;
+    if (in < -1.0){ add_output_text_line("I am clipping"); in = -1.0;}
+    if (in > +1.0){  add_output_text_line("I am clipping"); in = +1.0;}
 
     // convert to bytes
     short s = (short) ( MAX_16_BIT * in);
@@ -908,6 +931,7 @@ public static void play(double in, AudioTrack at) {
 
     // send to sound card if buffer is full        
     if (bufferSize >= bufferInt.length ) {
+    	
     	at.write(bufferInt, 0, bufferInt.length);
         bufferSize = 0;
         at.play();
@@ -946,12 +970,37 @@ public double[] modulate_ts(int length, int f1, int f2){
 	return mod_ts;
 }
 
-public void save_to_file(String filename,double[] data,int length){
+public void save_d_to_file(String filename,double[] data,int length){
 	SimpleOutputFile out = new SimpleOutputFile();
 	out.open(filename);
 	out.writeInt(length);
 	for(int i=0; i<length; i++){
       out.writeDouble(data[i]);
+	}
+	out.close();
+	
+	
+}
+
+public void save_i_to_file(String filename,int[] data,int length){
+	SimpleOutputFile out = new SimpleOutputFile();
+	out.open(filename);
+	out.writeInt(length);
+	for(int i=0; i<length; i++){
+      out.writeInt(data[i]);
+	}
+	out.close();
+	
+	
+}
+
+public void save_c_to_file(String filename,Complex[] data,int length){
+	SimpleOutputFile out = new SimpleOutputFile();
+	out.open(filename);
+	out.writeInt(length);
+	for(int i=0; i<length; i++){
+      out.writeDouble(data[i].re());
+      out.writeDouble(data[i].im());
 	}
 	out.close();
 	
@@ -977,11 +1026,11 @@ public int[] load_from_file(String filename,int mode){
 }
 
 public void compare(int decision[]){
-	int[] length_vec=load_from_file("bits.txt",0);
+	int[] length_vec=load_from_file("data_test.txt",0);
 	float length = length_vec[0];
 	add_output_text_line("length of tx_seq"+length);
 	int tx_seq[];
-	tx_seq=load_from_file("bits.txt",1);
+	tx_seq=load_from_file("data_test.txt",1);
 	float e = 0;
 	float max = 0;
 	if(decision.length<length){
@@ -1293,16 +1342,16 @@ public static double[][] mod_const(int bit_stream[], int L,int levels){
 		yi=0;
 		for(int m=0;m<2*levels;m=m+2){
 			if(bit_stream[n+m]==0){      
-				xi=xi+Math.pow(2, m/2);
+				xi=xi+A*Math.pow(2, m/2);
 
 			}else{
-				xi=xi-Math.pow(2, m/2);
+				xi=xi-A*Math.pow(2, m/2);
 			}     
 			if(bit_stream[n+m+1]==0){
-				yi=yi+Math.pow(2, m/2);
+				yi=yi+A*Math.pow(2, m/2);
 
 			}else{
-				yi=yi-Math.pow(2, m/2);
+				yi=yi-A*Math.pow(2, m/2);
 			}
 
 
@@ -1336,16 +1385,16 @@ public static double[][] mod_const_ts(int ts_stream[], int L,int levels){
 		yi=0;
 		for(int m=0;m<2*levels;m=m+2){
 			if(ts_stream[n+m]==0){      
-				xi=xi+Math.pow(2, m/2);
+				xi=xi+A*Math.pow(2, m/2);
 
 			}else{
-				xi=xi-Math.pow(2, m/2);
+				xi=xi-A*Math.pow(2, m/2);
 			}     
 			if(ts_stream[n+m+1]==0){
-				yi=yi+Math.pow(2, m/2);
+				yi=yi+A*Math.pow(2, m/2);
 
 			}else{
-				yi=yi-Math.pow(2, m/2);
+				yi=yi-A*Math.pow(2, m/2);
 			}
 
 
@@ -1392,8 +1441,8 @@ public int[] demod_const(Complex[] H, int levels){
 				i_x=-1;
 			}
 			sym_pos++;
-			th_y = th_y + i_y*Math.pow(2, levels-(n+1));
-			th_x = th_x + i_x*Math.pow(2, levels-(n+1));
+			th_y = th_y + A*i_y*Math.pow(2, levels-(n+1));
+			th_x = th_x + A*i_x*Math.pow(2, levels-(n+1));
 		}
 
 		
@@ -1407,7 +1456,7 @@ public int[] demod_const(Complex[] H, int levels){
 }
 
 @SuppressLint("NewApi")
-public static double[] MQAMmod(int f, int[] bits){
+public  double[] MQAMmod(int f, int[] bits){
 	int L;
 	if(bits.length%(2*levels) != 0){
 		L=bits.length+2*levels-(bits.length%(2*levels));}
@@ -1418,10 +1467,17 @@ public static double[] MQAMmod(int f, int[] bits){
 	bit_stream = Arrays.copyOfRange(bits, 0, bit_stream.length);
 	double[] signal = new double[L/(2*levels)*no_samp_period];
 	double[][] mconst = mod_const(bit_stream, L, levels);
-
+	
+	Complex[] tx_const = new Complex[mconst.length];
+	for(int k=0;k<mconst.length;k++){
+		tx_const[k]=new Complex(mconst[k][0],mconst[k][1]);
+	}
+	save_c_to_file("tx_const.txt",tx_const,tx_const.length);
+	
 	for(int i=0;i<L/(2*levels);i++){
 		for(int ii=i*no_samp_period;ii<no_samp_period*(i+1);ii++){
 			signal[ii]=window[ii-i*no_samp_period]*mconst[ii][0]*cosf1[ii-i*no_samp_period]-window[ii-i*no_samp_period]*mconst[ii][1]*sinf1[ii-i*no_samp_period];
+			
 		}
 	}
 
@@ -1431,7 +1487,11 @@ public static double[] MQAMmod(int f, int[] bits){
 
 public double[] modulateQAM_ts(int length,int f,int levels){
 	SimpleInputFile in = new SimpleInputFile();
-    in.open("ts2.txt"); 
+	
+    in.open("ts_test.txt"); 
+    length = in.readInt();
+    ts_length=length;
+    add_output_text_line("ts_length="+ts_length);
 	final int [] ts = new int[length*2*levels];
 	   // Read file from sdcard
     for(int i=0; i<ts.length; i++){
@@ -1451,11 +1511,11 @@ public int[] MQAMreceiver(int f,int n_sym,double[] r){
 	
 	double Vx[]=new double[r.length];
 	double Vy[]=new double[r.length];
-	
+	int a=0;
 	for(int k=0;k<r.length;k++){
 		Vx[k]=r[k]*cosf1[k%no_samp_period];
 		Vy[k]=-r[k]*sinf1[k%no_samp_period];
-	}
+		}
 	
 	double Hx[] =LPfir(Vx);
 	double Hy[] =LPfir(Vy);
@@ -1491,9 +1551,11 @@ public int[] MQAMreceiver(int f,int n_sym,double[] r){
 	// Phase estimation
 	
 	Complex mconst[] = phase_estimation(Arrays.copyOfRange(Hxs, 0, current_position),Arrays.copyOfRange(Hys, 0, current_position),ts_mod_const,current_position);
+	save_c_to_file("mconst.txt",mconst,mconst.length);
+	Complex[] demconst = new Complex[mconst.length];
 	double theta = 0;
 	double Ts = (double) no_samp_period / (double) mysampleRate;
-	int batch_length = (int) Math.floor(0.5/Ts);
+	int batch_length = (int) Math.floor(0.1/Ts);
     int[] decision = new int[mconst.length*2*levels];
 	current_position = 0;
 	add_output_text_line("b_l="+batch_length);
@@ -1506,7 +1568,7 @@ public int[] MQAMreceiver(int f,int n_sym,double[] r){
 			mconst_phi[q-k*batch_length]=mconst_phi[q-k*batch_length].times(complex_exp);
 		}
 		int decision_aux[] = demod_const(mconst_phi,levels);
-		
+		System.arraycopy(mconst_phi, 0, demconst, k*batch_length , batch_length);
 		// copies an array from the specified source array
 		System.arraycopy(decision_aux, 0, decision, current_position , decision_aux.length);
 		current_position = current_position + decision_aux.length;
@@ -1521,12 +1583,13 @@ public int[] MQAMreceiver(int f,int n_sym,double[] r){
 	for(int q=(k)*batch_length; q < mconst.length ;q++){
 		mconst_phi[q-(k)*batch_length] = mconst[q];
 		mconst_phi[q-(k)*batch_length]=mconst_phi[q-(k)*batch_length].times(complex_exp);
+		demconst[q] = new Complex(0,0);
 	}
 	int decision_aux[] = demod_const(mconst_phi,levels);
 	// copies an array from the specified source array
 	System.arraycopy(decision_aux, 0, decision, current_position, decision_aux.length);
 	//current_position = current_position + decision_aux.length;
-	
+	save_c_to_file("demconst.txt",demconst,demconst.length);
 
 	//	int decision[] = demod_const(mconst,levels);
 	return decision;
@@ -1646,10 +1709,12 @@ public Complex[] phase_estimation(double[] Hx,double[] Hy, double[][] mconst_ts,
 	for(int k=0;k<mconst_ts.length;k++){
 		mconst[k] = new Complex(mconst_ts[k][0],mconst_ts[k][1]);
 	}
+	
 
 	for(int k=0;k<length;k++){		
 		rx[k] = new Complex(Hx[k],Hy[k]);
 	}
+	save_c_to_file("mconst_before.txt",rx,length);
 
 	for (int i=0;i<mconst_ts.length;i++){
 		Complex x = rx[i].times(mconst[i].conjugate());
@@ -1729,16 +1794,16 @@ public double offset_estimation(Complex[] mconst,int[] bit_stream){
 		yi=0;
 		for(int m=0;m<2*levels;m=m+2){
 			if(bit_stream[n+m]==0){      
-				xi=xi+Math.pow(2, m/2);
+				xi=xi+A*Math.pow(2, m/2);
 
 			}else{
-				xi=xi-Math.pow(2, m/2);
+				xi=xi-A*Math.pow(2, m/2);
 			}     
 			if(bit_stream[n+m+1]==0){
-				yi=yi+Math.pow(2, m/2);
+				yi=yi+A*Math.pow(2, m/2);
 
 			}else{
-				yi=yi-Math.pow(2, m/2);
+				yi=yi-A*Math.pow(2, m/2);
 			}
 
 
@@ -1758,8 +1823,27 @@ public double offset_estimation(Complex[] mconst,int[] bit_stream){
 	
 }	
 
+public static final byte[] double2Byte(double[] inData) {
+    int j=0;
+    int length=inData.length;
+    byte[] outData=new byte[length*8];
+    for (int i=0;i<length;i++) {
+      long data=Double.doubleToLongBits(inData[i]);
+      outData[j++]=(byte)(data>>>56);
+      outData[j++]=(byte)(data>>>48);
+      outData[j++]=(byte)(data>>>40);
+      outData[j++]=(byte)(data>>>32);
+      outData[j++]=(byte)(data>>>24);
+      outData[j++]=(byte)(data>>>16);
+      outData[j++]=(byte)(data>>>8);
+      outData[j++]=(byte)(data>>>0);
+    }
+    return outData;
+  }
 
 }
+
+
 
 
 

@@ -15,7 +15,8 @@ else
 end
 
 
-window=gausswin(nr_samples_bit); %define window.
+%window=gausswin(nr_samples_bit); %define window.
+window=rectwin(nr_samples_bit); %define window.
 %trunc = 1;
 %window = root_raised_cosine((nr_samples_bit-1)/(2*trunc),0.22,trunc);
 delta=10;

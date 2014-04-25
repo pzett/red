@@ -141,6 +141,7 @@ public class StudentCode extends StudentCodeBase {
 	final int WRITE = 2;
 	final int FIRST = 0;
 	final int SECOND = 1;
+	boolean error = false;
     
 	final int length_titleFile = 1024;
 	final int length_sizeFile  = 1024;
@@ -225,7 +226,8 @@ public class StudentCode extends StudentCodeBase {
     public void stop()      
     {
     	// Gives user option to open file when it has been received
-  	    if(side==1) open_text_file(rx_filename);
+    	error = false;
+    	if(side==1) open_text_file(rx_filename);
         trigger=-1;
         rx_ind=0;
         clear_output_text();
@@ -257,7 +259,14 @@ public class StudentCode extends StudentCodeBase {
     	// Convert file to be sent into a binary stream stored in bit_buffer
     	case GETDATA:
     		bit_buffer = data_buffer_bits();
-    	    break;
+    		
+    		// If the file is too big start again
+    		if (error == true){
+    			trigger=-1;
+    			state=-1;
+    			d_filename = null;
+    		}
+    		break;
     	    
     	// Send data stored in bit_buffer
     	case SEND:  
@@ -277,7 +286,7 @@ public class StudentCode extends StudentCodeBase {
         	  }
         	  
         	  // Equalizer
-        	  rx_bufferdouble = EQ(rx_bufferdouble);
+        	  //rx_bufferdouble = EQ(rx_bufferdouble);
         	  
         	  int index = maxXcorr(Arrays.copyOfRange(rx_bufferdouble, 1, block_length),ts_mod); //find where training sequence begins
         
@@ -290,6 +299,13 @@ public class StudentCode extends StudentCodeBase {
         	  // Convert binary stream back into a file
         	  rx_filename = retrieveData(decision);
         	  
+        	  // If an error occurs start again
+        	  if (error == true){
+        		  trigger=-1;
+            	  state=-1;
+            	  d_filename = null;
+        	  }
+        	  else{
         	  // File is finished transferring
         	  add_output_text_line("File is received. If you would like to open "+rx_filename+" now, press the menu button and select open.");
         	  
@@ -301,7 +317,7 @@ public class StudentCode extends StudentCodeBase {
           	  trigger=-1;
         	  state=-1;
         	  d_filename = null;
-
+        	  }
           }
     	}
 
@@ -949,6 +965,9 @@ public int[] data_buffer_bits(){
 		int sizeofFile_i = Integer.valueOf(the_file_contents.length);
 		
 		if (sizeofFile_i>10240){
+			add_output_text_line("The file is too big (over 10kB). Please press stop and send a smaller file.");
+			error = true;
+			return null;
 		}
 
 		byte[] sizeofFile_b = sizeofFile_s.getBytes();
@@ -1038,8 +1057,9 @@ public String retrieveData(int[] received){
 				// Converts eight bits at a time into their corresponding byte value
 				data_buffer_received[k]= (byte) Integer.parseInt(data_concatenated,2);
 			} catch (NumberFormatException e) {
-				e.getStackTrace();
+				//e.printStackTrace();
 				add_output_text_line("Something went wrong. Please try again.");
+				error = true;
 				return null;
 			}
 
@@ -1072,7 +1092,15 @@ public String retrieveData(int[] received){
 		}
 		
 		// Turn size of file into a byte
-		int size_i= Integer.parseInt(data_buffer_received_size_c,2);
+		int size_i;
+		try {
+			size_i= Integer.parseInt(data_buffer_received_size_c,2);
+		} catch (NumberFormatException e) {
+			//e.printStackTrace();
+			add_output_text_line("Something went wrong. Please try again.");
+			error = true;
+			return null;
+		}
 		
 		// Get data, remove size and title of file from the received buffer
 		byte[] data_buffer_received_n = new byte[(received.length/8)-(length_titleFile+length_sizeFile)/8];

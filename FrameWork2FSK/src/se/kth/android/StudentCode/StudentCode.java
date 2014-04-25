@@ -51,6 +51,7 @@ import com.google.zxing.qrcode.detector.Detector;
 
 import se.kth.android.FrameWork.FrameWork;
 import se.kth.android.FrameWork.StudentCodeBase;
+import se.kth.android.FrameWork.StudentCodeBase.SimpleInputFile;
 
 
 import android.annotation.SuppressLint;
@@ -275,6 +276,9 @@ public class StudentCode extends StudentCodeBase {
         	  for (int j=0;j<rx_ind;j++) {
         	      rx_bufferdouble[j] = (double)rx_buffer[j]; // Convert received samples to doubles
         	  }
+        	  
+        	  // Equalizer
+        	  rx_bufferdouble = EQ(rx_bufferdouble);
         	  
         	  int index = maxXcorr(Arrays.copyOfRange(rx_bufferdouble, 0, block_length),ts_mod); //find where training sequence begins
         	  
@@ -1254,5 +1258,26 @@ public static double[] FSK_mod4(int f1,int f2, int f3, int f4, int[] r){
 	return signal;
 }
 
+// Equalizer
+public double[] EQ(double[] input){
+	
+	SimpleInputFile in = new SimpleInputFile();
+	in.open("eqcoeffs8.txt");
+
+	final double [] a = new double[3];
+	final double [] b = new double[3];
+	// Read file from sdcard
+	for(int i=0; i<b.length; i++){
+		b[i]=in.readDouble(); 
+	};
+	for(int i=0; i<a.length; i++){
+		a[i]=in.readDouble(); 
+	};
+	in.close();
+	IIR filter =new IIR(b,a);
+	double[] out = filter.getOutput(input);
+	return out;
+
+}
 
 }

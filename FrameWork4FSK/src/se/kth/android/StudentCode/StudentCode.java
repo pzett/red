@@ -1133,7 +1133,7 @@ public String retrieveData(int[] received){
 		// Get data, remove size and title of file from the received buffer
 		//byte[] data_buffer_received_n = new byte[(received.length/8)-(length_titleFile+length_sizeFile)/8];
 		byte[] data_buffer_received_n = new byte[(received.length/8)-(length_titleFile+length_sizeFile)/8];
-		for (int k=(length_titleFile+length_sizeFile)/8;k<(length_titleFile+length_sizeFile)/8+size_i;k++){ //received.length/8
+		for (int k=(length_titleFile+length_sizeFile)/8;k<(length_titleFile+length_sizeFile)/8+size_i;k++){
 			data_buffer_received_n[k-(length_titleFile+length_sizeFile)/8]=data_buffer_received[k];
 		}
 		

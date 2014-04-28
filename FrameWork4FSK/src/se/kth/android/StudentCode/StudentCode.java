@@ -142,7 +142,7 @@ public class StudentCode extends StudentCodeBase {
 	final int FIRST = 0;
 	final int SECOND = 1;
 	
-	// variable keeping in track of any errors that might occur
+	// Variable keeping in track of any errors that might occur
 	boolean error = false;
     
 	final int length_titleFile = 1024;
@@ -315,7 +315,7 @@ public class StudentCode extends StudentCodeBase {
         	  double R = 2 *((double) mysampleRate) / ((double) no_samp_period);
         	  
         	  // Display rate achieved 
-        	  add_output_text_line("Rate of transmission = "+R);
+        	  add_output_text_line("Rate of transmission = "+R+" kB");
           	  trigger=-1;
         	  state=-1;
         	  d_filename = null;
@@ -436,8 +436,20 @@ public class StudentCode extends StudentCodeBase {
    
     public void stringFromUser(String user_input)
     {       
-    	// Opens received file
-    	open_text_file(user_input);
+    	if (side==-1) {
+
+    		//set_output_text(user_input);
+        	String MessageFromUser = "MessageFromUser.txt";
+    		
+        	// Save string from user to a text file
+        	save_to_file_s(MessageFromUser,user_input,user_input.length());
+        	add_output_text_line("The file "+MessageFromUser+" was stored on the phone.");
+    	}
+    	else{
+        	// Opens received file
+        	open_text_file(user_input);
+    	}
+
     }
 
    
@@ -638,10 +650,9 @@ private double [] square(double [] in_values) {
  void square(int sample){
 	 double Q=Math.sqrt(sample);
 	 set_output_text(""+sample+"\n"+Q+ "\n");
-			 }
- 
- 
- 
+ }
+
+ // Function used to compute FFT
  public static Complex[] fft(Complex[] x) {
      int N = x.length;
 
@@ -847,8 +858,10 @@ void send_data(){
             AudioFormat.ENCODING_PCM_16BIT, bufferInt.length,
             AudioTrack.MODE_STREAM);
 	double time_tx= (tx_signal.length) /((double) mysampleRate);
+	
 	add_output_text_line("Transmission will take "+Math.round(time_tx*100)/100.00+ " seconds.");
-    for (int i = 0; i < tx_signal.length; i++) {
+    
+	for (int i = 0; i < tx_signal.length; i++) {
         play(tx_signal[i], audioTrack);
     }
     add_output_text_line("Done with buffering of transmission.");
@@ -913,6 +926,18 @@ public void save_to_file(String filename,int[] data,int length){
 	for(int i=0; i<data.length; i++){
       out.writeInt(data[i]);
 	}
+	out.close();
+}
+
+//Function that saves string to a text file
+public void save_to_file_s(String filename,String data,int length){
+	
+	SimpleOutputFile out = new SimpleOutputFile();
+	out.open(filename);
+	//out.writeInt(length);
+	//for(int i=0; i<data.length; i++){
+   out.writeString(data);//[i]);
+	//}
 	out.close();
 }
 
@@ -1106,9 +1131,19 @@ public String retrieveData(int[] received){
 		}
 		
 		// Get data, remove size and title of file from the received buffer
+		//byte[] data_buffer_received_n = new byte[(received.length/8)-(length_titleFile+length_sizeFile)/8];
 		byte[] data_buffer_received_n = new byte[(received.length/8)-(length_titleFile+length_sizeFile)/8];
 		for (int k=(length_titleFile+length_sizeFile)/8;k<(length_titleFile+length_sizeFile)/8+size_i;k++){ //received.length/8
 			data_buffer_received_n[k-(length_titleFile+length_sizeFile)/8]=data_buffer_received[k];
+		}
+		
+		// Remove zeros at the end
+		int counter_two = 0;
+		byte[] data_buffer_received_nn = new byte[size_i];
+		while(data_buffer_received_n[counter_two]!=0){
+		//for (int k=(length_titleFile+length_sizeFile)/8;k<(length_titleFile+length_sizeFile)/8+size_i;k++){ //received.length/8
+			data_buffer_received_nn[counter_two]=data_buffer_received_n[counter_two];
+			counter_two++;
 		}
 
 		// Convert the buffer containing the title into characters
@@ -1146,7 +1181,7 @@ public String retrieveData(int[] received){
 			long fileLength = file.length();
 			outFile = new FileOutputStream(file);
 			// Write the data of received buffer
-			outFile.write(data_buffer_received_n); 
+			outFile.write(data_buffer_received_nn); 
 			outFile.flush();
 			outFile.close();
 		} catch (IOException e) {

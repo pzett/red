@@ -71,10 +71,7 @@ import android.os.Environment;
 import android.os.Handler;
 
 
-
 public class StudentCode extends StudentCodeBase {
-	
-
 	 
     boolean init_done=false;
     boolean file_loaded=false;
@@ -94,18 +91,19 @@ public class StudentCode extends StudentCodeBase {
     final double inputycorr[]={1,2};
     
      final static int no_samp_period = 8;
-    final static int f1=10000;
+    final static int f1=mysampleRate/4;
     final static int f2=7350;
     final static int f3=mysampleRate/7;
     final static int f4=mysampleRate/8;
     final static int ts_f1=mysampleRate/20;
     final static int ts_f2=mysampleRate/15;
     
+    int ts_stream[];
     final static double[] cosf1 =initCosine(f1, mysampleRate,no_samp_period);
     final static double[] sinf1 =initSinusoid(f1, mysampleRate,no_samp_period);
     final static int levels = 3;
     final static int A = 1;
-   
+    double gama;
     final static double[] cosf1ts =initCosine(ts_f1, mysampleRate,no_samp_period);
     final static double[] cosf2ts =initCosine(ts_f2, mysampleRate,no_samp_period);
     
@@ -312,6 +310,7 @@ public class StudentCode extends StudentCodeBase {
     		save_d_to_file("rx_signal.txt",rx_bufferdouble,rx_bufferdouble.length);
     		
     		rx_bufferdouble = EQ(rx_bufferdouble);
+    		save_d_to_file("rx_signal_afterEQ.txt",rx_bufferdouble,rx_bufferdouble.length);
     		//save_to_file("rx_a.txt",rx_bufferdouble,rx_bufferdouble.length);
     		int index = maxXcorr(Arrays.copyOfRange(rx_bufferdouble, 0, block_length),ts_modQAM); //find where training sequence begins
 
@@ -751,7 +750,7 @@ private double [] square(double [] in_values) {
 	 
  }
  
- public static int maxXcorr(double[] x,double[] y){
+ public int maxXcorr(double[] x,double[] y){
 	 double[] c= new double[x.length-y.length+2];
 	 double maxc=0;
 	 int index=0;
@@ -768,7 +767,7 @@ private double [] square(double [] in_values) {
 			 maxc=c[i];
 		 }
 	 }
-	 
+	 //add_output_text_line("index="+index);
 	 return index;
  }
  
@@ -796,7 +795,7 @@ private double [] square(double [] in_values) {
  public static double[] initCosine(int f, int fs,int N){
 	 double cosf[]=new double[N];
 	 for(int k=0;k<N;k++){
-		 cosf[k] = Math.cos(2 * Math.PI * f * k / (fs));
+		 cosf[k] = Math.cos(2 * Math.PI * (double) f * (double) k / ((double) fs));
 	 }
 	 return cosf;
  }
@@ -804,7 +803,7 @@ private double [] square(double [] in_values) {
  public static double[] initSinusoid(int f, int fs,int N){
 	 double sinf[]=new double[N];
 	 for(int k=0;k<N;k++){
-		 sinf[k] = Math.sin(2 * Math.PI * f * k / (fs));
+		 sinf[k] = Math.sin(2 * Math.PI * (double) f * (double) k / ((double) fs));
 	 }
 	 return sinf;
  }
@@ -817,8 +816,7 @@ void send_data(){
     int Nb=in.readInt();
     int[] bit_stream = new int[Nb];
 	
-	
-	
+
 	//int[] size_data_signal = new int [100];
 //	for(int i = 0;i<Nb;i++){
 //		bit_stream[i]=Math.round((float) Math.random());
@@ -880,6 +878,28 @@ void send_data(){
 //	}
 //	
 	
+	
+	current_position = 0;
+	int[] long_stream = new int[guard_stream.length*2+ts_length*2*levels+bit_stream.length];
+	for(int k=0;k<guard_stream.length;k++){
+		long_stream[current_position++]=guard_stream[k];
+		
+	}
+	for(int k=0;k<ts_stream.length;k++){
+		long_stream[current_position++]=ts_stream[k];
+		
+	}
+	for(int k=0;k<bit_stream.length;k++){
+		long_stream[current_position++]=bit_stream[k];		
+	}
+	for(int k=0;k<guard_stream.length;k++){
+		long_stream[current_position++]=guard_stream[k];
+		
+	}
+	
+	//double tx_signal_c[] = MQAMmod_c(f1,long_stream);
+	
+	
 	final AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
             mysampleRate, AudioFormat.CHANNEL_OUT_MONO,
             AudioFormat.ENCODING_PCM_16BIT, bufferInt.length,
@@ -888,8 +908,8 @@ void send_data(){
 	for(int i = 0;i<tx_signal.length;i++){
 		if(Math.abs(tx_signal[i])>max) max=Math.abs(tx_signal[i]);
 	}
-	short[] tx_signal_s=new short[tx_signal.length];
-	save_d_to_file("tx_signal.txt",tx_signal,tx_signal.length);
+	//short[] tx_signal_s=new short[tx_signal.length];
+	//save_d_to_file("tx_signal.txt",tx_signal,tx_signal.length);
 	for (int i = 0; i < tx_signal.length; i++) {
 		tx_signal[i]=tx_signal[i]/max;
 
@@ -897,6 +917,19 @@ void send_data(){
 
 		play(tx_signal[i], audioTrack);
 	}
+	
+	
+//	max = 0;
+//	for(int i = 0;i<tx_signal_c.length;i++){
+//		if(Math.abs(tx_signal_c[i])>max) max=Math.abs(tx_signal_c[i]);
+//	}
+//	for (int i = 0; i < tx_signal_c.length; i++) {
+//		tx_signal_c[i]=tx_signal_c[i]/max;
+//
+//		//tx_signal_s[i]=(short) ( tx_signal[i]*Math.pow(2, 14));
+//
+//		play(tx_signal_c[i], audioTrack);
+//	}
 	
 	
 //	byte[] sound_contents = double2Byte(tx_signal);
@@ -1485,6 +1518,38 @@ public  double[] MQAMmod(int f, int[] bits){
 
 }
 
+@SuppressLint("NewApi")
+public  double[] MQAMmod_c(int f, int[] bits){
+	int L;
+	if(bits.length%(2*levels) != 0){
+		L=bits.length+2*levels-(bits.length%(2*levels));}
+	else{
+		L=bits.length;
+	}
+	int bit_stream[] = new int[L];
+	bit_stream = Arrays.copyOfRange(bits, 0, bit_stream.length);
+	double[] signal = new double[L/(2*levels)*no_samp_period];
+	double[][] mconst = mod_const(bit_stream, L, levels);
+	
+//	Complex[] tx_const = new Complex[mconst.length];
+//	for(int k=0;k<mconst.length;k++){
+//		tx_const[k]=new Complex(mconst[k][0],mconst[k][1]);
+//	}
+//	save_c_to_file("tx_const.txt",tx_const,tx_const.length);
+	
+	double[] cosf = initCosine(f1,mysampleRate,no_samp_period*L/(2*levels));
+	double[] sinf = initSinusoid(f1,mysampleRate,no_samp_period*L/(2*levels));
+	for(int i=0;i<L/(2*levels);i++){
+		for(int ii=i*no_samp_period;ii<no_samp_period*(i+1);ii++){
+			signal[ii]=window[ii-i*no_samp_period]*mconst[ii][0]*cosf[ii]-window[ii-i*no_samp_period]*mconst[ii][1]*sinf[ii];
+			
+		}
+	}
+
+	return signal;
+
+}
+
 public double[] modulateQAM_ts(int length,int f,int levels){
 	SimpleInputFile in = new SimpleInputFile();
 	
@@ -1493,9 +1558,13 @@ public double[] modulateQAM_ts(int length,int f,int levels){
     ts_length=length;
     add_output_text_line("ts_length="+ts_length);
 	final int [] ts = new int[length*2*levels];
+	
+	
+	ts_stream=new int[length*2*levels];
 	   // Read file from sdcard
     for(int i=0; i<ts.length; i++){
            ts[i]=in.readInt(); 
+           ts_stream[i] = ts[i];
     };
    //add_output_text_line("ts(0,1)="+ts[0]+""+ts[1]);
     in.close();
@@ -1515,10 +1584,20 @@ public int[] MQAMreceiver(int f,int n_sym,double[] r){
 	for(int k=0;k<r.length;k++){
 		Vx[k]=r[k]*cosf1[k%no_samp_period];
 		Vy[k]=-r[k]*sinf1[k%no_samp_period];
-		}
+	}
+//	double[] cosf=initCosine(f1,mysampleRate,r.length);
+//	double[] sinf=initSinusoid(f1,mysampleRate,r.length);
+//	for(int k=0;k<r.length;k++){
+//		Vx[k]=r[k]*cosf[k];
+//		Vy[k]=-r[k]*sinf[k];
+//	}
+//	
+	save_d_to_file("Vx.txt",Vx,r.length);
+	save_d_to_file("Vy.txt",Vy,r.length);
 	
-	double Hx[] =LPfir(Vx);
-	double Hy[] =LPfir(Vy);
+	
+	double Hx[]  = LPfir(Vx);
+	double Hy[] =  LPfir(Vy);
 	
 	int margin = 25;
 	int block_length = (margin+ts_length)*no_samp_period;
@@ -1551,6 +1630,7 @@ public int[] MQAMreceiver(int f,int n_sym,double[] r){
 	// Phase estimation
 	
 	Complex mconst[] = phase_estimation(Arrays.copyOfRange(Hxs, 0, current_position),Arrays.copyOfRange(Hys, 0, current_position),ts_mod_const,current_position);
+	
 	save_c_to_file("mconst.txt",mconst,mconst.length);
 	Complex[] demconst = new Complex[mconst.length];
 	double theta = 0;
@@ -1566,6 +1646,10 @@ public int[] MQAMreceiver(int f,int n_sym,double[] r){
 		for(int q=(k*batch_length);q<(k+1)*batch_length;q++){
 			mconst_phi[q-k*batch_length]=mconst[q];
 			mconst_phi[q-k*batch_length]=mconst_phi[q-k*batch_length].times(complex_exp);
+//		 Complex aux = mconst_phi[q-k*batch_length]; 
+//			mconst_phi[q-k*batch_length]=new Complex(aux.re()+aux.im()*Math.tan(gama),aux.im()/Math.cos(gama) );
+			
+			
 		}
 		int decision_aux[] = demod_const(mconst_phi,levels);
 		System.arraycopy(mconst_phi, 0, demconst, k*batch_length , batch_length);
@@ -1646,7 +1730,7 @@ public int synchronize(double Hx[],double Hy[],double[][] ts_const,int Q){
 			c[i]=c[i]+aux.abs();
 		}
 	}
-
+	add_output_text_line("max n_samp="+(mconst.length-tsconst.length+2));
 	for(int i=0;i<c.length;i++){
 		if(c[i]>maxc){
 			n_samp=i;
@@ -1710,27 +1794,36 @@ public Complex[] phase_estimation(double[] Hx,double[] Hy, double[][] mconst_ts,
 		mconst[k] = new Complex(mconst_ts[k][0],mconst_ts[k][1]);
 	}
 	
-
 	for(int k=0;k<length;k++){		
 		rx[k] = new Complex(Hx[k],Hy[k]);
 	}
+	
+	
 	save_c_to_file("mconst_before.txt",rx,length);
-
+	double aux_re;
+	double aux_im;
+	double ref_re = 0;
+	double ref_im = 0;
 	for (int i=0;i<mconst_ts.length;i++){
 		Complex x = rx[i].times(mconst[i].conjugate());
 		double argx = x.phase();
 		arg_sum=arg_sum+argx;
 		double aux = (rx[i].abs())/(mconst[i].abs());
 		ref = ref+aux;
+		aux_re = Math.abs(rx[i].re())/Math.abs(mconst[i].re());
+		aux_im = Math.abs(rx[i].im())/Math.abs(mconst[i].im());
+		ref_re = ref_re + aux_re;
+		ref_im = ref_im + aux_im;
 	}
 
-	ref = ref/mconst_ts.length;
+	ref = ref/ (double) mconst_ts.length;
 	//add_output_text_line("ref="+ref);
 	
 	double phihat = arg_sum /(double) mconst_ts.length;
 	//add_output_text_line("phihat="+phihat);
 	
-	
+	ref_re = ref_re / (double) mconst_ts.length;
+	ref_im = ref_im / (double) mconst_ts.length;
 	
 	Complex complex_exp =new Complex(Math.cos(-phihat),Math.sin(-phihat));
 	Complex aux = new Complex(ref,0);
@@ -1743,8 +1836,24 @@ public Complex[] phase_estimation(double[] Hx,double[] Hy, double[][] mconst_ts,
 
 		mconst_sym[k-mconst_ts.length] = rx[k].times(complex_exp);
 		mconst_sym[k-mconst_ts.length] = mconst_sym[k-mconst_ts.length].divides(aux);
+		
+		//mconst_sym[k-mconst_ts.length] = new Complex(mconst_sym[k-mconst_ts.length].re()/ref_re,mconst_sym[k-mconst_ts.length].im()/ref_im);
 	}
 	
+	
+	
+	Complex rx_ts[] = new Complex[mconst_ts.length];
+	
+	
+	for(int k=0;k<mconst_ts.length;k++){
+		 rx_ts[k] = rx[k].times(complex_exp);
+		//mconst_sym[k-mconst_ts.length] = mconst_sym[k-mconst_ts.length].divides(aux);
+		
+		rx_ts[k] = new Complex(rx_ts[k].re() / ref_re , rx_ts[k].im()/ref_im);
+	}
+	
+	gama = skew_estimation(rx_ts,mconst);
+	add_output_text_line("gama="+gama);
 	// Initialize real and imag
 	
 //	double[] real2 = new double [mconst_sym.length];
@@ -1840,6 +1949,27 @@ public static final byte[] double2Byte(double[] inData) {
     }
     return outData;
   }
+
+public double skew_estimation(Complex[] r, Complex[] ts){
+	
+	double total = 0;
+
+	for(int k = 0; k<ts.length;k++){
+		if(r[k].im()/ts[k].im()<1){
+			double aux = Math.acos(r[k].im()/ts[k].im());
+			total++;
+			gama = gama + aux;
+		}
+
+
+
+
+	}
+	gama=gama/total;
+	return gama;
+
+}
+ 
 
 }
 

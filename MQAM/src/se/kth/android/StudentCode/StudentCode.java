@@ -103,7 +103,8 @@ public class StudentCode extends StudentCodeBase {
     final static double[] sinf1 =initSinusoid(f1, mysampleRate,no_samp_period);
     final static int levels = 3;
     final static int A = 1;
-    double gama;
+    
+    double phihat;
     final static double[] cosf1ts =initCosine(ts_f1, mysampleRate,no_samp_period);
     final static double[] cosf2ts =initCosine(ts_f2, mysampleRate,no_samp_period);
     
@@ -300,7 +301,7 @@ public class StudentCode extends StudentCodeBase {
     		add_output_text_line("Stopped listening, decoding");
         	  //useSensors =  SOUND_OUT;
     		int margin = 20;
-    		int block_length=2*levels*no_samp_period*(gb_length+ts_length+margin); //block to do crosscorrelation
+    		int block_length=2*levels*no_samp_period*(gb_length+ts_length+margin); //block to do cross correlation
     		double[] rx_bufferdouble = new double[rx_ind+4096-rx_ind%4096]; //buffer of doubles
     		//add_output_text_line("buffer length="+rx_buffer.length+"rx_ind+ = "+(rx_ind+4096-rx_ind%4096));
     		for (int j=0;j<rx_ind;j++){
@@ -309,16 +310,20 @@ public class StudentCode extends StudentCodeBase {
 
     		save_d_to_file("rx_signal.txt",rx_bufferdouble,rx_bufferdouble.length);
     		
-    		rx_bufferdouble = EQ(rx_bufferdouble);
-    		save_d_to_file("rx_signal_afterEQ.txt",rx_bufferdouble,rx_bufferdouble.length);
+    		rx_bufferdouble = EQ(rx_bufferdouble); // apply equalizer 
+    		//save_d_to_file("rx_signal_afterEQ.txt",rx_bufferdouble,rx_bufferdouble.length);
     		//save_to_file("rx_a.txt",rx_bufferdouble,rx_bufferdouble.length);
+    		
     		int index = maxXcorr(Arrays.copyOfRange(rx_bufferdouble, 0, block_length),ts_modQAM); //find where training sequence begins
 
     		//send received data to decision algorithm, copy only data part
+    		
     		int decision[] = MQAMreceiver(f1,no_samp_period,Arrays.copyOfRange(rx_bufferdouble,index-margin,rx_bufferdouble.length));
+    		
     		// int decision[]=goertzel(f1,f2,no_samp_period, Arrays.copyOfRange(rx_bufferdouble,index+no_samp_period*ts_length,rx_bufferdouble.length));
 
     		//save decision to file
+    		
     		save_i_to_file("decision.txt", decision,decision.length);
 
     		compare(decision);
@@ -1059,7 +1064,7 @@ public int[] load_from_file(String filename,int mode){
 public void compare(int decision[]){
 	int[] length_vec=load_from_file("data_test.txt",0);
 	float length = length_vec[0];
-	add_output_text_line("length of tx_seq"+length);
+	//add_output_text_line("length of tx_seq"+length);
 	int tx_seq[];
 	tx_seq=load_from_file("data_test.txt",1);
 	float e = 0;
@@ -1553,6 +1558,7 @@ public int[] MQAMreceiver(int f,int n_sym,double[] r){
 		Vx[k]=r[k]*cosf1[k%no_samp_period];
 		Vy[k]=-r[k]*sinf1[k%no_samp_period];
 	}
+	
 //	double[] cosf=initCosine(f1,mysampleRate,r.length);
 //	double[] sinf=initSinusoid(f1,mysampleRate,r.length);
 //	for(int k=0;k<r.length;k++){
@@ -1560,19 +1566,20 @@ public int[] MQAMreceiver(int f,int n_sym,double[] r){
 //		Vy[k]=-r[k]*sinf[k];
 //	}
 //	
-	save_d_to_file("Vx.txt",Vx,r.length);
-	save_d_to_file("Vy.txt",Vy,r.length);
+	//save_d_to_file("Vx.txt",Vx,r.length);
+	//save_d_to_file("Vy.txt",Vy,r.length);
 	
 	
 	double Hx[]  = LPfir(Vx);
 	double Hy[] =  LPfir(Vy);
 	
-	int margin = 50;
+	int margin = 10;
 	int block_length = (margin+ts_length)*no_samp_period;
 	
 	
-	save_d_to_file("Hx.txt",Hx,Hx.length);
-	save_d_to_file("Hy.txt",Hy,Hy.length);
+	//save_d_to_file("Hx.txt",Hx,Hx.length);
+	//save_d_to_file("Hy.txt",Hy,Hy.length);
+
 	//save_to_file("Hy.txt",Arrays.copyOfRange(Hy,0,block_length),block_length);
 //	double[] ts_real=new double[ts_mod_const.length];
 //	double[] ts_imag=new double[ts_mod_const.length];
@@ -1586,7 +1593,7 @@ public int[] MQAMreceiver(int f,int n_sym,double[] r){
 	
 	int n_samp = synchronize(Arrays.copyOfRange(Hx,0,block_length),Arrays.copyOfRange(Hy,0,block_length),
 							 ts_mod_const,no_samp_period);
-	add_output_text_line("n_samp ="+n_samp);
+	
 	double Hxs[] = new double[Hx.length];
 	double Hys[] = new double[Hy.length];
 	int current_position = 0;
@@ -1595,25 +1602,25 @@ public int[] MQAMreceiver(int f,int n_sym,double[] r){
 		Hys[current_position] = Hy[k];
 		current_position++;
 	}
-	save_d_to_file("mconstJavay.txt",Hys,current_position);
-	save_d_to_file("mconstJavax.txt",Hxs,current_position);
+	//save_d_to_file("mconstJavay.txt",Hys,current_position);
+	//save_d_to_file("mconstJavax.txt",Hxs,current_position);
 	// Phase estimation
 	
 	Complex mconst[] = phase_estimation(Arrays.copyOfRange(Hxs, 0, current_position),Arrays.copyOfRange(Hys, 0, current_position),ts_mod_const,current_position);
 	
-	save_c_to_file("mconst.txt",mconst,mconst.length);
+	//save_c_to_file("mconst.txt",mconst,mconst.length);
 	Complex[] demconst = new Complex[mconst.length];
 	double theta = 0;
-	double theta_vec[]=new double[3000];
+	
 	double Ts = (double) no_samp_period / (double) mysampleRate;
 	int batch_length = (int) Math.floor(0.1/Ts);
     int[] decision = new int[mconst.length*2*levels];
 	current_position = 0;
-	add_output_text_line("b_l="+batch_length);
-	int count_theta = 0;
+	//add_output_text_line("b_l="+batch_length);
+	
 	for(int k = 0 ; k < (int) Math.floor((double) mconst.length/(double) batch_length); k++){
 		Complex[] mconst_phi =new Complex[batch_length];
-		Complex complex_exp =new Complex(Math.cos(-theta),Math.sin(-theta));
+		Complex complex_exp =new Complex(Math.cos(-phihat), Math.sin(-phihat));
 		for(int q=(k*batch_length);q<(k+1)*batch_length;q++){
 			mconst_phi[q-k*batch_length]=mconst[q];
 			mconst_phi[q-k*batch_length]=mconst_phi[q-k*batch_length].times(complex_exp);
@@ -1624,18 +1631,20 @@ public int[] MQAMreceiver(int f,int n_sym,double[] r){
 		int decision_aux[] = demod_const(mconst_phi,levels);
 		System.arraycopy(mconst_phi, 0, demconst, k*batch_length , batch_length);
 		// copies an array from the specified source array
+		
 		System.arraycopy(decision_aux, 0, decision, current_position , decision_aux.length);
+		
 		current_position = current_position + decision_aux.length;
 		theta = offset_estimation(mconst_phi,decision_aux);
-		count_theta++;
-		//add_output_text_line("theta="+theta);
-		theta_vec[current_position/decision_aux.length-1]=theta;
+		phihat = phihat + theta;
+		
+		
 	}
 
-	save_d_to_file("theta.txt",theta_vec,10);
+	
 	int k = (int) Math.floor((double) mconst.length/ (double) batch_length);
 	Complex[] mconst_phi =new Complex[mconst.length-(k)*batch_length];
-	add_output_text_line("count="+count_theta);
+	
 	Complex complex_exp =new Complex(Math.cos(-theta),Math.sin(-theta));
 	for(int q=(k)*batch_length; q < mconst.length ;q++){
 		mconst_phi[q-(k)*batch_length] = mconst[q];
@@ -1650,7 +1659,6 @@ public int[] MQAMreceiver(int f,int n_sym,double[] r){
 	
 	//	int decision[] = demod_const(mconst,levels);
 	return Arrays.copyOfRange(decision, ts_length*2*levels, decision.length);
-
 }
 
 @SuppressLint("NewApi")
@@ -1705,7 +1713,7 @@ public int synchronize(double Hx[],double Hy[],double[][] ts_const,int Q){
 		}
 		c[i]=aux.abs();
 	}
-	add_output_text_line("max n_samp="+(mconst.length-tsconst.length+2));
+	
 	for(int i=0;i<c.length;i++){
 		if(c[i]>maxc){
 			n_samp=i;
@@ -1792,15 +1800,16 @@ public Complex[] phase_estimation(double[] Hx,double[] Hy, double[][] mconst_ts,
 	}
 
 	ref = ref / (double) mconst_ts.length;
-	add_output_text_line("ref="+ref);
+	//add_output_text_line("ref="+ref);
 	
-	double phihat = arg_sum /(double) mconst_ts.length;
-	add_output_text_line("phihat="+phihat);
+	phihat = arg_sum /(double) mconst_ts.length;
+	//add_output_text_line("phihat="+phihat);
 	
 //	ref_re = ref_re / (double) mconst_ts.length;
 //	ref_im = ref_im / (double) mconst_ts.length;
 	
-	Complex complex_exp =new Complex(Math.cos(-phihat),Math.sin(-phihat));
+//	Complex complex_exp =new Complex(Math.cos(-phihat),Math.sin(-phihat));
+	Complex complex_exp =new Complex(1,0);
 	Complex aux = new Complex(ref,0);
 //	Complex mconst_sym[] = new Complex[Hx.length-mconst_ts.length];
 //	
@@ -1905,7 +1914,7 @@ public double offset_estimation(Complex[] mconst,int[] bit_stream){
 		}
 		demconst[current_position]= new Complex(xi,yi); current_position++;
 }
-	
+	//add_output_text_line("current="+current_position);
 	double arg_sum = 0;
 	for (int i=0;i<current_position;i++){
 		Complex x = mconst[i].times(demconst[i].conjugate());
@@ -1914,6 +1923,7 @@ public double offset_estimation(Complex[] mconst,int[] bit_stream){
 		
 	}
 	arg_sum =  arg_sum / (double) current_position;
+	
 	return arg_sum;
 	
 }	

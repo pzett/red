@@ -1606,11 +1606,11 @@ public int[] MQAMreceiver(int f,int n_sym,double[] r){
 	double theta = 0;
 	double theta_vec[]=new double[3000];
 	double Ts = (double) no_samp_period / (double) mysampleRate;
-	int batch_length = (int) Math.floor(0.01/Ts);
+	int batch_length = (int) Math.floor(0.1/Ts);
     int[] decision = new int[mconst.length*2*levels];
 	current_position = 0;
 	add_output_text_line("b_l="+batch_length);
-	
+	int count_theta = 0;
 	for(int k = 0 ; k < (int) Math.floor((double) mconst.length/(double) batch_length); k++){
 		Complex[] mconst_phi =new Complex[batch_length];
 		Complex complex_exp =new Complex(Math.cos(-theta),Math.sin(-theta));
@@ -1627,6 +1627,7 @@ public int[] MQAMreceiver(int f,int n_sym,double[] r){
 		System.arraycopy(decision_aux, 0, decision, current_position , decision_aux.length);
 		current_position = current_position + decision_aux.length;
 		theta = offset_estimation(mconst_phi,decision_aux);
+		count_theta++;
 		//add_output_text_line("theta="+theta);
 		theta_vec[current_position/decision_aux.length-1]=theta;
 	}
@@ -1634,7 +1635,7 @@ public int[] MQAMreceiver(int f,int n_sym,double[] r){
 	save_d_to_file("theta.txt",theta_vec,10);
 	int k = (int) Math.floor((double) mconst.length/ (double) batch_length);
 	Complex[] mconst_phi =new Complex[mconst.length-(k)*batch_length];
-	add_output_text_line("length="+(mconst.length-(k)*batch_length));
+	add_output_text_line("count="+count_theta);
 	Complex complex_exp =new Complex(Math.cos(-theta),Math.sin(-theta));
 	for(int q=(k)*batch_length; q < mconst.length ;q++){
 		mconst_phi[q-(k)*batch_length] = mconst[q];
@@ -1712,7 +1713,7 @@ public int synchronize(double Hx[],double Hy[],double[][] ts_const,int Q){
 		}
 	}
 
-	return n_samp;
+	return n_samp-1;
 
 }
 

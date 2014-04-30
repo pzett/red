@@ -1588,14 +1588,15 @@ public int[] MQAMreceiver(int f,int n_sym,double[] r){
 							 ts_mod_const,no_samp_period);
 	add_output_text_line("n_samp ="+n_samp);
 	double Hxs[] = new double[Hx.length];
-	double Hys[] = new double[Hx.length];
+	double Hys[] = new double[Hy.length];
 	int current_position = 0;
 	for(int k=n_samp;k<Hx.length;k=k+no_samp_period){
 		Hxs[current_position] = Hx[k];
 		Hys[current_position] = Hy[k];
 		current_position++;
 	}
-
+	save_d_to_file("mconstJavay.txt",Hys,current_position);
+	save_d_to_file("mconstJavax.txt",Hxs,current_position);
 	// Phase estimation
 	
 	Complex mconst[] = phase_estimation(Arrays.copyOfRange(Hxs, 0, current_position),Arrays.copyOfRange(Hys, 0, current_position),ts_mod_const,current_position);
@@ -1603,13 +1604,14 @@ public int[] MQAMreceiver(int f,int n_sym,double[] r){
 	save_c_to_file("mconst.txt",mconst,mconst.length);
 	Complex[] demconst = new Complex[mconst.length];
 	double theta = 0;
+	double theta_vec[]=new double[3000];
 	double Ts = (double) no_samp_period / (double) mysampleRate;
 	int batch_length = (int) Math.floor(0.01/Ts);
     int[] decision = new int[mconst.length*2*levels];
 	current_position = 0;
-	//add_output_text_line("b_l="+batch_length);
+	add_output_text_line("b_l="+batch_length);
 	
-	for(int k = 0;k<(int) Math.floor((double) mconst.length/(double) batch_length );k++){
+	for(int k = 0 ; k < (int) Math.floor((double) mconst.length/(double) batch_length); k++){
 		Complex[] mconst_phi =new Complex[batch_length];
 		Complex complex_exp =new Complex(Math.cos(-theta),Math.sin(-theta));
 		for(int q=(k*batch_length);q<(k+1)*batch_length;q++){
@@ -1626,11 +1628,13 @@ public int[] MQAMreceiver(int f,int n_sym,double[] r){
 		current_position = current_position + decision_aux.length;
 		theta = offset_estimation(mconst_phi,decision_aux);
 		//add_output_text_line("theta="+theta);
+		theta_vec[current_position/decision_aux.length-1]=theta;
 	}
 
-
-	int k=(int) Math.floor((double) mconst.length/ (double) batch_length);
+	save_d_to_file("theta.txt",theta_vec,10);
+	int k = (int) Math.floor((double) mconst.length/ (double) batch_length);
 	Complex[] mconst_phi =new Complex[mconst.length-(k)*batch_length];
+	add_output_text_line("length="+(mconst.length-(k)*batch_length));
 	Complex complex_exp =new Complex(Math.cos(-theta),Math.sin(-theta));
 	for(int q=(k)*batch_length; q < mconst.length ;q++){
 		mconst_phi[q-(k)*batch_length] = mconst[q];
@@ -1642,9 +1646,9 @@ public int[] MQAMreceiver(int f,int n_sym,double[] r){
 	System.arraycopy(decision_aux, 0, decision, current_position, decision_aux.length);
 	//current_position = current_position + decision_aux.length;
 	save_c_to_file("demconst.txt",demconst,demconst.length);
-
+	
 	//	int decision[] = demod_const(mconst,levels);
-	return decision;
+	return Arrays.copyOfRange(decision, ts_length*2*levels, decision.length);
 
 }
 
@@ -1693,10 +1697,12 @@ public int synchronize(double Hx[],double Hy[],double[][] ts_const,int Q){
 	
 	for(int i = 0; i < mconst.length-tsconst.length;i++){
 		c[i]=0;
+		aux = new Complex(0,0);
 		for(int ii=0;ii<tsconst.length;ii++){
-			aux = mconst[ii+i].times(tsconst[ii].conjugate());
-			c[i]=c[i]+aux.abs();
+			aux = aux.plus(mconst[ii+i].times(tsconst[ii].conjugate()));
+			
 		}
+		c[i]=aux.abs();
 	}
 	add_output_text_line("max n_samp="+(mconst.length-tsconst.length+2));
 	for(int i=0;i<c.length;i++){
@@ -1785,30 +1791,41 @@ public Complex[] phase_estimation(double[] Hx,double[] Hy, double[][] mconst_ts,
 	}
 
 	ref = ref / (double) mconst_ts.length;
-	//add_output_text_line("ref="+ref);
+	add_output_text_line("ref="+ref);
 	
 	double phihat = arg_sum /(double) mconst_ts.length;
-	//add_output_text_line("phihat="+phihat);
+	add_output_text_line("phihat="+phihat);
 	
 //	ref_re = ref_re / (double) mconst_ts.length;
 //	ref_im = ref_im / (double) mconst_ts.length;
 	
 	Complex complex_exp =new Complex(Math.cos(-phihat),Math.sin(-phihat));
 	Complex aux = new Complex(ref,0);
-	Complex mconst_sym[] = new Complex[Hx.length-mconst_ts.length];
+//	Complex mconst_sym[] = new Complex[Hx.length-mconst_ts.length];
+//	
+//	for(int i =0;i<mconst_sym.length;i++){
+//		mconst_sym[i]=new Complex(0,0);
+//	}
+//	for(int k=mconst_ts.length;k<Hx.length;k++){
+//		
+//		mconst_sym[k-mconst_ts.length] = rx[k].times(complex_exp);
+//		mconst_sym[k-mconst_ts.length] = mconst_sym[k-mconst_ts.length].divides(aux);
+//		
+//		//mconst_sym[k-mconst_ts.length] = new Complex(mconst_sym[k-mconst_ts.length].re()/ref_re,mconst_sym[k-mconst_ts.length].im()/ref_im);
+//	}
+	
+	Complex mconst_sym[] = new Complex[length];
 	
 	for(int i =0;i<mconst_sym.length;i++){
 		mconst_sym[i]=new Complex(0,0);
 	}
-	for(int k=mconst_ts.length;k<Hx.length;k++){
-
-		mconst_sym[k-mconst_ts.length] = rx[k].times(complex_exp);
-		mconst_sym[k-mconst_ts.length] = mconst_sym[k-mconst_ts.length].divides(aux);
+	for(int k=0;k<length;k++){
+		
+		mconst_sym[k] = rx[k].times(complex_exp);
+		mconst_sym[k] = mconst_sym[k].divides(aux);
 		
 		//mconst_sym[k-mconst_ts.length] = new Complex(mconst_sym[k-mconst_ts.length].re()/ref_re,mconst_sym[k-mconst_ts.length].im()/ref_im);
 	}
-	
-	
 	
 //	Complex rx_ts[] = new Complex[mconst_ts.length];
 	

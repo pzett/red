@@ -1374,5 +1374,37 @@ public double[] EQ(double[] input){
 
 }
 
+public int metric(int x, int y){
+	if(x==y){
+		return 0;
+	}
+	else{
+		return 1;
+	}
+}
+
+public int[] dectobin (int A, int B){
+	int[] y = new int [B];
+	int i = 1;
+	while(A>=0 && i<=B){
+		y[i]= A % 2;
+		i++;
+	}
+	// line missing
+	return y;
+
+}
+
+public int[] next_state (int current_state, int input,int L, int K){
+	int[] binary_state = dectobin(current_state,K*(L-1));
+	int[] binary_input = dectobin(input,K);
+	int[] next_state_binary = Arrays.copyOfRange(binary_input, 0, binary_input.length);
+	int[] next_state_binary_n = Arrays.copyOfRange(next_state_binary, 0, (L-2)*K);
+	// int[] to string then parse int
+	//next_state = Integer.parseInt(next_state_binary,2);
+	
+}
+
+// Debug when sending an image.. check if there are zeros in buffer
 
 }

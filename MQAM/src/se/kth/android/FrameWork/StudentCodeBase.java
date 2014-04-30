@@ -987,6 +987,10 @@ String(Environment.getExternalStorageDirectory()+"/"+"data"+"/"+name);
 		//add_output_text_line("filename="+filename);
 		frameWork.open_text_file(filename_with_path); 
 		};
+		
+		public void please_vibrate(){
+			frameWork.vibrate();
+		}
 };
 
 

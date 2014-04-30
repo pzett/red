@@ -19,6 +19,7 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import android.widget.Toast;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -69,6 +70,7 @@ import android.widget.Button;
 //import android.view.SurfaceHolder;
 import android.widget.TextView;
 import android.widget.EditText;
+import android.os.Vibrator;
 
 
 public class FrameWork extends Activity implements OnRecordPositionUpdateListener, OnPlaybackPositionUpdateListener, SensorEventListener, PreviewCallback, LocationListener {
@@ -1352,6 +1354,22 @@ public class FrameWork extends Activity implements OnRecordPositionUpdateListene
 		
 	}
 	
+	public void vibrate(){
+		 Vibrator v = (Vibrator) this.context.getSystemService(Context.VIBRATOR_SERVICE);
+		 v.vibrate(500);
+		 
+		 runOnUiThread(new Runnable(){
+			 public void run()
+			 {
+		 
+		 Context context = getApplicationContext();
+		 CharSequence text = "File Received!";
+		 int duration = Toast.LENGTH_SHORT;
 
+		 Toast toast = Toast.makeText(context, text, duration);
+		 toast.show();
+	}
+		 });
+	}
 
 };

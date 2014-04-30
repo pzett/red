@@ -24,7 +24,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.Object;
 import android.app.Activity;
-
+import android.os.Vibrator;
 import android.content.Context;
 
 import com.google.zxing.Binarizer;
@@ -1085,7 +1085,7 @@ public void compare(int decision[]){
 	}
 	double BER =e/max;
 	add_output_text_line("errors,BER="+e+"  ,  "+BER);
-	
+	please_vibrate();
 }
 
 public int[] data_buffer_bits(){

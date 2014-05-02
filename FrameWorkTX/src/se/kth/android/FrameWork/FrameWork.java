@@ -49,6 +49,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.media.AudioFormat;
+import android.media.AudioManager;
 //import android.media.AudioManager;
 import android.media.AudioRecord;
 import android.media.AudioTrack;
@@ -132,6 +133,26 @@ public class FrameWork extends Activity implements OnRecordPositionUpdateListene
         buttonView = (View)findViewById(R.id.buttons);
         studentCode = new StudentCode();
         
+        AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
+		    int max_value =am.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+		    int volume_level= am.getStreamVolume(AudioManager.STREAM_MUSIC);
+		    am.setStreamVolume(AudioManager.STREAM_MUSIC,(int) Math.floor(max_value)-4, 0);
+		    boolean meow = am.isWiredHeadsetOn();
+		    if(meow == false){
+		    	
+	        		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+	        		builder.setMessage("You must plug the headset.")
+	        		       .setCancelable(false)
+	        		       .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+	        		           public void onClick(DialogInterface dialog, int id) {
+	        		        	  
+	        		           }
+	        		       });
+	        		AlertDialog alert = builder.create();
+	        		alert.show();
+	        			    }
+		    
+		    
         studentCode.init();
         
         if(studentCode.test_harness())

@@ -11,7 +11,7 @@ fs=44100;
 loops=1;
 plotting=1;
 
-% Pull out info from sensor
+%Pull out info from sensor
 names=list_sensor_log_files_on_sdcard;%grabs list of .csv files on phone
 filename = char(names.filenames(end)); % Char converts cell to string
 copy_file_from_sdcard_to_working_directory(filename);%copy file to folder
@@ -38,8 +38,12 @@ end
 n_cols = length(r)/(S+P+FS);
 r_matrix = reshape ( r , S+P+FS,n_cols);
 decoded = [];
+cp1 = zeros(P,n_cols);
+cp2 = zeros(P,n_cols);
 for(k=1:n_cols)
     data_with_cp = r_matrix(:,k);
+    cp1(:,k) = data_with_cp(1:P);
+    cp2(:,k) = data_with_cp(end-S-P+1:end-S);
     data = [data_with_cp(P+1:end-S)];
     info = fft(data,FS);
     D = Nc;
@@ -47,11 +51,9 @@ for(k=1:n_cols)
     decoded = [decoded; demod];
 end
 
-% scatterplot(decoded)
-% [phihat ref ref_re ref_im]=phase_estimation(decoded,mconst_ts(1:100))
-% scatterplot(decoded*exp(-1i*phihat)/ref)
-% scatterplot(decoded(1:ts_length)*exp(-1i*phihat)/ref)
-
+if(pilot == 1)
+    [pilots decoded] = remove_pilots(decoded,pilot_int,ts_pilot_length,ts_length)
+end
 
 
 tsr_matrix = reshape(decoded(1:ts_length),Nc,ts_length/Nc);
@@ -63,15 +65,21 @@ for(k=1:Nc)
 end
 
 ref2 = 1;
-batch_length = Nc;
+batch_length = 20;
 mconst = transpose(decoded);
 mconstdem = [];
 mdem = [];
 
 for(k=1:floor(length(mconst)/batch_length))
-    mconst_phi=zeros(batch_length,1);
-    for(b=1:batch_length)
-        mconst_phi(b) = mconst((k-1)*batch_length+b) * exp(-1i*phihat(b)) / (ref(b)*ref2);
+   
+    %     for(b=1:batch_length)
+    %         mconst_phi(b) = mconst((k-1)*batch_length+b) * exp(-1i*phihat(b)) / (ref(b)*ref2);
+    %     end
+    
+     mconst_phi=zeros(1,batch_length);
+    for(b=0:batch_length-1)
+        index = (k-1)*batch_length+b;
+        mconst_phi(b+1) = mconst(index+1) * exp(-1i*phihat(mod(index,Nc)+1)) / (ref(mod(index,Nc)+1)*ref2);
     end
     %     scatterplot(mconst_phi)
     %     pause
@@ -112,14 +120,20 @@ for(k=1:floor(length(mconst)/batch_length))
     end
     demconst=demodulate(mdem((k-1)*batch_length*2*levels+1:k*batch_length*2*levels),levels,A);
     [theta ref2]=offset_estimation(mconst_phi,demconst);
-    phihat=phihat+theta;
+    %phihat=phihat+theta;
+    for(b=0:batch_length-1)
+        index = (k-1)*batch_length+b;
+        
+        phihat(mod(index,Nc)+1) = phihat(mod(index,Nc)+1) + theta;
+    end
     ref2=1;
 end
 
 k=k+1;
-mconst_phi=zeros(length( mconst((k-1)*batch_length+1:end)));
-for(b=1:length(mconst_phi))
-    mconst_phi(b) = mconst((k-1)*batch_length+b) * exp(-1i*phihat(b)) / (ref(b)*ref2);
+mconst_phi=zeros(1,length( mconst((k-1)*batch_length+1:end)));
+for(b=0:length(mconst_phi)-1)
+    index = (k-1)*batch_length+b;
+    mconst_phi(b+1) = mconst(index+1) * exp(-1i*phihat(mod(index,Nc)+1)) / (ref(mod(index,Nc)+1)*ref2);
 end
 
 mconstdem =[mconstdem mconst_phi];
@@ -175,12 +189,19 @@ if(length(decoded)>=length(test))
 end
 
 mod_signal_length = length(mod_signal)/fs;
-R = fs*Nc*2*levels / (FS+S+P)
-R = ((ts_length+2*gb_length)*2*levels + Nb) / mod_signal_length  
+%R = fs*Nc*2*levels / (FS+S+P)
+R = ((ts_length+2*gb_length)*2*levels + Nb) / mod_signal_length
+effective_rate = Nb / mod_signal_length
 
 
 
 
 
 
+%     consttx = reshape(demconst,batch_length/Nc,Nc);
+%     constrx = reshape(mconst_phi,batch_length/Nc,Nc);
+%     for(b=1:Nc)
+%         [theta(b) ref2(b)] = offset_estimation(constrx(:,b),consttx(:,b));
+%     end
+%     phihat = phihat + transpose(theta);
 %errors = sum(transpose((decoded(1:ts_length + Nb / (2*levels))))~=mconst(ts_length+1:end-gb_length) )

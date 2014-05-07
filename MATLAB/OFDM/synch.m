@@ -1,6 +1,6 @@
 function [t_samp]= synch(r, mod_ts)
 
-threshold=0.01; %define amplitude threshold to start  -> change accordingly.
+threshold=50; %define amplitude threshold to start  -> change accordingly.
 
 % Loop to identify sample where received sequence is initialized
 for(k=1:length(r))

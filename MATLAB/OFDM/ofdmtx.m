@@ -10,22 +10,22 @@ fclose('all');
 
 fs=44100; %Sampling frequency
 
-levels = 1;
+levels = 4;
 A = 1;
 FS = 1024;
 fc = fs/4;
 P = 20;
 S = 2;
-Nc =64;
+Nc =256;
 
 ts_length=3*FS;
 gb_length=3*FS;
 Nb=3*FS;        %Number of bits to transmit
 ts = randint(ts_length*2*levels,1,2);
 gb = randint(gb_length*2*levels,1,2);%zeros(gb_length*2*levels,1);
-data = randint(Nb,1,2);
+data_sent = randint(Nb,1,2);
 left = rem(Nb+(ts_length+gb_length)*2*levels,2*levels)
-bit_stream = [gb' ts' data'  gb'];
+bit_stream = [gb' ts' data_sent'  gb'];
 L=length(bit_stream);
 
 symbol2=ones(1,1);
@@ -96,7 +96,7 @@ ts_mod=ts_mod/(max(abs(ts_mod)+0.001));
 wavwrite(mod_signal, fs, 'mod_signal.wav');
 create_file_of_shorts('test_signal.dat',mod_signal*2^14)
 copy_file_from_working_directory_to_sdcard( 'test_signal.dat' );
-save('MQAM.mat','Nb','levels','fc','data','ts_length','gb_length','A','mod_signal','P','S','Nc','FS');
+save('MQAM.mat','Nb','levels','fc','data_sent','ts_length','gb_length','A','mod_signal','P','S','Nc','FS');
 save('ts_mod.mat','ts_mod','mconst_ts','ts')
 mod_signal_length = length(mod_signal)/fs; % Length of modulated signal in seconds
 fprintf('Modulated signal: %g seconds long \n',mod_signal_length)

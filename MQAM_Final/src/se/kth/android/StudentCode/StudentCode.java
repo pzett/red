@@ -157,29 +157,30 @@ public class StudentCode extends StudentCodeBase {
 	// Variable keeping in track of any errors that might occur
     boolean error = false;
     
-    // Variable used for testing
-    boolean testing = false;
-	
-    // Needs to be divisible by 8 and a number that depends on variable levels  
+    // Needs to be divisible by 8 and a number that depends on variable levels (currently 6) 
 	final int length_titleFile = 768;
 	final int length_sizeFile  = 768;
 	final int length_checksum = 768;
 	String rx_filename;
  
     // This is called before any other functions are initialized so that parameters for these can be set
-    public void init(int a) //a=0 -> tx ; a=1 -> rx
+    public void init(int a) // a = 0 -> tx ; a = 1 -> rx
     { 
-    	
            // Name your project so that messaging will work within your project
            projectName = "DemoProject";
            set_output_text("Hello World! Press menu for options!");
            // Add sensors your project will use
-           if(a==0){ useSensors =  SOUND_OUT; // CAMERA;CAMERA_RGB;//WIFI_SCAN | SOUND_OUT; //GYROSCOPE;//SOUND_IN|SOUND_OUT;//WIFI_SCAN | ACCELEROMETER | MAGNETIC_FIELD | PROXIMITY | LIGHT;//TIME_SYNC|SOUND_IN;//TIME_SYNC | ACCELEROMETER | MAGNETIC_FIELD | PROXIMITY | LIGHT | SOUND_IN;
-           clear_output_text();
-           add_output_text_line("TX side");
-           side=0;
+           if(a==0){ 
+        	   useSensors =  SOUND_OUT; // CAMERA;CAMERA_RGB;//WIFI_SCAN | SOUND_OUT; //GYROSCOPE;//SOUND_IN|SOUND_OUT;//WIFI_SCAN | ACCELEROMETER | MAGNETIC_FIELD | PROXIMITY | LIGHT;//TIME_SYNC|SOUND_IN;//TIME_SYNC | ACCELEROMETER | MAGNETIC_FIELD | PROXIMITY | LIGHT | SOUND_IN;
+        	   clear_output_text();
+        	   add_output_text_line("TX side");
+        	   side=0;
            }
-           if(a==1){ useSensors=SOUND_IN; add_output_text_line("RX side"); side=1; }                               
+           if(a==1){ 
+        	   useSensors=SOUND_IN; 
+        	   add_output_text_line("RX side"); 
+        	   side=1; 
+           }                               
           
            // Set sample rate for sound in/out, 8000 for emulator, 8000, 11025, 22050 or 44100 for target device
            sampleRate = 44100;
@@ -226,15 +227,12 @@ public class StudentCode extends StudentCodeBase {
            int length_rxb =no_samp_period*2000*30;
            rx_buffer = new short[length_rxb];
            
-           // Specify type of window function, 0 -> rect window, 1 -> Hanning window 
+           // Specify type of window function, 0 -> Rect window, 1 -> Hanning window 
            window =create_window(1);
                      
            // Modulate the training sequence
            ts_modQAM = modulateQAM_ts(ts_length,f1,levels); 
-           
-           // Line used for debugging purposes
-           //add_output_text_line("MQAM f="+f1);
-           //d_filename = null;
+
     }
 
     // This is called when the user presses start in the menu, reinitialize any data if needed
@@ -285,11 +283,7 @@ public class StudentCode extends StudentCodeBase {
     	
     	// Convert file to be sent into a binary stream stored in bit_buffer
     	case GETDATA:
-    		//add_output_text_line("Encoding file");
     		bit_buffer = data_buffer_bits();
-
-    		// Line for debugging purposes
-    		//save_i_to_file("bitbuffer.txt",bit_buffer,bit_buffer.length);
     		
     		// If the file is too big start again
     		if (error == true){
@@ -301,59 +295,34 @@ public class StudentCode extends StudentCodeBase {
     		break;
     	    
     	// Send data stored in bit_buffer
-    	case SEND:
-    		//add_output_text_line("Sending file");
+    	case SEND:  
     		send_data();
     		
         // Receiver part
     	case RECEIVED:
     	if(trigger==2){
     		add_output_text_line("Stopped listening and started decoding");
-    		//useSensors =  SOUND_OUT;
+    	
     		int margin = 20;
-    		int block_length=2*levels*no_samp_period*(gb_length+ts_length+margin); //block to do cross correlation
-    		double[] rx_bufferdouble = new double[rx_ind+4096-rx_ind%4096]; //buffer of doubles
-    		// Line used for debugging purposes
-    		//add_output_text_line("buffer length="+rx_buffer.length+"rx_ind+ = "+(rx_ind+4096-rx_ind%4096));
+    		int block_length=2*levels*no_samp_period*(gb_length+ts_length+margin); // Block to do cross correlation
+    		double[] rx_bufferdouble = new double[rx_ind+4096-rx_ind%4096]; // Buffer of doubles
+    	
     		for (int j=0;j<rx_ind;j++){
-    			rx_bufferdouble[j] = (double) rx_buffer[j]; //convert received samples to doubles.
+    			rx_bufferdouble[j] = (double) rx_buffer[j]; // Convert received samples to doubles
     		}
-    		
-    		// Line used for debugging purposes
-    		//save_d_to_file("rx_signal.txt",rx_bufferdouble,rx_bufferdouble.length);
     		
     		// Equalizer
     		rx_bufferdouble = EQ(rx_bufferdouble); 
-    		//save_d_to_file("rx_signal_afterEQ.txt",rx_bufferdouble,rx_bufferdouble.length);
-    		//save_to_file("rx_a.txt",rx_bufferdouble,rx_bufferdouble.length);
     		
-    		// Time the maxXcorr function
-    		long startTime3 = System.currentTimeMillis();
-    		int index = maxXcorr(Arrays.copyOfRange(rx_bufferdouble, 0, block_length),ts_modQAM); //find where training sequence begins
-    		long endTime3 = System.currentTimeMillis();
-    		add_output_text_line("maxXcorr took " + (endTime3 - startTime3) + " milliseconds");
+    		// Correlation function used to find training sequence
+    		int index = maxXcorr(Arrays.copyOfRange(rx_bufferdouble, 0, block_length),ts_modQAM);
     		
-    		//send received data to decision algorithm, copy only data part
-    		// Time the MQAMreceiver function
-    		long startTime = System.currentTimeMillis();
+    		// Send the received data to the decision algorithm, copy only data part
     		int decision[] = MQAMreceiver(f1,no_samp_period,Arrays.copyOfRange(rx_bufferdouble,index-margin,rx_bufferdouble.length));
-    		long endTime = System.currentTimeMillis();
-    		add_output_text_line("MAQMreceiver took " + (endTime - startTime) + " milliseconds");
-
-    		// Save decision to file
-    		//save_i_to_file("decision.txt", decision,decision.length);
 
     		// Convert binary stream back into a file
-    		// Time the retrieveData function
-    		long startTime2 = System.currentTimeMillis();
     		rx_filename = retrieveData(decision);
-      	    long endTime2 = System.currentTimeMillis();
-  		    add_output_text_line("RetrieveData took " + (endTime2 - startTime2) + " milliseconds");
-      	    
-  		    if(testing == true){
-      	    compare(decision);
-      	    }
-    		  		
+
       	   // If an error occurs start again
       	   if (error == true){
       		   trigger=-1;
@@ -361,11 +330,14 @@ public class StudentCode extends StudentCodeBase {
           	   d_filename = null;
       	   }
       	   else{
+      		   
+      		// Phone vibrates with "File received!" pop-up message   
       		please_vibrate();
-      	    // File is finished transferring
+      	    
+      		// File is finished transferring
     		add_output_text_line("File is received. If you would like to open "+rx_filename+" now, press the menu button and select open.");
     		
-    		// Calculate rate achieved
+    		// Calculate approximate rate achieved
     		double R = 2*levels *((double) mysampleRate) /( (double) no_samp_period);
     		
     		// Display rate achieved 
@@ -380,8 +352,6 @@ public class StudentCode extends StudentCodeBase {
     	}
 
     };       
-
-   
   
 
 	// Fill in the functions receiving sensor data to do processing 
@@ -414,53 +384,45 @@ public class StudentCode extends StudentCodeBase {
            lightData = "L: "+format4_2.format(l);
     }
    
-    void echoPlay(final short[] samp, int len)
-    {
-           final Handler handler = new Handler();
-           handler.postDelayed(new Runnable() {
-              @Override
-              public void run() {
-                  // Do something after 5s = 5000ms
-                  sound_out(samp,samp.length);
-              }
-           }, 1000);
-          
-    }
-   
+    // Function used to detect when information is being transmitted
     @SuppressLint("NewApi")
-	public void sound_in(long time, final short[] samples, int length)
+    public void sound_in(long time, final short[] samples, int length)
     { 
     	final int threshold = 100;
-    	int continue_listening = 0; //variable to verify if transmission is done (detect only noise in buffer)
+
+    	// Variable to verify if transmission is done (detect only noise in buffer)
+    	int continue_listening = 0;
     	if(trigger==0){
-    	set_output_text("only noise for the moment");
-    	for(int i = 0 ; i < length; i++){
-    		if(i==10){
-    			add_output_text_line("sample_amp="+samples[i]);
+    		set_output_text("Only noise for the moment");
+    		for(int i = 0 ; i < length; i++){
+    			if(i==10){
+    				add_output_text_line("sample_amp="+samples[i]);
+    			}
+    			if(samples[i]>threshold){
+    				clear_output_text();
+    				trigger=1;
+    				add_output_text_line("Started listening");
+    				rx_buffer=send_to_buffer(rx_buffer,length-i,Arrays.copyOfRange(samples, i, length));
+    				break;
+    			}
     		}
-    		if(samples[i]>threshold){
-    			clear_output_text();
-    			trigger=1;
-    			add_output_text_line("Started listening");
-    			rx_buffer=send_to_buffer(rx_buffer,length-i,Arrays.copyOfRange(samples, i, length));
-    			break;
-    	}
-    	}
     	}else{
     		if(trigger==1){
     			for(int i = 0;i<samples.length;i++){
     				if(samples[i]>threshold) { continue_listening = 1; break;}
     			}
     			if(continue_listening==1){
-    		rx_buffer=send_to_buffer(rx_buffer,length,samples);
-    			}else{ //buffer of only noise, transmission done
-    				 trigger=2;
-    				 state=RECEIVED;
-    			}
+    				rx_buffer=send_to_buffer(rx_buffer,length,samples);
     			
+    			// Buffer of only noise, transmission done
+    			}else{ 
+    				trigger=2;
+    				state=RECEIVED;
     			}
+
+    		}
     	}
-    
+
     }
     
     	
@@ -473,10 +435,11 @@ public class StudentCode extends StudentCodeBase {
     public void message_in(StudentMessage message)
     {
     }           
+    
     // Implement any plotting you need here 
     public void plot_data(Canvas plotCanvas, int width, int height) 
     {           
-          
+    	
            if((latestImage != null) && ((useSensors & CAMERA) == CAMERA)) // If camera is enabled, display
            {
                   plot_camera_image(plotCanvas,latestImage,imageWidth,imageHeight,width,height);
@@ -487,24 +450,30 @@ public class StudentCode extends StudentCodeBase {
            }                         
     }
     
+    // Function that stores that name of the file chosen
 	public void stringFromBrowseForFile(String filename){
+		
 		// Store name and extension of file in d_filename
 		d_filename=filename;
+		
 		// Display file chosen for sending
 		add_output_text_line("You chose "+d_filename+" for sending.");
 	}
    
+	// Function that saves the users input in a text file on the phone
     public void stringFromUser(String user_input)
     {
+    	// On the transmission side
     	if (side==-1) {
 
-    		//set_output_text(user_input);
         	String MessageFromUser = "MessageFromUser.txt";
     		
         	// Save string from user to a text file
         	save_to_file_s(MessageFromUser,user_input,user_input.length());
         	add_output_text_line("The file "+MessageFromUser+" was stored on the phone.");
     	}
+    	
+    	// On the receiver side
     	else{
         	// Opens received file
         	open_text_file(user_input);
@@ -677,27 +646,8 @@ private double [] square(double [] in_values) {
                   sound_out(buffer,buffer.length); // Send buffer to player                    
            };            
     };
-    
-//Task 3 generate a mono tone of specified frequency
- void genTone(int freq){
-     // fill out the array
-     for (int i = 0; i < numSamples; ++i) {
-         sample[i] = Math.sin(2 * Math.PI * i / (mysampleRate/freq));
-     }
-
-     // convert to 16 bit pcm sound array
-     // assumes the sample buffer is normalised.
-     int idx = 0;
-     for (final double dVal : sample) {
-         // scale to maximum amplitude
-         final short val = (short) ((dVal * 10767));
-         // in 16 bit wav PCM, first byte is the low order byte
-         generatedSnd[idx++] = (byte) (val & 0x00ff);
-         generatedSnd[idx++] = (byte) ((val & 0xff00) >>> 8);
-
-     }
- }
-
+ 
+ // Function used to play sound   
  void playSound(){
      final AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
              mysampleRate, AudioFormat.CHANNEL_OUT_MONO,
@@ -747,53 +697,9 @@ private double [] square(double [] in_values) {
      return y;
  }
  
- public static int[] goertzel(int f1, int f2, int n, double r[]){
-	 double fs=44100;
-	 
-	 double k1=0.5+ (double) (n*f1)/ ((double) fs);
-	 double k2=0.5+ (double) (n*f2)/ ((double) fs);
-	 
-	 double coeff1=2*Math.cos(2 * Math.PI / n * k1);
-	 double coeff2=2*Math.cos(2 * Math.PI / n * k2);
-	 double[] P =new double[3];
-	 double[] Q =new double[3];
-	 double[] mag1 =new double[r.length/n];
-	 double[] mag2 =new double[r.length/n];
-	 int aux=0;
-	 
-	 for(int l=0;l<r.length;l++) {
-		 P[0]=coeff1*P[1]-P[2]+r[l];
-		 Q[0]=coeff2*Q[1]-Q[2]+r[l];
-		 Q[2]=Q[1]; Q[1]=Q[0];
-		 P[2]=P[1]; P[1]=P[0];
-		 	
-		 if((l+1)%n==0){
-			 mag1[aux]=P[1]*P[1]+P[2]*P[2]-P[1]*P[2]*coeff1;
-			 mag2[aux]=Q[1]*Q[1]+Q[2]*Q[2]-Q[1]*Q[2]*coeff2;
-			 aux++;
-			//reset
-			 Q[2]=0;Q[1]=0;Q[0]=0;
-			 P[2]=0;P[1]=0;P[0]=0;
-		 }
-			
-		 
-	 }
-	 
-	 int[] decision= new int[aux+8-aux%8];
-	 
-	 for(int l=0;l<aux;l++){
-		 if(mag1[l]>mag2[l]){
-			 decision[l]=1;
-		 }else{
-			 decision[l]=0;
-		 }
-	 }
- 	 return decision;
-	 
- }
- 
+ // Function that performs correlation
  public int maxXcorr(double[] x,double[] y){
-	 double[] c= new double[x.length-y.length+2];
+	 double[] c = new double[x.length-y.length+2];
 	 double maxc=0;
 	 int index=0;
 	 for(int i = 0; i < x.length-y.length+1;i++){
@@ -812,29 +718,9 @@ private double [] square(double [] in_values) {
 	 //add_output_text_line("index="+index);
 	 return index;
  }
+
  
-
-//Modulation function into 2FSK used to modulate the training sequence
- public static double[] FSK_mod_ts(int f1,int f2, int[] r){
-	 double[] signal = new double[no_samp_period*r.length];
-
-	 for(int i=0;i<r.length;i++){
-		 if(r[i]==1){
-			 for(int ii=i*no_samp_period;ii<no_samp_period*(i+1)-1;ii++){
-				 signal[ii]=cosf1ts[ii-i*no_samp_period];
-			 }
-		 }
-		 else{
-			 for(int ii=i*no_samp_period;ii<no_samp_period*(i+1)-1;ii++){
-				 signal[ii]= cosf2ts[ii-i*no_samp_period];
-			 }
-		 }
-
-	 }
-	 return signal;
- }
- 
-//Initialize cosine with specified frequency
+// Initialize cosine with specified frequency
  public static double[] initCosine(int f, int fs,int N){
 	 double cosf[]=new double[N];
 	 for(int k=0;k<N;k++){
@@ -843,7 +729,7 @@ private double [] square(double [] in_values) {
 	 return cosf;
  }
  
-//Initialize sine with specified frequency
+// Initialize sine with specified frequency
  public static double[] initSinusoid(int f, int fs,int N){
 	 double sinf[]=new double[N];
 	 for(int k=0;k<N;k++){
@@ -853,39 +739,20 @@ private double [] square(double [] in_values) {
  }
  
 void send_data(){
-	// Generate a random stream of bits for testing
-	
-	SimpleInputFile in = new SimpleInputFile();
-    //in.open("data_test.txt"); 
-    //int Nb=in.readInt();
-    //int[] bit_stream = new int[Nb];
-	
 
-	//int[] size_data_signal = new int [100];
-//	for(int i = 0;i<Nb;i++){
-//		bit_stream[i]=Math.round((float) Math.random());
-//		}
-	//for(int i = 0;i<Nb;i++){
-	//bit_stream[i]=in.readInt();
-	//}
-	//in.close();
-	
+	SimpleInputFile in = new SimpleInputFile();
+
+	// Open and read text file containing guard band bits
 	in.open("gb_test.txt");
 	gb_length = in.readInt();
-	
-	// Line for debugging purposes
-	//add_output_text_line("gb_length="+gb_length);
-	
 	int[] guard_stream = new int[gb_length*2*levels];
 	for(int i = 0;i<gb_length*2*levels;i++){
 		guard_stream[i]=in.readInt();
-		//guard_stream[i]=Math.round((float) Math.random());
 	}
 	in.close();
-//	bit_stream = load_from_file("data_test.txt",Nb);
-//	save_to_file("data.txt",bit_stream,Nb);
+
 	
-	// Modulate the guard and data signal
+	// Modulate the guard band, data signal, size of file, title of file and checksum of data
 	double[] guard_signal =  MQAMmod(f1,guard_stream);
 	double[] data_signal = MQAMmod(f1,bit_buffer);
 	double[] size_data_signal = MQAMmod(f1,sizeofFile);
@@ -925,41 +792,12 @@ void send_data(){
 		tx_signal[current_position]=guard_signal[i];
 		current_position++;
 	}
-//	for(int i=0;i<bufferInt.length-current_position%bufferInt.length+1;i++){
-//		tx_signal[current_position+i]=0;
-//	}
-//	
-	
-	
-//	current_position = 0;
-//	int[] long_stream = new int[guard_stream.length*2+ts_length*2*levels+bit_stream.length];
-//	for(int k=0;k<guard_stream.length;k++){
-//		long_stream[current_position++]=guard_stream[k];
-//		
-//	}
-//	for(int k=0;k<ts_stream.length;k++){
-//		long_stream[current_position++]=ts_stream[k];
-//		
-//	}
-//	for(int k=0;k<bit_stream.length;k++){
-//		long_stream[current_position++]=bit_stream[k];		
-//	}
-//	for(int k=0;k<guard_stream.length;k++){
-//		long_stream[current_position++]=guard_stream[k];
-//		
-//	}
-	
-	//double tx_signal_c[] = MQAMmod_c(f1,long_stream);
-	
-	
+
+	// Create audiotrack
 	final AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
             mysampleRate, AudioFormat.CHANNEL_OUT_MONO,
             AudioFormat.ENCODING_PCM_16BIT, bufferInt.length,
             AudioTrack.MODE_STREAM);
-	
-    //double time_tx= (tx_signal.length) /((double) mysampleRate);
-	
-	//add_output_text_line("Transmission will take "+Math.round(time_tx*100)/100.00+ " seconds.");
 	
 	// Find maximum value of tx_singal
 	double max = 0;
@@ -967,56 +805,30 @@ void send_data(){
 		if(Math.abs(tx_signal[i])>max) max=Math.abs(tx_signal[i]);
 	}
 	
-	//short[] tx_signal_s=new short[tx_signal.length];
-	save_d_to_file("tx_signal.txt",tx_signal,tx_signal.length);
+	// Play out the total modulated transmission signal
 	for (int i = 0; i < tx_signal.length; i++) {
-		//tx_signal_s[i]=(short) ( tx_signal[i]*Math.pow(2, 14));
 		tx_signal[i]=tx_signal[i]/max;
 		play(tx_signal[i], audioTrack);
 	}
 	
-	
-//	max = 0;
-//	for(int i = 0;i<tx_signal_c.length;i++){
-//		if(Math.abs(tx_signal_c[i])>max) max=Math.abs(tx_signal_c[i]);
-//	}
-//	for (int i = 0; i < tx_signal_c.length; i++) {
-//		tx_signal_c[i]=tx_signal_c[i]/max;
-//
-//		//tx_signal_s[i]=(short) ( tx_signal[i]*Math.pow(2, 14));
-//
-//		play(tx_signal_c[i], audioTrack);
-//	}
-	
-	
-//	byte[] sound_contents = double2Byte(tx_signal);
-//	ByteBuffer sound_contents_bb;
-//	short[] buffer1 = new short[sound_contents.length/8];
-//	sound_contents_bb = ByteBuffer.wrap(sound_contents);
-//	sound_contents_bb.order(ByteOrder.LITTLE_ENDIAN);
-//	for (int i1=0;i1<sound_contents.length/8;i1++) {                        
-//		buffer1[i1]=sound_contents_bb.getShort(); // Create a buffer of shorts
-//	};
-//	 sound_out(tx_signal_s,tx_signal_s.length); // Send buffer to player    
-
 	add_output_text_line("Done with transmission");
 	state=-1;
-	//d_filename = null;
 
 }
 
+// Function for playing sound
 public void play(double in, AudioTrack at) {
 
-    // clip if outside [-1, +1]
+    // Clip outside of range [-1, +1]
     if (in < -1.0){ add_output_text_line("I am clipping"); in = -1.0;}
     if (in > +1.0){  add_output_text_line("I am clipping"); in = +1.0;}
 
-    // convert to bytes
+    // Convert to bytes
     short s = (short) ( MAX_16_BIT * in);
     bufferInt[bufferSize++] = (byte) s;
-    bufferInt[bufferSize++] = (byte) (s >> 8);   // little Endian
+    bufferInt[bufferSize++] = (byte) (s >> 8);
 
-    // send to sound card if buffer is full        
+    // Send to sound card if buffer is full        
     if (bufferSize >= bufferInt.length ) {
     	
     	at.write(bufferInt, 0, bufferInt.length);
@@ -1026,7 +838,7 @@ public void play(double in, AudioTrack at) {
 }
 
 public  short[] send_to_buffer(short[] rx_buffer, int length, short[] samples) {
-	//copy buffer
+	// Copy buffer
 	for(int i=0;i<length;i++){
 		rx_buffer[i+rx_ind]=samples[i];
 	}
@@ -1040,24 +852,10 @@ public  short[] send_to_buffer(short[] rx_buffer, int length, short[] samples) {
 	return rx_buffer;
 }
 
-public double[] modulate_ts(int length, int f1, int f2){
-	
-	SimpleInputFile in = new SimpleInputFile();
-    in.open("ts.txt"); 
-	final int [] ts = new int[length];
-	   // Read file from sdcard
-    for(int i=0; i<ts.length; i++){
-           ts[i]=in.readInt(); 
-    };
-   //add_output_text_line("ts(0,1)="+ts[0]+""+ts[1]);
-    in.close();
-	final double[] mod_ts =FSK_mod_ts(f1,f2,ts);
-	
-	return mod_ts;
-}
 
 // Function that saves double to a text file
 public void save_d_to_file(String filename,double[] data,int length){
+	
 	SimpleOutputFile out = new SimpleOutputFile();
 	out.open(filename);
 	out.writeInt(length);
@@ -1065,12 +863,11 @@ public void save_d_to_file(String filename,double[] data,int length){
       out.writeDouble(data[i]);
 	}
 	out.close();
-	
-	
 }
 
 // Function that saves int to a text file
 public void save_i_to_file(String filename,int[] data,int length){
+	
 	SimpleOutputFile out = new SimpleOutputFile();
 	out.open(filename);
 	out.writeInt(length);
@@ -1078,12 +875,11 @@ public void save_i_to_file(String filename,int[] data,int length){
       out.writeInt(data[i]);
 	}
 	out.close();
-	
-	
 }
 
 // Function that saves complex to a text file
 public void save_c_to_file(String filename,Complex[] data,int length){
+	
 	SimpleOutputFile out = new SimpleOutputFile();
 	out.open(filename);
 	out.writeInt(length);
@@ -1092,8 +888,6 @@ public void save_c_to_file(String filename,Complex[] data,int length){
       out.writeDouble(data[i].im());
 	}
 	out.close();
-	
-	
 }
 
 // Function that saves string to a text file
@@ -1101,10 +895,7 @@ public void save_to_file_s(String filename,String data,int length){
 	
 	SimpleOutputFile out = new SimpleOutputFile();
 	out.open(filename);
-	//out.writeInt(length);
-	//for(int i=0; i<data.length; i++){
-    out.writeString(data);//[i]);
-	//}
+    out.writeString(data);
 	out.close();
 }
 
@@ -1126,35 +917,7 @@ public int[] load_from_file(String filename,int mode){
 	
 }
 
-// Function used to compare received data with text file data
-public void compare(int decision[]){
-	int[] length_vec=load_from_file("data_test.txt",0);
-	float length = length_vec[0];
-	//add_output_text_line("length of tx_seq"+length);
-	int tx_seq[];
-	tx_seq=load_from_file("data_test.txt",1);
-	float e = 0;
-	float max = 0;
-	if(decision.length<length){
-		add_output_text_line("decision is smaller than transmitted !!");
-		max = decision.length; }
-	else{ max = length;
-	}
-	
-	for (int a = 0; a < max; a++) {
-
-        if (tx_seq[a] == decision[a]) {
-           // e=e;
-            } else {
-            e++;
-        }
-	}
-	double BER =e/max;
-	add_output_text_line("errors,BER="+e+"  ,  "+BER);
-	please_vibrate();
-}
-
-//Function that converts as file into a binary stream of ones and zeros
+// Function that converts as file into a binary stream of ones and zeros
 public int[] data_buffer_bits(){
 	if (init_done && (!file_loaded) && (!(d_filename==null))) {
 
@@ -1163,7 +926,7 @@ public int[] data_buffer_bits(){
 		
 		// Calculate checksum value of bybte array
 		C_sum_tx = checksum(the_file_contents,the_file_contents.length);
-		add_output_text_line("Check sum of data at transmitter ="+C_sum_tx);
+		
 		// Store length of file in in int[] of bits
 		String checksumofFile_s = Integer.toBinaryString((int) C_sum_tx);
 		
@@ -1210,10 +973,6 @@ public int[] data_buffer_bits(){
 			}
 		}
 
-		// Line for debugging purposes
-		//add_output_text_line("size of chosen file = "+sizeofFile_s+" (length = "+the_file_contents.length+"bytes)");
-		//add_output_text_line("title of chosen file="+d_filename);
-
 		// Convert the data in file to bits
 		the_file_contents_bb=ByteBuffer.wrap(the_file_contents); // Wrapper to easier access content.
 		the_file_contents_bb.order(ByteOrder.LITTLE_ENDIAN);
@@ -1246,14 +1005,11 @@ public int[] data_buffer_bits(){
 	return data_buffer_bits;	
 }
 
-//Function that converts binary stream of ones and zeros into the original file
+// Function that converts binary stream of ones and zeros into the original file
 public String retrieveData(int[] received){
 
 	byte[] data_buffer_received = new byte[received.length/8];
 	int receivedBitstemp[] = new int [8];
-
-	// Line for debugging purposes
-	//add_output_text_line("received length / 8 ="+((double) received.length/8)+"rx length"+received.length);
 
 	state_two=FIRST;
 
@@ -1278,7 +1034,6 @@ public String retrieveData(int[] received){
 				// Converts eight bits at a time into their corresponding byte value
 				data_buffer_received[k]= (byte) Integer.parseInt(data_concatenated,2);
 			} catch (NumberFormatException e) {
-				//e.printStackTrace();
 				add_output_text_line("Something went wrong. Please try again.");
 				error = true;
 				return null;
@@ -1297,13 +1052,6 @@ public String retrieveData(int[] received){
 				data_buffer_received_title[k]=data_buffer_received[k];
 			}
 		}
-		
-		// Get title of file
-		//byte[] data_buffer_received_title = new byte[length_titleFile/8];
-		//int temp_index = 0;
-		//while (data_buffer_received[temp_index]!=0){
-		//		data_buffer_received_title[temp_index]=data_buffer_received[temp_index];
-		//}
 		
 		// Get size of file
 		byte[] data_buffer_received_size = new byte[length_sizeFile/8];
@@ -1332,7 +1080,6 @@ public String retrieveData(int[] received){
 		try {
 			checksum_rx = Integer.parseInt(data_buffer_received_checksum_c,2);
 		} catch (NumberFormatException e) {
-			//e.printStackTrace();
 			add_output_text_line("Something went wrong. Please try again.");
 			error = true;
 			return null;
@@ -1349,42 +1096,25 @@ public String retrieveData(int[] received){
 		try {
 			size_i= Integer.parseInt(data_buffer_received_size_c,2);
 		} catch (NumberFormatException e) {
-			//e.printStackTrace();
 			add_output_text_line("Something went wrong. Please try again.");
 			error = true;
 			return null;
 		}
 		
 		// Get data, remove size and title of file from the received buffer
-		//byte[] data_buffer_received_n = new byte[(received.length/8)-(length_titleFile+length_sizeFile)/8];
-		//byte[] data_buffer_received_n = new byte[(received.length/8)-(length_titleFile+length_sizeFile)/8];
-		//for (int k=(length_titleFile+length_sizeFile)/8;k<(length_titleFile+length_sizeFile)/8+size_i;k++){
-		//	data_buffer_received_n[k-(length_titleFile+length_sizeFile)/8]=data_buffer_received[k];
-		//}
-		
 		byte[] data_buffer_received_n = new byte[(received.length/8)-(length_titleFile+length_sizeFile+length_checksum)/8];
 		for (int k=(length_titleFile+length_sizeFile+length_checksum)/8;k<(length_titleFile+length_sizeFile+length_checksum)/8+size_i;k++){
 			data_buffer_received_n[k-(length_titleFile+length_sizeFile+length_checksum)/8]=data_buffer_received[k];
 		}
 		
 		// Remove zeros at the end
-		//int counter_two = 0;
 		byte[] data_buffer_received_nn = new byte[size_i];
-		
-	//	while(data_buffer_received_n[counter_two]!=0){
-	//	//for (int k=(length_titleFile+length_sizeFile)/8;k<(length_titleFile+length_sizeFile)/8+size_i;k++){ //received.length/8
-	//		data_buffer_received_nn[counter_two]=data_buffer_received_n[counter_two];
-	//		counter_two++;
-	//	}
-		
 		for (int i=0;i<size_i;i++){
-			//for (int k=(length_titleFile+length_sizeFile)/8;k<(length_titleFile+length_sizeFile)/8+size_i;k++){ //received.length/8
 				data_buffer_received_nn[i]=data_buffer_received_n[i];
 			}
 		
 		// Compute checksum of received byte buffer and compare it to the transmitted check sum
 		C_sum_rx = checksum(data_buffer_received_nn,data_buffer_received_nn.length);
-        add_output_text_line("Checksum of data at receiver ="+C_sum_rx);
         
         // If the checksums are not equal, transmit again
         if (checksum_rx!=C_sum_rx){
@@ -1392,7 +1122,6 @@ public String retrieveData(int[] received){
         	error = true;
         	return null;
         }
-        
 		
 		// Convert the buffer containing the title into characters
 		String data_buffer_received_title_n="";
@@ -1413,24 +1142,20 @@ public String retrieveData(int[] received){
 			data_buffer_received_ext += (char) data_buffer_received_title[index_t];
 			index_t++;
 		}
-		
-		//add_output_text_line("Title of received file = "+data_buffer_received_title_n);
 
 		// Create file
 		FileOutputStream outFile;		
 		File out = new File(Environment.getExternalStorageDirectory().getPath());
 
 		// The file name to be written and stored
-		String filename_title = new String(out+"/"+data_buffer_received_title_n+"."+data_buffer_received_ext);
 		String filename_w_ext =new String(data_buffer_received_title_n+"."+data_buffer_received_ext);
 
 		try {
 			File file = new File(out+"/"+data_buffer_received_title_n+"."+data_buffer_received_ext);
-			//long fileLength = file.length();
 			outFile = new FileOutputStream(file);
+			
 			// Write the data of received buffer
 			outFile.write(data_buffer_received_nn);
-			//outFile.flush();
 			outFile.close();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -1446,89 +1171,8 @@ public void readFile(String received)
 	in.open(received);
 	String result = in.readString();
 	while(result != null){
-		//add_output_text_line("line="+result);
 		result = in.readString();
 	}
-}
-
-public static int[] goertzel2(int f1, int f2, int f3, int f4, int n, double r[]){
-	 int fs=44100;
-	 
-	 double k1=0.5+ n*f1/fs;
-	 double k2=0.5+ n*f2/fs;
-	 double k3=0.5+ n*f3/fs;
-	 double k4=0.5+ n*f4/fs;
-	 
-	 double coeff1=2*Math.cos(2 * Math.PI / n * k1);
-	 double coeff2=2*Math.cos(2 * Math.PI / n * k2);
-	 double coeff3=2*Math.cos(2 * Math.PI / n * k3);
-	 double coeff4=2*Math.cos(2 * Math.PI / n * k4);
-	 
-	 double[] P =new double[3];
-	 double[] Q =new double[3];
-	 double[] R =new double[3];
-	 double[] S =new double[3];
-	 
-	 double[] mag1 =new double[r.length/n];
-	 double[] mag2 =new double[r.length/n];
-	 double[] mag3 =new double[r.length/n];
-	 double[] mag4 =new double[r.length/n];
-	 int aux=0;
-	 
-	 for(int l=0;l<r.length;l++) {
-		 P[0]=coeff1*P[1]-P[2]+r[l];
-		 Q[0]=coeff2*Q[1]-Q[2]+r[l];
-		 R[0]=coeff3*R[1]-R[2]+r[1];
-		 S[0]=coeff4*S[1]-S[2]+r[1];
-		 
-		 Q[2]=Q[1]; Q[1]=Q[0];
-		 P[2]=P[1]; P[1]=P[0];
-		 R[2]=R[1]; R[1]=R[0];
-		 S[2]=S[1]; S[1]=S[0];
-		 	
-		 if((l+1)%n==0){
-			 mag1[aux]=P[1]*P[1]+P[2]*P[2]-P[1]*P[2]*coeff1;
-			 mag2[aux]=Q[1]*Q[1]+Q[2]*Q[2]-Q[1]*Q[2]*coeff2;
-			 mag3[aux]=R[1]*R[1]+R[2]*R[2]-R[1]*R[2]*coeff3;
-			 mag4[aux]=S[1]*S[1]+S[2]*S[2]-S[1]*S[2]*coeff4;
-			 aux++;
-			//reset
-			 Q[2]=0;Q[1]=0;Q[0]=0;
-			 P[2]=0;P[1]=0;P[0]=0;
-			 R[2]=0;R[1]=0;R[0]=0;
-			 S[2]=0;S[1]=0;S[0]=0;
-		 }
-			
-		 
-	 }
-	 
-	 int[] decision= new int[aux];
-	 
-	 for(int l=0;l<aux;l++){
-			 
-			 ArrayList <Double> v = new ArrayList <Double>();
-
-			    v.add(new Double(mag1[l]));
-			    v.add(new Double(mag2[l]));
-			    v.add(new Double(mag3[l]));
-			    v.add(new Double(mag4[l]));
-			    Double value = Collections.max(v);
-			    // Might need a += instead
-			    if(value==mag1[l]){
-			    	decision[l]=Integer.parseInt("00");
-			    }
-			    else if(value==mag2[l]){
-			    	decision[l]=Integer.parseInt("10");
-			    }
-			    else if(value==mag3[l]){
-			    	decision[l]=Integer.parseInt("11");
-			    }
-			    else if(value==mag4[l]){
-			    	decision[l]=Integer.parseInt("01");
-			    }
-	 }
-	 return decision;
-	 
 }
 
 public static double[][] mod_const(int bit_stream[], int L,int levels){
@@ -1686,25 +1330,22 @@ public  double[] MQAMmod(int f, int[] bits){
 
 }
 
-
-
 public double[] modulateQAM_ts(int length,int f,int levels){
 	SimpleInputFile in = new SimpleInputFile();
 	
     in.open("ts_test.txt"); 
     length = in.readInt();
     ts_length=length;
-    //add_output_text_line("ts_length="+ts_length);
 	final int [] ts = new int[length*2*levels];
 	
-	
 	ts_stream=new int[length*2*levels];
-	   // Read file from sdcard
+	
+	// Read file from sdcard
     for(int i=0; i<ts.length; i++){
            ts[i]=in.readInt(); 
            ts_stream[i] = ts[i];
     };
-   //add_output_text_line("ts(0,1)="+ts[0]+""+ts[1]);
+    
     in.close();
 	final double[] mod_ts = MQAMmod(f,ts);
 	ts_mod_const = mod_const_ts(ts,ts.length,levels);
@@ -1718,43 +1359,17 @@ public int[] MQAMreceiver(int f,int n_sym,double[] r){
 	
 	double Vx[]=new double[r.length];
 	double Vy[]=new double[r.length];
-	int a=0;
+
 	for(int k=0;k<r.length;k++){
 		Vx[k]=r[k]*cosf1[k%no_samp_period];
 		Vy[k]=-r[k]*sinf1[k%no_samp_period];
 	}
-	
-//	double[] cosf=initCosine(f1,mysampleRate,r.length);
-//	double[] sinf=initSinusoid(f1,mysampleRate,r.length);
-//	for(int k=0;k<r.length;k++){
-//		Vx[k]=r[k]*cosf[k];
-//		Vy[k]=-r[k]*sinf[k];
-//	}
-//	
-	//save_d_to_file("Vx.txt",Vx,r.length);
-	//save_d_to_file("Vy.txt",Vy,r.length);
-	
 	
 	double Hx[]  = LPfir(Vx);
 	double Hy[] =  LPfir(Vy);
 	
 	int margin = 10;
 	int block_length = (margin+ts_length)*no_samp_period;
-	
-	
-	//save_d_to_file("Hx.txt",Hx,Hx.length);
-	//save_d_to_file("Hy.txt",Hy,Hy.length);
-
-	//save_to_file("Hy.txt",Arrays.copyOfRange(Hy,0,block_length),block_length);
-//	double[] ts_real=new double[ts_mod_const.length];
-//	double[] ts_imag=new double[ts_mod_const.length];
-//	for(int k=0;k<ts_mod_const.length;k++){
-//		ts_real[k]=ts_mod_const[k][0];
-//		ts_imag[k]=ts_mod_const[k][1];
-//	}
-//	save_to_file("ts_real.txt",Arrays.copyOfRange(ts_real,0,ts_mod_const.length),ts_mod_const.length);
-//	save_to_file("ts_imag.txt",Arrays.copyOfRange(ts_imag,0,ts_mod_const.length),ts_mod_const.length);
-	
 	
 	int n_samp = synchronize(Arrays.copyOfRange(Hx,0,block_length),Arrays.copyOfRange(Hy,0,block_length),
 							 ts_mod_const,no_samp_period);
@@ -1767,13 +1382,10 @@ public int[] MQAMreceiver(int f,int n_sym,double[] r){
 		Hys[current_position] = Hy[k];
 		current_position++;
 	}
-	//save_d_to_file("mconstJavay.txt",Hys,current_position);
-	//save_d_to_file("mconstJavax.txt",Hxs,current_position);
+
 	// Phase estimation
-	
 	Complex mconst[] = phase_estimation(Arrays.copyOfRange(Hxs, 0, current_position),Arrays.copyOfRange(Hys, 0, current_position),ts_mod_const,current_position);
 	
-	//save_c_to_file("mconst.txt",mconst,mconst.length);
 	Complex[] demconst = new Complex[mconst.length];
 	double theta = 0;
 	
@@ -1781,7 +1393,7 @@ public int[] MQAMreceiver(int f,int n_sym,double[] r){
 	int batch_length = (int) Math.floor(0.1/Ts);
     int[] decision = new int[mconst.length*2*levels];
 	current_position = 0;
-	//add_output_text_line("b_l="+batch_length);
+
 	
 	for(int k = 0 ; k < (int) Math.floor((double) mconst.length/(double) batch_length); k++){
 		Complex[] mconst_phi =new Complex[batch_length];
@@ -1789,20 +1401,17 @@ public int[] MQAMreceiver(int f,int n_sym,double[] r){
 		for(int q=(k*batch_length);q<(k+1)*batch_length;q++){
 			mconst_phi[q-k*batch_length]=mconst[q];
 			mconst_phi[q-k*batch_length]=mconst_phi[q-k*batch_length].times(complex_exp);
-//		 Complex aux = mconst_phi[q-k*batch_length]; 
-//			mconst_phi[q-k*batch_length]=new Complex(aux.re()+aux.im()*Math.tan(gama),aux.im()/Math.cos(gama) );
 				
 		}
 		int decision_aux[] = demod_const(mconst_phi,levels);
 		System.arraycopy(mconst_phi, 0, demconst, k*batch_length , batch_length);
-		// copies an array from the specified source array
 		
+		// Copies an array from the specified source array	
 		System.arraycopy(decision_aux, 0, decision, current_position , decision_aux.length);
 		
 		current_position = current_position + decision_aux.length;
 		theta = offset_estimation(mconst_phi,decision_aux);
 		phihat = phihat + theta;
-		
 		
 	}
 
@@ -1817,9 +1426,11 @@ public int[] MQAMreceiver(int f,int n_sym,double[] r){
 		demconst[q] = new Complex(0,0);
 	}
 	int decision_aux[] = demod_const(mconst_phi,levels);
-	// copies an array from the specified source array
+	
+	// Copies an array from the specified source array
 	System.arraycopy(decision_aux, 0, decision, current_position, decision_aux.length);
-	//current_position = current_position + decision_aux.length;
+	
+	// Current_position = current_position + decision_aux.length;
 	save_c_to_file("demconst.txt",demconst,demconst.length);
 	
 	//	int decision[] = demod_const(mconst,levels);
@@ -1917,21 +1528,6 @@ public double[] create_window(int mode){ //MODE 0->RECT MODE 1->WINDOW.TXT
 
 public Complex[] phase_estimation(double[] Hx,double[] Hy, double[][] mconst_ts,int length){
 	
-//	// Save input variables to file for debugging purposes
-//	save_to_file("Hx.txt", Hx , length);
-//	save_to_file("Hy.txt", Hy,  length);
-//	double[] ts_real = new double [mconst_ts.length];
-//	double[] ts_imag = new double [mconst_ts.length];
-//	
-//	// Extract real and imaginary parts of mconst_ts
-//	for (int i=0;i<mconst_ts.length;i++){
-//		ts_real[i] = mconst_ts[i][0]; 
-//		ts_imag[i] = mconst_ts[i][1];
-//	}
-//	
-//	save_to_file("ts_real.txt",ts_real,ts_real.length);
-//	save_to_file("ts_imag.txt", ts_imag,ts_imag.length);
-	
 	// Initialize variables
 	double ref = 0;
 	double arg_sum = 0;
@@ -1946,49 +1542,21 @@ public Complex[] phase_estimation(double[] Hx,double[] Hy, double[][] mconst_ts,
 		rx[k] = new Complex(Hx[k],Hy[k]);
 	}
 	
-	
-	save_c_to_file("mconst_before.txt",rx,length);
-//	double aux_re;
-//	double aux_im;
-//	double ref_re = 0;
-//	double ref_im = 0;
+	//save_c_to_file("mconst_before.txt",rx,length);
+
 	for (int i=0;i<mconst_ts.length;i++){
 		Complex x = rx[i].times(mconst[i].conjugate());
 		double argx = x.phase();
 		arg_sum=arg_sum+argx;
 		double aux = (rx[i].abs())/(mconst[i].abs());
 		ref = ref+aux;
-//		aux_re = Math.abs(rx[i].re())/Math.abs(mconst[i].re());
-//		aux_im = Math.abs(rx[i].im())/Math.abs(mconst[i].im());
-//		ref_re = ref_re + aux_re;
-//		ref_im = ref_im + aux_im;
 	}
 
 	ref = ref / (double) mconst_ts.length;
-	//add_output_text_line("ref="+ref);
-	
 	phihat = arg_sum /(double) mconst_ts.length;
-	//add_output_text_line("phihat="+phihat);
-	
-//	ref_re = ref_re / (double) mconst_ts.length;
-//	ref_im = ref_im / (double) mconst_ts.length;
-	
-//	Complex complex_exp =new Complex(Math.cos(-phihat),Math.sin(-phihat));
+
 	Complex complex_exp =new Complex(1,0);
 	Complex aux = new Complex(ref,0);
-//	Complex mconst_sym[] = new Complex[Hx.length-mconst_ts.length];
-//	
-//	for(int i =0;i<mconst_sym.length;i++){
-//		mconst_sym[i]=new Complex(0,0);
-//	}
-//	for(int k=mconst_ts.length;k<Hx.length;k++){
-//		
-//		mconst_sym[k-mconst_ts.length] = rx[k].times(complex_exp);
-//		mconst_sym[k-mconst_ts.length] = mconst_sym[k-mconst_ts.length].divides(aux);
-//		
-//		//mconst_sym[k-mconst_ts.length] = new Complex(mconst_sym[k-mconst_ts.length].re()/ref_re,mconst_sym[k-mconst_ts.length].im()/ref_im);
-//	}
-	
 	Complex mconst_sym[] = new Complex[length];
 	
 	for(int i =0;i<mconst_sym.length;i++){
@@ -1999,33 +1567,7 @@ public Complex[] phase_estimation(double[] Hx,double[] Hy, double[][] mconst_ts,
 		mconst_sym[k] = rx[k].times(complex_exp);
 		mconst_sym[k] = mconst_sym[k].divides(aux);
 		
-		//mconst_sym[k-mconst_ts.length] = new Complex(mconst_sym[k-mconst_ts.length].re()/ref_re,mconst_sym[k-mconst_ts.length].im()/ref_im);
 	}
-	
-//	Complex rx_ts[] = new Complex[mconst_ts.length];
-	
-	
-//	for(int k=0;k<mconst_ts.length;k++){
-//		 rx_ts[k] = rx[k].times(complex_exp);
-//		//mconst_sym[k-mconst_ts.length] = mconst_sym[k-mconst_ts.length].divides(aux);
-//		
-//		rx_ts[k] = new Complex(rx_ts[k].re() / ref_re , rx_ts[k].im()/ref_im);
-//	}
-//	
-//	gama = skew_estimation(rx_ts,mconst);
-//	add_output_text_line("gama="+gama);
-	// Initialize real and imag
-	
-//	double[] real2 = new double [mconst_sym.length];
-//	double[] imag2 = new double [mconst_sym.length];
-//	// Extract real and imaginary parts of the complex values
-//	for (int i=0;i<mconst_sym.length;i++){
-//		real2[i] = mconst_sym[i].re();
-//		imag2[i] = mconst_sym[i].im();
-//	}
-	// Save output variables to file for debugging purposes
-//	save_to_file("out_real.txt", real2,real2.length);
-//	save_to_file("out_imag.txt", imag2,imag2.length);
 	
 	return mconst_sym;
 	
@@ -2038,7 +1580,8 @@ public double[] EQ(double[] input){
     
 	final double [] a = new double[3];
 	final double [] b = new double[3];
-	   // Read file from sdcard
+	
+	// Read file from sdcard
     for(int i=0; i<b.length; i++){
            b[i]=in.readDouble(); 
     };
@@ -2049,7 +1592,6 @@ public double[] EQ(double[] input){
 	IIR filter =new IIR(b,a);
     double[] out = filter.getOutput(input);
    
-    
 	return out;
 	
 }
@@ -2080,7 +1622,6 @@ public double offset_estimation(Complex[] mconst,int[] bit_stream){
 		}
 		demconst[current_position]= new Complex(xi,yi); current_position++;
 }
-	//add_output_text_line("current="+current_position);
 	double arg_sum = 0;
 	for (int i=0;i<current_position;i++){
 		Complex x = mconst[i].times(demconst[i].conjugate());
@@ -2109,108 +1650,4 @@ long checksum(byte[] buf, int length) {
 }
 
 }
-/*
-public int metric(int x, int y){
-	if(x==y){
-		return 0;
-	}
-	else{
-		return 1;
-	}
-}
-
-public int[] dectobin (int A, int B){
-	int[] y = new int [B];
-	int i = 1;
-	while(A>=0 && i<=B){
-		y[i]= A % 2;
-		i++;
-	}
-	// Check this line
-	for (int ii=B;ii<1;ii--){
-		y[ii-B]=y[ii];
-	}
-	return y;
-
-}
-
-public int[] next_state (int current_state, int input,int L, int K){
-	int[] binary_state = dectobin(current_state,K*(L-1));
-	int[] binary_input = dectobin(input,K);
-	int[] next_state_binary = Arrays.copyOfRange(binary_input, 0, binary_input.length);
-	int[] next_state_binary_n = Arrays.copyOfRange(next_state_binary, 0, (L-2)*K);
-	
-	StringBuilder concatenated = new StringBuilder(next_state_binary_n.length);
-	
-	for (int k=0;k<next_state_binary_n.length;k++){
-		concatenated.append(next_state_binary_n[k]);
-	}
-	
-	String data_concatenated = concatenated.toString();
-	int next_state = Integer.parseInt(data_concatenated,2);
-	int[] mem_cont = Arrays.copyOfRange(next_state_binary, 0, binary_state.length);
-	// Not returning correct int[]
-}
-
-public void decoder(int[] data_input, int code_rate){
-	int G[][] = new int [5][8];
-	G[0][0]=1; G[0][1]=0; G[0][2]=0; G[0][3]=1; G[0][4]=1; G[0][5]=1; G[0][6]=1; G[0][7]=1;
-	G[1][0]=1; G[1][1]=0; G[1][2]=1; G[1][3]=1; G[1][4]=1; G[1][5]=1; G[1][6]=0; G[1][7]=0;
-	G[2][0]=0; G[2][1]=1; G[2][2]=1; G[2][3]=0; G[2][4]=1; G[2][5]=1; G[2][6]=1; G[2][7]=0;
-	G[3][0]=1; G[3][1]=0; G[3][2]=1; G[3][3]=0; G[3][4]=1; G[3][5]=1; G[3][6]=0; G[3][7]=1;
-	G[4][0]=1; G[4][1]=1; G[4][2]=0; G[4][3]=1; G[4][4]=1; G[4][5]=1; G[4][6]=1; G[4][7]=1;
-	
-	int k = 4; int n = 5; int L = 8/4;
-	
-	double number_of_state = Math.pow((L-1)*k,2);
-	
-	
-}
-*/
-
-//
-//public static final byte[] double2Byte(double[] inData) {
-//    int j=0;
-//    int length=inData.length;
-//    byte[] outData=new byte[length*8];
-//    for (int i=0;i<length;i++) {
-//      long data=Double.doubleToLongBits(inData[i]);
-//      outData[j++]=(byte)(data>>>56);
-//      outData[j++]=(byte)(data>>>48);
-//      outData[j++]=(byte)(data>>>40);
-//      outData[j++]=(byte)(data>>>32);
-//      outData[j++]=(byte)(data>>>24);
-//      outData[j++]=(byte)(data>>>16);
-//      outData[j++]=(byte)(data>>>8);
-//      outData[j++]=(byte)(data>>>0);
-//    }
-//    return outData;
-//  }
-//
-//public double skew_estimation(Complex[] r, Complex[] ts){
-//	
-//	double total = 0;
-//
-//	for(int k = 0; k<ts.length;k++){
-//		if(r[k].im()/ts[k].im()<1){
-//			double aux = Math.acos(r[k].im()/ts[k].im());
-//			total++;
-//			gama = gama + aux;
-//		}
-//
-//
-//
-//
-//	}
-//	gama=gama/total;
-//	return gama;
-//
-//}
-// 
-//
-//
-//
-
-
-
 

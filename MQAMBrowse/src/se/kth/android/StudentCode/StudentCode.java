@@ -141,6 +141,9 @@ public class StudentCode extends StudentCodeBase {
 	int state_two = 0;
 	int[] sizeofFile; 
 	int[] titleofFile;
+	int[] checksumofFile;
+	long C_sum_tx;
+	long C_sum_rx;
 	
 	// Variables used in the switch cases
 	final int GETDATA = 0; 
@@ -160,6 +163,7 @@ public class StudentCode extends StudentCodeBase {
     // Needs to be divisible by 8 and a number that depends on variable levels  
 	final int length_titleFile = 768;
 	final int length_sizeFile  = 768;
+	final int length_checksum = 768;
 	String rx_filename;
  
     // This is called before any other functions are initialized so that parameters for these can be set
@@ -282,7 +286,7 @@ public class StudentCode extends StudentCodeBase {
     	// Convert file to be sent into a binary stream stored in bit_buffer
     	case GETDATA:
     		bit_buffer = data_buffer_bits();
-    		
+
     		// Line for debugging purposes
     		//save_i_to_file("bitbuffer.txt",bit_buffer,bit_buffer.length);
     		
@@ -435,7 +439,7 @@ public class StudentCode extends StudentCodeBase {
     		if(samples[i]>threshold){
     			clear_output_text();
     			trigger=1;
-    			add_output_text_line("started listening");
+    			add_output_text_line("Started listening");
     			rx_buffer=send_to_buffer(rx_buffer,length-i,Arrays.copyOfRange(samples, i, length));
     			break;
     	}
@@ -884,9 +888,10 @@ void send_data(){
 	double[] data_signal = MQAMmod(f1,bit_buffer);
 	double[] size_data_signal = MQAMmod(f1,sizeofFile);
 	double[] title_data_signal = MQAMmod(f1,titleofFile);
+	double[] checksum_data_signal = MQAMmod(f1,checksumofFile);
 	
 	// Size of total signal to be transmitted
-	double[] tx_signal =new double[2*guard_signal.length+data_signal.length+ts_modQAM.length+bufferInt.length+title_data_signal.length+size_data_signal.length];
+	double[] tx_signal =new double[2*guard_signal.length+data_signal.length+ts_modQAM.length+bufferInt.length+title_data_signal.length+size_data_signal.length+checksum_data_signal.length];
 	
 	int current_position=0;
 	
@@ -904,6 +909,10 @@ void send_data(){
 	}
 	for(int i=0; i<size_data_signal.length; i++){
 		tx_signal[current_position]=size_data_signal[i];
+		current_position++;
+	}
+	for(int i=0; i<checksum_data_signal.length; i++){
+		tx_signal[current_position]=checksum_data_signal[i];
 		current_position++;
 	}
 	for(int i=0;i<data_signal.length;i++){
@@ -988,7 +997,7 @@ void send_data(){
 //	};
 //	 sound_out(tx_signal_s,tx_signal_s.length); // Send buffer to player    
 
-	add_output_text_line("done with buffering of transmission");
+	add_output_text_line("Done with transmission");
 	state=-1;
 	//d_filename = null;
 
@@ -1149,19 +1158,27 @@ public int[] data_buffer_bits(){
 
 		// Read file from plain file of samples in form of shorts
 		the_file_contents=read_data_from_file(d_filename);
-
+		
+		// Calculate checksum value of bybte array
+		C_sum_tx = checksum(the_file_contents,the_file_contents.length);
+		add_output_text_line("Check sum of data at transmitter ="+C_sum_tx);
+		// Store length of file in in int[] of bits
+		String checksumofFile_s = Integer.toBinaryString((int) C_sum_tx);
+		
 		// Store length of file in in int[] of bits
 		String sizeofFile_s = Integer.toBinaryString(the_file_contents.length);
 		
 		// Calculate the integer value of the length of the file contents
 		int sizeofFile_i = Integer.valueOf(the_file_contents.length);
-	/*	
+	
+		// Warning message: File is too large
 		if (sizeofFile_i>10240){
-			add_output_text_line("The file is too big (over 10kB). Please press stop and send a smaller file.");
+			add_output_text_line("The file is too big (over 36kB). Please press stop and send a smaller file.");
 			error = true;
 			return null;
 		}
-    */
+    
+		// Store size of file in int[] of bits
 		byte[] sizeofFile_b = sizeofFile_s.getBytes();
 		sizeofFile = new int[length_sizeFile];
 		for (int k=0;k<sizeofFile_b.length;k++) {				
@@ -1178,6 +1195,16 @@ public int[] data_buffer_bits(){
 			for (int k1=0; k1<8; k1++){
 				// Turn each byte into its corresponding bit representation
 				titleofFile [8*k+k1]=(titleofFile_b[k] >> (7-k1) & 1);
+			}
+		}
+		
+		// Store checksum in int[] of bits
+		byte[] checksumofFile_b = (checksumofFile_s.getBytes());	
+		checksumofFile = new int[length_checksum];
+		for (int k=0;k<checksumofFile_b.length;k++) {				
+			for (int k1=0; k1<8; k1++){
+				// Turn each byte into its corresponding bit representation
+				checksumofFile [8*k+k1]=(checksumofFile_b[k] >> (7-k1) & 1);
 			}
 		}
 
@@ -1284,6 +1311,31 @@ public String retrieveData(int[] received){
 			counter++;
 		}
 		
+		// Get checksum of file
+		byte[] data_buffer_received_checksum = new byte[length_checksum/8];
+		int counter_n=(length_titleFile+length_sizeFile)/8;
+		while(data_buffer_received[counter_n]!=0){
+			data_buffer_received_checksum[counter_n-(length_titleFile+length_sizeFile)/8]=data_buffer_received[counter_n];
+			counter_n++;
+		}
+
+		// Turn checksum of file into a string
+		String data_buffer_received_checksum_c="";
+		for (int k=(length_checksum+length_checksum)/8;k<counter_n;k++){
+			data_buffer_received_checksum_c += (char) data_buffer_received_checksum[k-(length_checksum+length_checksum)/8];
+		}
+		
+		// Turn checksum of file into a byte
+		int checksum_rx;
+		try {
+			checksum_rx = Integer.parseInt(data_buffer_received_checksum_c,2);
+		} catch (NumberFormatException e) {
+			//e.printStackTrace();
+			add_output_text_line("Something went wrong. Please try again.");
+			error = true;
+			return null;
+		}
+		
 		// Turn size of file into a string
 		String data_buffer_received_size_c="";
 		for (int k=length_titleFile/8;k<counter;k++){
@@ -1303,13 +1355,18 @@ public String retrieveData(int[] received){
 		
 		// Get data, remove size and title of file from the received buffer
 		//byte[] data_buffer_received_n = new byte[(received.length/8)-(length_titleFile+length_sizeFile)/8];
-		byte[] data_buffer_received_n = new byte[(received.length/8)-(length_titleFile+length_sizeFile)/8];
-		for (int k=(length_titleFile+length_sizeFile)/8;k<(length_titleFile+length_sizeFile)/8+size_i;k++){
-			data_buffer_received_n[k-(length_titleFile+length_sizeFile)/8]=data_buffer_received[k];
+		//byte[] data_buffer_received_n = new byte[(received.length/8)-(length_titleFile+length_sizeFile)/8];
+		//for (int k=(length_titleFile+length_sizeFile)/8;k<(length_titleFile+length_sizeFile)/8+size_i;k++){
+		//	data_buffer_received_n[k-(length_titleFile+length_sizeFile)/8]=data_buffer_received[k];
+		//}
+		
+		byte[] data_buffer_received_n = new byte[(received.length/8)-(length_titleFile+length_sizeFile+length_checksum)/8];
+		for (int k=(length_titleFile+length_sizeFile+length_checksum)/8;k<(length_titleFile+length_sizeFile+length_checksum)/8+size_i;k++){
+			data_buffer_received_n[k-(length_titleFile+length_sizeFile+length_checksum)/8]=data_buffer_received[k];
 		}
 		
 		// Remove zeros at the end
-		int counter_two = 0;
+		//int counter_two = 0;
 		byte[] data_buffer_received_nn = new byte[size_i];
 		
 	//	while(data_buffer_received_n[counter_two]!=0){
@@ -1322,7 +1379,19 @@ public String retrieveData(int[] received){
 			//for (int k=(length_titleFile+length_sizeFile)/8;k<(length_titleFile+length_sizeFile)/8+size_i;k++){ //received.length/8
 				data_buffer_received_nn[i]=data_buffer_received_n[i];
 			}
-
+		
+		// Compute checksum of received byte buffer and compare it to the transmitted check sum
+		C_sum_rx = checksum(data_buffer_received_nn,data_buffer_received_nn.length);
+        add_output_text_line("Checksum of data at receiver ="+C_sum_rx);
+        
+        // If the checksums are not equal, transmit again
+        if (checksum_rx!=C_sum_rx){
+        	add_output_text_line("Something went wrong. Please try again.");
+        	error = true;
+        	return null;
+        }
+        
+		
 		// Convert the buffer containing the title into characters
 		String data_buffer_received_title_n="";
 		String data_buffer_received_ext="";
@@ -2021,10 +2090,81 @@ public double offset_estimation(Complex[] mconst,int[] bit_stream){
 	
 	return arg_sum;
 	
-}	
+}
+
+// Function that computes the internet checksum of an array of bytes (ref: http://www.faqs.org/rfcs/rfc1071.html) 
+long checksum(byte[] buf, int length) {
+    int i = 0;
+    long sum = 0;
+    while (length > 0) {
+        sum += (buf[i++]&0xff) << 8;
+        if ((--length)==0) break;
+        sum += (buf[i++]&0xff);
+        --length;
+    }
+
+    return (~((sum & 0xFFFF)+(sum >> 16)))&0xFFFF;
+}
+
+}
+/*
+public int metric(int x, int y){
+	if(x==y){
+		return 0;
+	}
+	else{
+		return 1;
+	}
+}
+
+public int[] dectobin (int A, int B){
+	int[] y = new int [B];
+	int i = 1;
+	while(A>=0 && i<=B){
+		y[i]= A % 2;
+		i++;
+	}
+	// Check this line
+	for (int ii=B;ii<1;ii--){
+		y[ii-B]=y[ii];
+	}
+	return y;
 
 }
 
+public int[] next_state (int current_state, int input,int L, int K){
+	int[] binary_state = dectobin(current_state,K*(L-1));
+	int[] binary_input = dectobin(input,K);
+	int[] next_state_binary = Arrays.copyOfRange(binary_input, 0, binary_input.length);
+	int[] next_state_binary_n = Arrays.copyOfRange(next_state_binary, 0, (L-2)*K);
+	
+	StringBuilder concatenated = new StringBuilder(next_state_binary_n.length);
+	
+	for (int k=0;k<next_state_binary_n.length;k++){
+		concatenated.append(next_state_binary_n[k]);
+	}
+	
+	String data_concatenated = concatenated.toString();
+	int next_state = Integer.parseInt(data_concatenated,2);
+	int[] mem_cont = Arrays.copyOfRange(next_state_binary, 0, binary_state.length);
+	// Not returning correct int[]
+}
+
+public void decoder(int[] data_input, int code_rate){
+	int G[][] = new int [5][8];
+	G[0][0]=1; G[0][1]=0; G[0][2]=0; G[0][3]=1; G[0][4]=1; G[0][5]=1; G[0][6]=1; G[0][7]=1;
+	G[1][0]=1; G[1][1]=0; G[1][2]=1; G[1][3]=1; G[1][4]=1; G[1][5]=1; G[1][6]=0; G[1][7]=0;
+	G[2][0]=0; G[2][1]=1; G[2][2]=1; G[2][3]=0; G[2][4]=1; G[2][5]=1; G[2][6]=1; G[2][7]=0;
+	G[3][0]=1; G[3][1]=0; G[3][2]=1; G[3][3]=0; G[3][4]=1; G[3][5]=1; G[3][6]=0; G[3][7]=1;
+	G[4][0]=1; G[4][1]=1; G[4][2]=0; G[4][3]=1; G[4][4]=1; G[4][5]=1; G[4][6]=1; G[4][7]=1;
+	
+	int k = 4; int n = 5; int L = 8/4;
+	
+	double number_of_state = Math.pow((L-1)*k,2);
+	
+	
+}
+*/
 
 //
 //public static final byte[] double2Byte(double[] inData) {

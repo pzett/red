@@ -18,8 +18,7 @@ end;
 temp=zeros(1,size(data,1)*size(data,2));
 for i1=1:size(data,2)
     ix=(i1-size(data,2))+size(data,2)*(1:size(data,1));
-    temp(ix)=data(:,i1);
-    
+    temp(ix)=data(:,i1);    
 end
 
 

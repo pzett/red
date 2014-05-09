@@ -2,11 +2,8 @@
 
 <LinearLayout android:layout_width="fill_parent"
 	android:layout_height="fill_parent" xmlns:android="http://schemas.android.com/apk/res/android"
-	android:gravity="center"
-	android:id="@+id/main" android:orientation="vertical"
-	android:background="@drawable/ic_launcher"
-	>
-	<se.kth.android.FrameWork.PlotView android:id="@+id/oscview" android:layout_height="10sp" android:layout_width="10sp" android:layout_weight="1"/>
+	android:id="@+id/main" android:orientation="vertical">
+	<se.kth.android.FrameWork.PlotView android:id="@+id/oscview" android:layout_height="fill_parent" android:layout_width="fill_parent" android:layout_weight="1"/>
 
  <LinearLayout android:layout_weight="1"  android:layout_width="fill_parent"
 	android:layout_height="fill_parent" 

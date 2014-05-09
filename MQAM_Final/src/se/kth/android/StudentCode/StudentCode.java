@@ -60,17 +60,21 @@ import android.content.Context;
 //import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.graphics.Paint;
 //import android.graphics.Color;
 //import android.graphics.Paint;
 //import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Paint.Style;
+import android.graphics.drawable.Drawable;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.net.wifi.ScanResult;
 import android.os.Environment;
 import android.os.Handler;
+import android.widget.ImageView;
 
 
 public class StudentCode extends StudentCodeBase {
@@ -118,8 +122,8 @@ public class StudentCode extends StudentCodeBase {
     public static int trigger = 0; //0 -> listening and waiting 1 -> listening and received 2 -> done listening -1 ->processed
     private static short[] rx_buffer;
     private static int rx_ind=0;
-    private static int ts_length = 172;//504;
-    private static int gb_length = 220;//804;
+    private static int ts_length = 200;//504;
+    private static int gb_length = 520;//804;
     private static double[] ts_mod;
     private static double[][] ts_mod_const;
     private static double[] window;
@@ -316,7 +320,7 @@ public class StudentCode extends StudentCodeBase {
     		
     		// Correlation function used to find training sequence
     		int index = maxXcorr(Arrays.copyOfRange(rx_bufferdouble, 0, block_length),ts_modQAM);
-    		
+    		add_output_text_line("Index = "+index);
     		// Send the received data to the decision algorithm, copy only data part
     		int decision[] = MQAMreceiver(f1,no_samp_period,Arrays.copyOfRange(rx_bufferdouble,index-margin,rx_bufferdouble.length));
 
@@ -331,17 +335,12 @@ public class StudentCode extends StudentCodeBase {
       	   }
       	   else{
       		   
-      		// Phone vibrates with "File received!" pop-up message   
+      		// Phone vibrates with "File received!" pop-up message
       		please_vibrate();
       	    
       		// File is finished transferring
     		add_output_text_line("File is received. If you would like to open "+rx_filename+" now, press the menu button and select open.");
     		
-    		// Calculate approximate rate achieved
-    		double R = 2*levels *((double) mysampleRate) /( (double) no_samp_period);
-    		
-    		// Display rate achieved 
-    		add_output_text_line("achieved rate = "+R);
     		d_filename = null;
           	bit_buffer = null;
     		trigger=-1;
@@ -352,37 +351,6 @@ public class StudentCode extends StudentCodeBase {
     	}
 
     };       
-  
-
-	// Fill in the functions receiving sensor data to do processing 
-    public void gps(long time, double latitude, double longitude, double height, double precision)
-    {
-           gpsData = "G: "+format4_2.format(latitude)+":"+format4_2.format(longitude)+":"+format4_2.format(height)+":"+format4_2.format(precision);
-    }
-   
-    public void magnetic_field(long time, double x, double y, double z)
-    {
-           magneticData = "M: "+format4_2.format(x)+":"+format4_2.format(y)+":"+format4_2.format(z);
-    }
-
-    public void accelerometer(long time, double x, double y, double z)
-    {
-           triggerTime = "A: "+format4_2.format(x)+":"+format4_2.format(y)+":"+format4_2.format(z);
-    }
-   
-    public void gyroscope(long time, double x, double y, double z)
-    {
-           gyroData = "G: "+format4_2.format(x)+":"+format4_2.format(y)+":"+format4_2.format(z);
-    }
-    public void proximity(long time, double p)
-    {
-           proximityData = "P: "+format4_2.format(p); 
-    }
-   
-    public void light(long time, double l)
-    {
-           lightData = "L: "+format4_2.format(l);
-    }
    
     // Function used to detect when information is being transmitted
     @SuppressLint("NewApi")
@@ -424,8 +392,6 @@ public class StudentCode extends StudentCodeBase {
     	}
 
     }
-    
-    	
   
     public void screen_touched(float x, float y) 
     {
@@ -439,15 +405,16 @@ public class StudentCode extends StudentCodeBase {
     // Implement any plotting you need here 
     public void plot_data(Canvas plotCanvas, int width, int height) 
     {           
-    	
-           if((latestImage != null) && ((useSensors & CAMERA) == CAMERA)) // If camera is enabled, display
-           {
-                  plot_camera_image(plotCanvas,latestImage,imageWidth,imageHeight,width,height);
-           }                         
-           if((latestRGBImage != null) && ((useSensors & CAMERA_RGB) == CAMERA_RGB)) // If camera is enabled, display
-           {
-                  plot_camera_image_rgb(plotCanvas,latestRGBImage,imageWidth,imageHeight,width,height);
-           }                         
+/*    	
+    	ImageView img = (ImageView)findViewById(R.id.activity_image);
+        try {
+            Drawable d = Drawable.createFromStream(getAssets().open("@ahd ic_launcher.png"), null);
+            img.setImageDrawable(d);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+  */  	                     
     }
     
     // Function that stores that name of the file chosen
@@ -480,153 +447,10 @@ public class StudentCode extends StudentCodeBase {
     	}
     }
 
-   
-    // Implement wifi ap analysis here
-    public void wifi_ap(long time, List<ScanResult> wifi_list)
-    {
-           wifi_ap = "";
-           for(ScanResult sr: wifi_list)
-                  wifi_ap += sr.SSID + " " + sr.level + "\n"; 
-          
-    }
-
     // Implement reception of streaming sound here
     public void streaming_buffer_in(short[] buffer, int length, int senderId)
     {
     }
-
-    byte[] latestImage = null;
-    byte[] latestRGBImage = null;
-    int imageHeight = 0;
-    int imageWidth = 0;
-    QRCodeReader r = new QRCodeReader();
-   
-    public void camera_image(byte[] image, int width, int height) // For gray scale G8 in each byte
-    {
-           /* Save latest image*/
-           latestImage = image;
-           imageWidth = width;
-           imageHeight = height;
-
-    }
-   
-
-
-    public void camera_image_rgb(byte[] image, int width, int height) // For color RGB888 interleaved
-    {
-           latestRGBImage = image;
-           imageWidth = width;
-           imageHeight = height;
-                          
-           /* Below is example code which uses the com.google.zxing.qrcode QR decoder to
-             detect a web address. The address is displayed in the text display. */
-           /* zxing start color */ 
-          
-           Result res = null;
-           int[] frame = new int[width/4*height/4];
-           for(int y=0;y<height/4;y++)
-                  for(int x=0;x<width/4;x++)
-                  {
-                         int i = (y*4*width+x*4)*3;
-                        
-                         int rgbColor = 0xFF000000 | (image[i]<<16)&0xFF0000 | (image[i+1]<<8)&0xFF00 | image[i+2]&0xFF;
-                         frame[y*width/4+x] = rgbColor;
-                  }
-                                      
-                 
-          
-           RGBLuminanceSource s = new RGBLuminanceSource(width/4,height/4,frame);
-           BinaryBitmap b = new BinaryBitmap(new GlobalHistogramBinarizer(s));
-           Detector d;
-           DetectorResult dr = null;
-           try {
-                  d = new Detector(b.getBlackMatrix());
-                  dr = d.detect();
-                 
-                  res = r.decode(b);
-           } catch (NotFoundException e) {
-           } catch (FormatException e) {
-           }
-       catch (ChecksumException e) {
-       }
-           if(dr != null)
-           for(ResultPoint rp : dr.getPoints())
-           {
-                  image[(int) ((rp.getX()*4+rp.getY()*4*width)*3)] = 0;
-                  image[(int) ((rp.getX()*4+rp.getY()*4*width)*3)+1] = 0;
-                  image[(int) ((rp.getX()*4+rp.getY()*4*width)*3)+1] = (byte) 0xFF;
-           }
-          
-           if(res != null)
-           {
-                  set_output_text(res.getText());
-           } 
-          
-           /* zxing stop color */ 
-    }
-
-
- //This function is called before the framework executes normally  meaning that no sensors or
- // initialing is done.
- // If you return true the execution stops after this function.
- // Use this to test algorithms with static data.
- public boolean test_harness()
- {
-    boolean do_test=false; // Set to true when running test_harness_example
-   
-  // The below code is used together with test_harness_example.m.  
- if (do_test) {  
-    int no_of_real=5000;
-    double [] in_values = new double[no_of_real];
-    int [] out_values;
-   // in_values=new double[no_of_real];
-// for(int k=0;k<no_of_real;k++){
-//	in_values[k]=Math.random()*2+5;
-//}
-	
-    SimpleOutputFile out = new SimpleOutputFile();
-    SimpleInputFile in = new SimpleInputFile();
-   
-    in.open("indata.txt");             
-    out.open("outdata.txt");
-   
-    // Read data from input file 
-    no_of_real=in.readInt();
-    
-    // Read file from sdcard
-    for(int i=0; i<in_values.length; i++){
-           in_values[i]=in.readDouble(); 
-    };
-    int f1=200;
-    int f2=300;	
-    int n=100;
-     // Call the function to be tested 
-   // out_values=goertzel(f1,f2,n,in_values);
-   
-    // Write file on sdcard 
-    //for(int i=0; i<out_values.length; i++){
-        //   out.writeDouble(out_values[i]);
-   // };
-            
-    
-    out.close();  
-    in.close();
-   
-    return true;
- } else
- return false;
-}
-
-/* Used in test_harness_example.m */
-private double [] square(double [] in_values) {
-    double [] out_values;
-    out_values = new double[in_values.length];
-    for(int i=0; i<in_values.length; i++){
-           out_values[i]=in_values[i]*in_values[i];
-    } 
-    return out_values;
-}
-
 
     public void playsoundexample(){
            if (init_done && (!file_loaded)) {
@@ -715,7 +539,6 @@ private double [] square(double [] in_values) {
 			 maxc=c[i];
 		 }
 	 }
-	 //add_output_text_line("index="+index);
 	 return index;
  }
 
@@ -737,7 +560,8 @@ private double [] square(double [] in_values) {
 	 }
 	 return sinf;
  }
- 
+
+// Function that modulates all data and sends it
 void send_data(){
 
 	SimpleInputFile in = new SimpleInputFile();
@@ -801,17 +625,26 @@ void send_data(){
 	
 	// Find maximum value of tx_singal
 	double max = 0;
+
 	for(int i = 0;i<tx_signal.length;i++){
 		if(Math.abs(tx_signal[i])>max) max=Math.abs(tx_signal[i]);
 	}
+	
+	// Time transmission to calculate datarate
+	long startTime = System.currentTimeMillis();
 	
 	// Play out the total modulated transmission signal
 	for (int i = 0; i < tx_signal.length; i++) {
 		tx_signal[i]=tx_signal[i]/max;
 		play(tx_signal[i], audioTrack);
 	}
+	long endTime = System.currentTimeMillis();
 	
-	add_output_text_line("Done with transmission");
+	// Calculate data rate
+	//float data_rate = ( ((float)(bit_buffer.length)/1024) / (float)(endTime - startTime))*1000;
+	float data_rate = ( ((float)(bit_buffer.length+sizeofFile.length+titleofFile.length)/1024) / (float)(endTime - startTime))*1000;
+	//float data_rate = ( ((float)(bit_buffer.length+sizeofFile.length+titleofFile.length+checksumofFile.length)/1024) / tx_signal.length*mysampleRate);
+	add_output_text_line("Done with transmission, data rate achieved ="+data_rate+" kbps");
 	state=-1;
 
 }

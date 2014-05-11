@@ -8,10 +8,10 @@ load('MQAM.mat')
 load('ts_mod.mat')
 fs=44100;
 
-loops=1;
-plotting=1;
+loops=1; %apply loops ?
+plotting=1; % plot output of functions ?
 if(loops)
-    g_eq = 5.6;
+    g_eq = 5.6; %define equalizer gain, might not be needed, since this is OFDM.
 else
     g_eq=5.6;
 end
@@ -24,61 +24,65 @@ ro=extract_sound_from_log_data(log_data); %extract sound from log data.
 
 for(k_eq=1:length(g_eq))
     
+    
+    %     r=peakEQ(ro,g_eq(k_eq))'; % apply equalizer
+    %     Hd = hpf; % generate high pass filter to filter low pass component of noise
+    %
+    %     r = filter(Hd,r);
     figure(1)
-    %     r=peakEQ(ro,g_eq(k_eq))';
-    %             Hd = hpf;
-    %             r = filter(Hd,r);
-    r=ro;
+    r=ro; %received samples
     [t_samp t_end]=synch(r,ts_mod);
-    subplot(312)
-    pwelch(r)
+    subplot(412)
+    pwelch(mod_signal); title('PSD of transmitted signal')
+    subplot(413)
+    pwelch(r); title('PSD of received signal')
     r=r';
     r=r(t_samp:t_end);
-    if(plotting); colors = distinguishable_colors(Nc); end;
+    if(plotting); colors = distinguishable_colors(Nc); end; %generate Nc distinguishable colors
     t = 0: 1/fs : (length(r) - 1) / fs;
-    r=exp(-1i*2*pi*fc*t).*r;
-    subplot(313)
-    pwelch(r)
+    r=exp(-1i*2*pi*fc*t).*r; % multiply with the exponential
+    subplot(413)
+    pwelch(real(r)); title('PSD of received signal after (x) with complex exponential')
     
     if(mod(length(r), S+P+FS) ~= 0 )
-        r = [r  zeros(1,FS+S+P-mod(length(r), S+P+FS))];
+        r = [r  zeros(1,FS+S+P-mod(length(r), S+P+FS))]; %fill with zeros for reshaping purposes
     end
     n_cols = length(r)/(S+P+FS);
-    r_matrix = reshape ( r , S+P+FS ,n_cols);
+    r_matrix = reshape ( r , S+P+FS ,n_cols); % divide signal into colums containing the OFDM symbols
     decoded = [];
-    cp1 = zeros(P,n_cols);
-    cp2 = zeros(P,n_cols);
+    cp1 = zeros(P,n_cols); % variable to save cyclic prefix before
+    cp2 = zeros(P,n_cols); % variable to save cyclic prefix after, these might be unused
     for(k=1:n_cols)
-        data_with_cp = r_matrix(:,k);
+        data_with_cp = r_matrix(:,k); % extract columns
         cp1(:,k) = data_with_cp(1:P);
         cp2(:,k) = data_with_cp(end-S-P+1:end-S);
-        data = [data_with_cp(P+1:end-S)];
-        info = fft(data,FS);
+        data = [data_with_cp(P+1:end-S)]; %remove cyclic prefix and suffix
+        info = fft(data,FS); %apply FFT
         D = Nc;
-        demod = [info(1:D/2); info(FS-((D/2)-1):FS)];
-        decoded = [decoded; demod];
+        demod = [info(1:D/2); info(FS-((D/2)-1):FS)]; % demodulated symbols
+        decoded = [decoded; demod]; % merge into decoded
     end
     
     %     n_samp = synch2(decoded(1:ts_length+1000),mconst_ts)
     %     if(n_samp<=0); n_samp =1; end;
     %     decoded = decoded(n_samp:end);
     
-    if(pilot == 1)
+    if(pilot == 1) %if pilots are being used, they must be removed and the gain and phases estimated.
         [pilots, decoded] = remove_pilots(decoded,pilot_int/(2*levels),ts_pilot_length,ts_length);
         size(pilots)
         ts_const = demodulate(ts_pilot,levels,A);
         [pilot_phase, pilot_ref] = estimate_pilot_phases(pilots,ts_const,Nc);
     end
     
-    
-    tsr_matrix = reshape(decoded(1:ts_length),Nc,ts_length/Nc);
-    tss_matrix = reshape(mconst_ts,Nc,ts_length/Nc);
-    phihat = zeros(Nc,1);
-    ref = zeros(Nc,1);
+    tsr_matrix = reshape(decoded(1:ts_length),Nc,ts_length/Nc); %received training sequence
+    tss_matrix = reshape(mconst_ts,Nc,ts_length/Nc); % sent training sequence
+    phihat = zeros(Nc,1); % vector containing the phase estimations for each subcarrier.
+    ref = zeros(Nc,1); % vector containing the amplitude estimations for each subcarrier.
     for(k=1:Nc)
-        [phihat(k), ref(k), qq, qa] = phase_estimation(tsr_matrix(k,:),tss_matrix(k,:));
+        [phihat(k), ref(k), qq, qa] = phase_estimation(tsr_matrix(k,:),tss_matrix(k,:)); % estimate the phase and gain
     end
     
+    %generate vector of frequency for plotting and plot estimates for each frequency
     ff=fs*(Nc/(2*FS)):fs/FS:3*fs*(Nc/(2*FS)) ;
     ff =[ff(1:floor(length(ff)/2)) ff(ceil(length(ff)/2)+1:end)];
     figure(2)
@@ -87,17 +91,17 @@ for(k_eq=1:length(g_eq))
     subplot(212)
     stem(ff,ref)
     
+    ref2 = 1; % variable to keep track of amplitude changes in time, might not be needed.
+    batch_length = 64; % block length to update phase offset
+    if(mod(Nc,batch_length) ~= 0) disp('You might want to reconsider your batch length.')
+    %if(mod(pilot_int/(2*levels),batch_length) ~= 0 && pilot); disp('Pilot interval and batch length should match !'); pause; end
     
-    ref2 = 1;
-    batch_length = 64;
-    if(mod(pilot_int/(2*levels),batch_length) ~= 0 && pilot); disp('Pilot interval and batch length should match !'); pause; end
+    %initialize variables for decoding
     mconst = transpose(decoded);
     mconstdem = [];
     mdem = [];
-    
-    
     if(pilot); trigger_pilots = 0;  pilot_index=1; end;
-    % Y = scatterplot([0]);
+    
     figure(3)
     hold on
     grid on
@@ -110,21 +114,20 @@ for(k_eq=1:length(g_eq))
         mconst_phi=zeros(1,batch_length);
         
         for(b=0:batch_length-1)
-            index = (k-1)*batch_length+b;
-            
+            index = (k-1)*batch_length+b; % auxiliary variable so that the right phase and amplitude estimations are used.
             mconst_phi(b+1) = mconst(index+1) * exp(-1i*phihat(mod(index,Nc)+1)) / (ref(mod(index,Nc)+1)*ref2);
-            %
-            %                         if(plotting);
-            %                            % plot(real(mconst_phi(b+1)),imag(mconst_phi(b+1)),'.');
-            %                             plot(real(mconst_phi(b+1)),imag(mconst_phi(b+1)),'Marker','.','MarkerEdgeColor',colors(mod(index,Nc)+1,:),'LineStyle','none');
-            %                             %drawnow;
-            %                         end
+            
+%             if(plotting); 
+%                 %plot(real(mconst_phi(b+1)),imag(mconst_phi(b+1)),'.');
+%                 plot(real(mconst_phi(b+1)),imag(mconst_phi(b+1)),'Marker','.','MarkerEdgeColor',colors(mod(index,Nc)+1,:),'LineStyle','none');
+%                 %drawnow;
+%             end
         end
-        % plot(real(mconst_phi(b+1)),imag(mconst_phi(b+1)),'.');
-        %mconst_phi = real(mconst((k-1)*batch_length+1:k*batch_length) * exp(-1i*phihat)) / (ref*ref2) + 1i*imag(mconst((k-1)*batch_length+1:k*batch_length) * exp(-1i*phihat)) / (ref*ref2);
+       % plot(real(mconst_phi(b+1)),imag(mconst_phi(b+1)),'.');
+       % mconst_phi = real(mconst((k-1)*batch_length+1:k*batch_length) * exp(-1i*phihat)) / (ref*ref2) + 1i*imag(mconst((k-1)*batch_length+1:k*batch_length) * exp(-1i*phihat)) / (ref*ref2);
         mconstdem =[mconstdem mconst_phi];
         
-        for q=1:length(mconst_phi)
+        for q=1:length(mconst_phi) % take real and imag. part of constellation to apply ML decision
             Hx(q)=real(mconst_phi(q));
             Hy(q)=imag(mconst_phi(q));
         end
@@ -157,31 +160,31 @@ for(k_eq=1:length(g_eq))
         end
         
         demconst=demodulate(mdem((k-1)*batch_length*2*levels+1:k*batch_length*2*levels),levels,A);
-        [theta ref2]=offset_estimation(mconst_phi,demconst);
-        ref2=1;
-        
+        [theta ref2]=offset_estimation(mconst_phi,demconst); %estimate the phase offset.
+        ref2=1; % do not change amplitude, assume it is time invariant
         
         for(b=0:batch_length-1)
             index = (k-1)*batch_length+b;
-            phihat(mod(index,Nc)+1) = phihat(mod(index,Nc)+1) + theta;
+            phihat(mod(index,Nc)+1) = phihat(mod(index,Nc)+1) + theta; 
             %phihat=phihat+theta;
         end
         
-        if(pilot)
+        if(pilot) %if pilots are being used
             if(length(mconstdem) == ts_length); trigger_pilots = 1; end
             
             if(mod(length(mconstdem) - ts_length, pilot_int / (2*levels) )==0 && trigger_pilots && ((length(mconstdem)-ts_length) ~= 0) )
                 if(pilot_index < size(pilot_phase,2))
                     (length(mconstdem)-ts_length)
-                    phihat = pilot_phase(:,pilot_index);
-                    ref = pilot_ref(:,pilot_index);
+                    phihat = pilot_phase(:,pilot_index); %new phase estimation
+                    ref = pilot_ref(:,pilot_index);      %new amplitude estimation   
                     pilot_index=pilot_index+1
                 end
             end
         end
     end
     hold off
-    k=k+1;
+    
+    k=k+1; %process last batch.
     mconst_phi=zeros(1,length( mconst((k-1)*batch_length+1:end)));
     for(b=0:length(mconst_phi)-1)
         index = (k-1)*batch_length+b;
@@ -223,16 +226,17 @@ for(k_eq=1:length(g_eq))
         
     end
     
-    test =[ts; data_sent];
+    test =[ts; data_sent]; %vector to compare with the decoded and compute BER.
     figure(4)
     if(plotting)
-        subplot(212)
+        subplot(122)
         plot(real(mconstdem(ts_length+1:length(test)/(2*levels))),imag(mconstdem(ts_length+1:length(test)/(2*levels))),'.'); grid on ; xlabel('I'); ylabel('Q'),title('Received Constellation after Rotation and Offset Correction');
-        subplot(211)
-        plot(real(decoded(ts_length+1:length(test)/(2*levels))),imag(decoded(ts_length+1:length(test)/(2*levels))),'.');
+        subplot(121)
+        plot(real(decoded(ts_length+1:length(test)/(2*levels))),imag(decoded(ts_length+1:length(test)/(2*levels))),'.'); grid on ; xlabel('I'); ylabel('Q'),title('Received Constellation');
     end
     figure(5)
     plot(real(mconstdem(ts_length+1:length(test)/(2*levels))),imag(mconstdem(ts_length+1:length(test)/(2*levels))),'.'); grid on ; xlabel('I'); ylabel('Q'),title('Received Constellation after Rotation and Offset Correction');
+    
     decoded=mdem;
     
     if(length(decoded)>=length(test))
@@ -240,7 +244,7 @@ for(k_eq=1:length(g_eq))
         if(plotting)
             figure(6)
             subplot(211)
-            stem(test' ~= decoded);
+            stem(test' ~= decoded); title('Errors in the transmission'); xlabel('Samples'); ylabel('Error');
             subplot(212)
             carrier_errors(test(length(ts)+1:end)', decoded(length(ts)+1:end),Nc);
         end
@@ -252,8 +256,6 @@ end
 
 
 mod_signal_length = length(mod_signal)/fs;
-
-
 
 %R = fs*Nc*2*levels / (FS+S+P)
 

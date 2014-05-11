@@ -14,7 +14,7 @@ end
 [r_yts t]=xcorr(r(k_index:length(r)),mod_ts);
 
 [peak,offset]=max(abs(r_yts)); %find peak of cross correlation
-subplot(311)
+subplot(411)
 stem(abs(r_yts));
 
 t_samp = k_index + (offset - (length(r_yts)+1)/2);%only positive lags.

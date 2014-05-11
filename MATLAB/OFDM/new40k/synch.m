@@ -15,7 +15,7 @@ end
 
 [peak,offset]=max(abs(r_yts)); %find peak of cross correlation
 subplot(411)
-stem(abs(r_yts));
+stem(abs(r_yts)); title('Modulo of cross-correlation for synchronization'); xlabel('lag'); ylabel('Amplitude')
 
 t_samp = k_index + (offset - (length(r_yts)+1)/2);%only positive lags.
 

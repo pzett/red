@@ -14,7 +14,8 @@ for(k=1:Nc)
     errors(k) = sum(tx(k,:) ~= rx(k,:));
 end
 stem(errors); xlabel('Carrier number');
-             ylabel('Number of errors');   
+             ylabel('Number of errors');  
+             title('Errors in different carriers');
 
 end
 

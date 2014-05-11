@@ -6,7 +6,7 @@ fclose('all');
 
 load('MQAM.mat')
 load('ts_mod.mat')
-fs=44100;
+fs=44100; %sampling rate
 
 loops=1; %apply loops ?
 plotting=1; % plot output of functions ?
@@ -21,7 +21,7 @@ filename = char(names.filenames(end)); % Char converts cell to string
 copy_file_from_sdcard_to_working_directory(filename);%copy file to folder
 log_data=get_log_data_from_FrameWork(filename) %grab log data
 ro=extract_sound_from_log_data(log_data); %extract sound from log data.
-
+tic
 for(k_eq=1:length(g_eq))
     
     
@@ -33,16 +33,16 @@ for(k_eq=1:length(g_eq))
     r=ro; %received samples
     [t_samp t_end]=synch(r,ts_mod);
     subplot(412)
-    pwelch(mod_signal); title('PSD of transmitted signal')
+    pwelch(mod_signal,[],[],[],fs); title('PSD of transmitted signal');
     subplot(413)
-    pwelch(r); title('PSD of received signal')
+    pwelch(r,[],[],[],fs); title('PSD of received signal')
     r=r';
     r=r(t_samp:t_end);
     if(plotting); colors = distinguishable_colors(Nc); end; %generate Nc distinguishable colors
     t = 0: 1/fs : (length(r) - 1) / fs;
     r=exp(-1i*2*pi*fc*t).*r; % multiply with the exponential
-    subplot(413)
-    pwelch(real(r)); title('PSD of received signal after (x) with complex exponential')
+    subplot(414)
+    pwelch(real(r),[],[],[],fs); title('PSD of received signal after (x) with complex exponential')
     
     if(mod(length(r), S+P+FS) ~= 0 )
         r = [r  zeros(1,FS+S+P-mod(length(r), S+P+FS))]; %fill with zeros for reshaping purposes
@@ -83,17 +83,12 @@ for(k_eq=1:length(g_eq))
     end
     
     %generate vector of frequency for plotting and plot estimates for each frequency
-    ff=fs*(Nc/(2*FS)):fs/FS:3*fs*(Nc/(2*FS)) ;
-    ff =[ff(1:floor(length(ff)/2)) ff(ceil(length(ff)/2)+1:end)];
-    figure(2)
-    subplot(211)
-    stem(ff,phihat)
-    subplot(212)
-    stem(ff,ref)
+    plot_channel(fs,FS,Nc,fc,phihat,ref);
+    
     
     ref2 = 1; % variable to keep track of amplitude changes in time, might not be needed.
     batch_length = 64; % block length to update phase offset
-    if(mod(Nc,batch_length) ~= 0) disp('You might want to reconsider your batch length.')
+    if(mod(Nc,batch_length) ~= 0) disp('You might want to reconsider your batch length.'); end
     %if(mod(pilot_int/(2*levels),batch_length) ~= 0 && pilot); disp('Pilot interval and batch length should match !'); pause; end
     
     %initialize variables for decoding
@@ -102,12 +97,10 @@ for(k_eq=1:length(g_eq))
     mdem = [];
     if(pilot); trigger_pilots = 0;  pilot_index=1; end;
     
-    figure(3)
-    hold on
-    grid on
+ 
     for(k=1:floor(length(mconst)/batch_length))
         
-        %     for(b=1:batch_length)
+        %     for(b=1:batch_length) 
         %         mconst_phi(b) = mconst((k-1)*batch_length+b) * exp(-1i*phihat(b)) / (ref(b)*ref2);
         %     end
         
@@ -116,12 +109,6 @@ for(k_eq=1:length(g_eq))
         for(b=0:batch_length-1)
             index = (k-1)*batch_length+b; % auxiliary variable so that the right phase and amplitude estimations are used.
             mconst_phi(b+1) = mconst(index+1) * exp(-1i*phihat(mod(index,Nc)+1)) / (ref(mod(index,Nc)+1)*ref2);
-            
-%             if(plotting); 
-%                 %plot(real(mconst_phi(b+1)),imag(mconst_phi(b+1)),'.');
-%                 plot(real(mconst_phi(b+1)),imag(mconst_phi(b+1)),'Marker','.','MarkerEdgeColor',colors(mod(index,Nc)+1,:),'LineStyle','none');
-%                 %drawnow;
-%             end
         end
        % plot(real(mconst_phi(b+1)),imag(mconst_phi(b+1)),'.');
        % mconst_phi = real(mconst((k-1)*batch_length+1:k*batch_length) * exp(-1i*phihat)) / (ref*ref2) + 1i*imag(mconst((k-1)*batch_length+1:k*batch_length) * exp(-1i*phihat)) / (ref*ref2);
@@ -234,8 +221,11 @@ for(k_eq=1:length(g_eq))
         subplot(121)
         plot(real(decoded(ts_length+1:length(test)/(2*levels))),imag(decoded(ts_length+1:length(test)/(2*levels))),'.'); grid on ; xlabel('I'); ylabel('Q'),title('Received Constellation');
     end
-    figure(5)
-    plot(real(mconstdem(ts_length+1:length(test)/(2*levels))),imag(mconstdem(ts_length+1:length(test)/(2*levels))),'.'); grid on ; xlabel('I'); ylabel('Q'),title('Received Constellation after Rotation and Offset Correction');
+    
+    
+    
+    
+    %plot(real(mconstdem(ts_length+1:length(test)/(2*levels))),imag(mconstdem(ts_length+1:length(test)/(2*levels))),'.'); grid on ; xlabel('I'); ylabel('Q'),title('Received Constellation after Rotation and Offset Correction');
     
     decoded=mdem;
     
@@ -264,9 +254,17 @@ mod_signal_length = length(mod_signal)/fs;
 R = ((ts_length+2*gb_length)*2*levels + Nb) / mod_signal_length
 effective_rate = Nb / mod_signal_length
 
-fprintf('Transmitted: %g bytes in %g seconds\n',Nb/8,mod_signal_length );
+fprintf('Transmitted: %g bytes in %g seconds\n',Nb/8,mod_signal_length);
 
-
+T = toc;
+fprintf('Elapsed time: %g seconds. \n',T);
+figure(5)
+    hold on; grid on;
+    for(k=ts_length:length(test)/(2*levels))
+        
+        plot(real(mconstdem(k+1)),imag(mconstdem(k+1)),'Marker','.','MarkerEdgeColor',colors(mod(k-ts_length,Nc)+1,:),'LineStyle','none');
+    end
+title('Received constellation in each subcarrier'); xlabel('I'); ylabel('Q');
 
 
 %     consttx = reshape(demconst,batch_length/Nc,Nc);

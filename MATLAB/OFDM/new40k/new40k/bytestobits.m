@@ -10,7 +10,10 @@ vec3 = fread(fid);
 x = dec2bin(vec3);
 vec =[];
 for i = 1:size(x,1)
-    vec =[vec x(i,:)];
+    for(k=1:8)
+        aux = str2num(x(i,k));
+        vec =[vec aux];
+    end    
 end
 
 end

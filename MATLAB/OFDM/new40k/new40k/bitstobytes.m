@@ -2,9 +2,17 @@ function [fid] = bitstobytes(vec,filename)
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
 
-[M,N] = size(vec);
+str=[];
+for i = 1:length(vec)
+    
+        aux = num2str(vec(i));
+        str =[str aux];
+        
+end
 
-r=reshape(vec,8,N/8);
+[M,N] = size(str);
+
+r=reshape(str,8,N/8);
 
 rt=r';
 

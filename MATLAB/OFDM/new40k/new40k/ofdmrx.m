@@ -53,7 +53,7 @@ for(k_eq=1:length(g_eq))
     end
     
     decoded = demodulate_OFDM(r,FS,S,P,Nc);
-   % decoded = demodulate_OFDM_asym(r,FS,S,P,Nc,high);
+    % decoded = demodulate_OFDM_asym(r,FS,S,P,Nc,high);
     %     n_samp = synch2(decoded(1:ts_length+1000),mconst_ts)
     %     if(n_samp<=0); n_samp =1; end;
     %     decoded = decoded(n_samp:end);
@@ -90,10 +90,10 @@ for(k_eq=1:length(g_eq))
     mdem = [];
     if(pilot); trigger_pilots = 0;  pilot_index=1; end;
     
- 
+    
     for(k=1:floor(length(mconst)/batch_length))
         
-        %     for(b=1:batch_length) 
+        %     for(b=1:batch_length)
         %         mconst_phi(b) = mconst((k-1)*batch_length+b) * exp(-1i*phihat(b)) / (ref(b)*ref2);
         %     end
         
@@ -101,11 +101,11 @@ for(k_eq=1:length(g_eq))
         
         for(b=0:batch_length-1)
             index = (k-1)*batch_length+b; % auxiliary variable so that the right phase and amplitude estimations are used.
-           
+            
             mconst_phi(b+1) = mconst(index+1) * exp(-1i*phihat(mod(index,Nc)+1)) / (ref(mod(index,Nc)+1)*ref2);
         end
-       % plot(real(mconst_phi(b+1)),imag(mconst_phi(b+1)),'.');
-       % mconst_phi = real(mconst((k-1)*batch_length+1:k*batch_length) * exp(-1i*phihat)) / (ref*ref2) + 1i*imag(mconst((k-1)*batch_length+1:k*batch_length) * exp(-1i*phihat)) / (ref*ref2);
+        % plot(real(mconst_phi(b+1)),imag(mconst_phi(b+1)),'.');
+        % mconst_phi = real(mconst((k-1)*batch_length+1:k*batch_length) * exp(-1i*phihat)) / (ref*ref2) + 1i*imag(mconst((k-1)*batch_length+1:k*batch_length) * exp(-1i*phihat)) / (ref*ref2);
         mconstdem =[mconstdem mconst_phi];
         
         for q=1:length(mconst_phi) % take real and imag. part of constellation to apply ML decision
@@ -147,7 +147,7 @@ for(k_eq=1:length(g_eq))
         for(b=0:batch_length-1)
             index = (k-1)*batch_length+b;
             
-            phihat(mod(index,Nc)+1) = phihat(mod(index,Nc)+1) + theta; 
+            phihat(mod(index,Nc)+1) = phihat(mod(index,Nc)+1) + theta;
             %phihat=phihat+theta;
         end
         
@@ -208,35 +208,39 @@ for(k_eq=1:length(g_eq))
         
     end
     
-    test =[ts; data_sent]; %vector to compare with the decoded and compute BER.
-    figure(4)
-    if(plotting)
-        subplot(122)
-        plot(real(mconstdem(ts_length+1:length(test)/(2*levels))),imag(mconstdem(ts_length+1:length(test)/(2*levels))),'.'); grid on ; xlabel('I'); ylabel('Q'),title('Received Constellation after Rotation and Offset Correction');
-        subplot(121)
-        plot(real(decoded(ts_length+1:length(test)/(2*levels))),imag(decoded(ts_length+1:length(test)/(2*levels))),'.'); grid on ; xlabel('I'); ylabel('Q'),title('Received Constellation');
-    end
-    
-    
-    
-    
-    %plot(real(mconstdem(ts_length+1:length(test)/(2*levels))),imag(mconstdem(ts_length+1:length(test)/(2*levels))),'.'); grid on ; xlabel('I'); ylabel('Q'),title('Received Constellation after Rotation and Offset Correction');
-    
-    decoded=mdem;
-    
-    if(length(decoded)>=length(test))
-        decoded=decoded(1:length(test));
+    if(file)
+        file_data = mdem(ts_length*2*levels+1:ts_length*2*levels+length(data_sent));
+        bitstobytes(file_data,'output.wav');
+    else
+        test =[ts; data_sent]; %vector to compare with the decoded and compute BER.
+        figure(4)
         if(plotting)
-            figure(6)
-            subplot(211)
-            stem(test' ~= decoded); title('Errors in the transmission'); xlabel('Samples'); ylabel('Error');
-            subplot(212)
-            carrier_errors(test(length(ts)+1:end)', decoded(length(ts)+1:end),Nc);
+            subplot(122)
+            plot(real(mconstdem(ts_length+1:length(test)/(2*levels))),imag(mconstdem(ts_length+1:length(test)/(2*levels))),'.'); grid on ; xlabel('I'); ylabel('Q'),title('Received Constellation after Rotation and Offset Correction');
+            subplot(121)
+            plot(real(decoded(ts_length+1:length(test)/(2*levels))),imag(decoded(ts_length+1:length(test)/(2*levels))),'.'); grid on ; xlabel('I'); ylabel('Q'),title('Received Constellation');
         end
-        errors = sum(test(length(ts)+1:end)' ~= decoded(length(ts)+1:end));
-        BER = errors / length(test(length(ts)+1:end)) * 100
+        
+        
+        
+        
+        %plot(real(mconstdem(ts_length+1:length(test)/(2*levels))),imag(mconstdem(ts_length+1:length(test)/(2*levels))),'.'); grid on ; xlabel('I'); ylabel('Q'),title('Received Constellation after Rotation and Offset Correction');
+        
+        decoded=mdem;
+        
+        if(length(decoded)>=length(test))
+            decoded=decoded(1:length(test));
+            if(plotting)
+                figure(6)
+                subplot(211)
+                stem(test' ~= decoded); title('Errors in the transmission'); xlabel('Samples'); ylabel('Error');
+                subplot(212)
+                carrier_errors(test(length(ts)+1:end)', decoded(length(ts)+1:end),Nc);
+            end
+            errors = sum(test(length(ts)+1:end)' ~= decoded(length(ts)+1:end));
+            BER = errors / length(test(length(ts)+1:end)) * 100
+        end
     end
-    
 end
 
 

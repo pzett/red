@@ -12,6 +12,8 @@ fs=44100; %Sampling frequency
 pilot = 0; % use pilots in the middle of transmission?
 use_menu = 1;
 
+code = 0;
+rate = 1/2;
 
 levels = 3; %numbers of levels
 A = 1; % constellation amplitude, does not work
@@ -21,12 +23,15 @@ P = 5; %length of prefix
 S = 1; %length of suffix
 Nc = 512; %number of active subcarriers
 high = 512;
+
 if(use_menu);
     choice = menu('Choose an option for TX','Random','File');
+    if(choice==0) error('You must choose something !'); end;
     file=choice-1;
 else
     file = 0;
 end
+
 pilot_int = 12*Nc*2*levels; %(in bits) how many bits should be sent before pilot insertion
 ts_pilot_length = 6*Nc; %(in symbols) pilot length to reestimate the channel
 
@@ -40,14 +45,18 @@ if(file)
     if(filterindex==0); error('You must choose a file !'); end;
     str =[pathname,filename];
     data_sent = bytestobits(str);
+    [vec_name,vec_size] = bytestobitsnew(str,filename);
+    data_sent = [vec_size vec_name data_sent];
+    if(code); else; data_encoded =[]; end;
     if(mod(length(data_sent),Nc) ~= 0 )
         data_sent = [data_sent  zeros(1,Nc-mod(length(data_sent),Nc))]';
         fprintf('The file has %g bytes\n',length(data_sent)/8);
     end
     Nb = length(data_sent);
 else
-    Nb=50*FS;        %Number of bits to be transmitted
+    Nb=64800;        %Number of bits to be transmitted
     data_sent = randint(Nb,1,2); % generate random data
+   if(code==1); data_encoded = LDPCenc(data_sent,rate); else; data_encoded = []; end;
 end
 
 ts = randint(ts_length*2*levels,1,2); % generate training sequence
@@ -76,8 +85,12 @@ else
     ts_pilot =[];
 end
 
+if(code)
+    bit_stream = [gb' ts' data_encoded' gb']; % merge the data
+else
+    bit_stream = [gb' ts' data_sent_pilot' gb']; % merge the data
+end
 
-bit_stream = [gb' ts' data_sent_pilot' gb']; % merge the data
 L=length(bit_stream); %raw data length
 
 %initialize variables and map into constellation
@@ -149,7 +162,7 @@ if(mod(gb_length,Nc) || mod(ts_length,Nc)); disp('gb or ts length must be divisa
 create_file_of_shorts('test_signal.dat',mod_signal*(2^15-1));
 copy_file_to_all('test_signal.dat');
 %copy_file_from_working_directory_to_sdcard( 'test_signal.dat' );
-save('MQAM.mat','Nb','levels','fc','data_sent','ts_length','gb_length','A','mod_signal','P','S','Nc','FS','pilot','pilot_int','ts_pilot_length','high','file');
+save('MQAM.mat','Nb','levels','fc','data_sent','ts_length','gb_length','A','mod_signal','P','S','Nc','FS','pilot','pilot_int','ts_pilot_length','high','file','rate','code','data_encoded');
 save('ts_mod.mat','ts_mod','mconst_ts','ts','ts_pilot' )
 mod_signal_length = length(mod_signal)/fs; % Length of modulated signal in seconds
 fprintf('Modulated signal: %g seconds long \n',mod_signal_length);

@@ -1,7 +1,8 @@
 function [ output_args ] = carrier_errors( tx,rx,Nc )
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
-
+tx = reshape(tx,1,length(tx));
+rx = reshape(rx,1,length(rx));
 if(mod(length(tx),Nc) ~= 0)
 tx= [tx zeros(1,Nc-mod(length(tx),Nc))];
 rx= [rx zeros(1,Nc-mod(length(rx),Nc))];

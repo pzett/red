@@ -158,7 +158,7 @@ for(k_eq=1:length(g_eq))
                 if(pilot_index < size(pilot_phase,2))
                     (length(mconstdem)-ts_length)
                     phihat = pilot_phase(:,pilot_index); %new phase estimation
-                    ref = pilot_ref(:,pilot_index);      %new amplitude estimation
+                    %  ref = pilot_ref(:,pilot_index);      %new amplitude estimation
                     pilot_index=pilot_index+1
                 end
             end
@@ -208,46 +208,38 @@ for(k_eq=1:length(g_eq))
         
     end
     
+    
+    
+    
     if(file)
-        file_data = mdem(ts_length*2*levels+1:ts_length*2*levels+length(data_sent));
-        bitstobytes(file_data,'output.wav');
-    else
-        test =[ts; data_sent]; %vector to compare with the decoded and compute BER.
-        figure(4)
-        if(plotting)
-            subplot(122)
-            plot(real(mconstdem(ts_length+1:length(test)/(2*levels))),imag(mconstdem(ts_length+1:length(test)/(2*levels))),'.'); grid on ; xlabel('I'); ylabel('Q'),title('Received Constellation after Rotation and Offset Correction');
-            subplot(121)
-            plot(real(decoded(ts_length+1:length(test)/(2*levels))),imag(decoded(ts_length+1:length(test)/(2*levels))),'.'); grid on ; xlabel('I'); ylabel('Q'),title('Received Constellation');
+        if(code)
+            file_data = LDPCdec(mdem(ts_length*2*levels+1:end),rate);
+        else
+            file_data = mdem(ts_length*2*levels+1:end);
         end
-        
-        
-        
-        
-        %plot(real(mconstdem(ts_length+1:length(test)/(2*levels))),imag(mconstdem(ts_length+1:length(test)/(2*levels))),'.'); grid on ; xlabel('I'); ylabel('Q'),title('Received Constellation after Rotation and Offset Correction');
-        
-        decoded=mdem;
-        
-        if(length(decoded)>=length(test))
-            decoded=decoded(1:length(test));
-            if(plotting)
-                figure(6)
-                subplot(211)
-                stem(test' ~= decoded); title('Errors in the transmission'); xlabel('Samples'); ylabel('Error');
-                subplot(212)
-                carrier_errors(test(length(ts)+1:end)', decoded(length(ts)+1:end),Nc);
-            end
-            errors = sum(test(length(ts)+1:end)' ~= decoded(length(ts)+1:end));
+        bitstobytesnew(file_data);
+    else
+        if(code)
+            test=[ts;data_sent];
+            test_encoded=[ts;data_encoded];
+            dem_enc = mdem(length(ts)+1:length(test_encoded));
+            demodulated = LDPCdec(dem_enc,rate);
+            demodulated = demodulated(1:length(test)-length(ts));
+            errors = sum(test(length(ts)+1:end) ~= demodulated(1:end));
             BER = errors / length(test(length(ts)+1:end)) * 100
+        else
+            test =[ts; data_sent]; %vector to compare with the decoded and compute BER
+            demodulated=mdem;
+            if(length(demodulated)>=length(test))
+                demodulated=demodulated(length(ts)+1:length(test))';
+                errors = sum(test(length(ts)+1:end) ~= demodulated(1:end));
+                BER = errors / length(test(length(ts)+1:end)) * 100
+            end
         end
     end
 end
 
-
 mod_signal_length = length(mod_signal)/fs;
-
-%R = fs*Nc*2*levels / (FS+S+P)
-
 
 
 R = ((ts_length+2*gb_length)*2*levels + Nb) / mod_signal_length
@@ -257,15 +249,40 @@ fprintf('Transmitted: %g bytes in %g seconds\n',Nb/8,mod_signal_length);
 
 T = toc;
 fprintf('Elapsed time: %g seconds. \n',T);
+
+figure(4)
+if(plotting)
+    subplot(122)
+    plot(real(mconstdem(ts_length+1:length(test)/(2*levels))),imag(mconstdem(ts_length+1:length(test)/(2*levels))),'.'); grid on ; xlabel('I'); ylabel('Q'),title('Received Constellation after Rotation and Offset Correction');
+    subplot(121)
+    plot(real(decoded(ts_length+1:length(test)/(2*levels))),imag(decoded(ts_length+1:length(test)/(2*levels))),'.'); grid on ; xlabel('I'); ylabel('Q'),title('Received Constellation');
+end
+
 % figure(5)
-%     hold on; grid on;
-%     for(k=ts_length:length(test)/(2*levels))
-%
-%         plot(real(mconstdem(k+1)),imag(mconstdem(k+1)),'Marker','.','MarkerEdgeColor',colors(mod(k-ts_length,Nc)+1,:),'LineStyle','none');
-%     end
+% hold on; grid on;
+% subplot(122); hold on; grid on;
+% for(k=ts_length:length(test)/(2*levels))
+%     plot(real(mconstdem(k+1)),imag(mconstdem(k+1)),'Marker','.','MarkerEdgeColor',colors(mod(k-ts_length,Nc)+1,:),'LineStyle','none');
+% end
+% title('Received constellation in each subcarrier after correction'); xlabel('I'); ylabel('Q');
+% subplot(121); hold on; grid on;
+% for(k=ts_length:length(test)/(2*levels))
+%     
+%     plot(real(decoded(k+1)),imag(decoded(k+1)),'Marker','.','MarkerEdgeColor',colors(mod(k-ts_length,Nc)+1,:),'LineStyle','none');
+%     
+% end
 % title('Received constellation in each subcarrier'); xlabel('I'); ylabel('Q');
 
+figure(6)
+plot(real(mconstdem(ts_length+1:length(test)/(2*levels))),imag(mconstdem(ts_length+1:length(test)/(2*levels))),'.'); grid on ; xlabel('I'); ylabel('Q'),title('Received Constellation after Rotation and Offset Correction');
 
+if(plotting)
+    figure(7)
+    subplot(211)
+    stem(test(length(ts)+1:end) ~= demodulated(1:end)); title('Errors in the transmission'); xlabel('Samples'); ylabel('Error');
+    subplot(212)
+    carrier_errors(test(length(ts)+1:end), demodulated(1:end),Nc);
+end
 %     consttx = reshape(demconst,batch_length/Nc,Nc);
 %     constrx = reshape(mconst_phi,batch_length/Nc,Nc);
 %     for(b=1:Nc)

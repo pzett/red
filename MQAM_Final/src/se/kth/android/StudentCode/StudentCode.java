@@ -122,8 +122,10 @@ public class StudentCode extends StudentCodeBase {
     public static int trigger = 0; //0 -> listening and waiting 1 -> listening and received 2 -> done listening -1 ->processed
     private static short[] rx_buffer;
     private static int rx_ind=0;
-    private static int ts_length = 200;//504;
-    private static int gb_length = 520;//804;
+    //private static int ts_length = 200;//504;
+    //private static int gb_length = 520;//804;
+    public  int gb_length=0;
+    public  int ts_length=0;
     private static double[] ts_mod;
     private static double[][] ts_mod_const;
     private static double[] window;
@@ -198,7 +200,7 @@ public class StudentCode extends StudentCodeBase {
           
            // If message communication is used between phones in the project, enable it here and set server address, type and group names
            useMessaging = false;   
-           messageServer = "192.168.1.102";  
+           messageServer = "192.168.1.102";
            messageServerType = PHONE_SERVER;//LINUX_MESSAGE_SERVER; // WEB_MESSAGE_SERVER
             
            String temp[] =  {"N1","N2","N3"};
@@ -305,10 +307,15 @@ public class StudentCode extends StudentCodeBase {
         // Receiver part
     	case RECEIVED:
     	if(trigger==2){
-    		add_output_text_line("Stopped listening and started decoding");
-    	
+    		add_output_text_line("Stopped listening and started decoding...");
+    		long tstart0=System.currentTimeMillis();
     		int margin = 20;
     		int block_length=2*levels*no_samp_period*(gb_length+ts_length+margin); // Block to do cross correlation
+    		
+    		add_output_text_line("Block Length = "+block_length);
+    		add_output_text_line("GB Length = "+gb_length);
+    		add_output_text_line("TS Length = "+ts_length);
+    		
     		double[] rx_bufferdouble = new double[rx_ind+4096-rx_ind%4096]; // Buffer of doubles
     	
     		for (int j=0;j<rx_ind;j++){
@@ -319,11 +326,14 @@ public class StudentCode extends StudentCodeBase {
     		rx_bufferdouble = EQ(rx_bufferdouble); 
     		
     		// Correlation function used to find training sequence
+    		long tstart=System.currentTimeMillis();
     		int index = maxXcorr(Arrays.copyOfRange(rx_bufferdouble, 0, block_length),ts_modQAM);
+    		long tend=System.currentTimeMillis();
+    		add_output_text_line("Xcorr time = "+(float)(tend-tstart)/1000+"s");
     		add_output_text_line("Index = "+index);
     		// Send the received data to the decision algorithm, copy only data part
     		int decision[] = MQAMreceiver(f1,no_samp_period,Arrays.copyOfRange(rx_bufferdouble,index-margin,rx_bufferdouble.length));
-
+    		 
     		// Convert binary stream back into a file
     		rx_filename = retrieveData(decision);
 
@@ -336,10 +346,11 @@ public class StudentCode extends StudentCodeBase {
       	   else{
       		   
       		// Phone vibrates with "File received!" pop-up message
-      		please_vibrate();
-      	    
+      		 long tend0=System.currentTimeMillis();
+      		   please_vibrate();
+      		 add_output_text_line("Demod time = "+(float)(tend0-tstart0)/1000+"s");
       		// File is finished transferring
-    		add_output_text_line("File is received. If you would like to open "+rx_filename+" now, press the menu button and select open.");
+    		add_output_text_line("File is received. If you would like to open "+rx_filename+" now, press the Menu button and select Open.");
     		
     		d_filename = null;
           	bit_buffer = null;
@@ -563,18 +574,26 @@ public class StudentCode extends StudentCodeBase {
 
 // Function that modulates all data and sends it
 void send_data(){
-
+	add_output_text_line("Encoding...");
+	
+	 // Time total modulation
+	long t1s = System.currentTimeMillis(); 
+	
 	SimpleInputFile in = new SimpleInputFile();
-
+	
 	// Open and read text file containing guard band bits
-	in.open("gb_test.txt");
+	
+	in.open("/Redfiles/gb_test.txt");
+	
 	gb_length = in.readInt();
+	add_output_text_line("gb ="+gb_length);
+	
 	int[] guard_stream = new int[gb_length*2*levels];
 	for(int i = 0;i<gb_length*2*levels;i++){
 		guard_stream[i]=in.readInt();
 	}
 	in.close();
-
+	
 	
 	// Modulate the guard band, data signal, size of file, title of file and checksum of data
 	double[] guard_signal =  MQAMmod(f1,guard_stream);
@@ -582,6 +601,11 @@ void send_data(){
 	double[] size_data_signal = MQAMmod(f1,sizeofFile);
 	double[] title_data_signal = MQAMmod(f1,titleofFile);
 	double[] checksum_data_signal = MQAMmod(f1,checksumofFile);
+	
+	// End time of modulation
+	long t1e = System.currentTimeMillis();
+	// Display modulation time
+	add_output_text_line("Modulation time: "+(float)(t1e - t1s)/1000+" s");
 	
 	// Size of total signal to be transmitted
 	double[] tx_signal =new double[2*guard_signal.length+data_signal.length+ts_modQAM.length+bufferInt.length+title_data_signal.length+size_data_signal.length+checksum_data_signal.length];
@@ -630,6 +654,8 @@ void send_data(){
 		if(Math.abs(tx_signal[i])>max) max=Math.abs(tx_signal[i]);
 	}
 	
+	add_output_text_line("Sending file...");
+	
 	// Time transmission to calculate datarate
 	long startTime = System.currentTimeMillis();
 	
@@ -640,6 +666,7 @@ void send_data(){
 	}
 	long endTime = System.currentTimeMillis();
 	
+	add_output_text_line("Transmission time: "+(float)(endTime - startTime)/1000+"s");
 	// Calculate data rate
 	//float data_rate = ( ((float)(bit_buffer.length)/1024) / (float)(endTime - startTime))*1000;
 	float data_rate = ( ((float)(bit_buffer.length+sizeofFile.length+titleofFile.length)/1024) / (float)(endTime - startTime))*1000;
@@ -770,12 +797,13 @@ public int[] data_buffer_bits(){
 		int sizeofFile_i = Integer.valueOf(the_file_contents.length);
 	
 		// Warning message: File is too large
+		/*
 		if (sizeofFile_i>36864){
 			add_output_text_line("The file is too big (over 36kB). Please press stop and send a smaller file.");
 			error = true;
 			return null;
 		}
-    
+    */
 		// Store size of file in int[] of bits
 		byte[] sizeofFile_b = sizeofFile_s.getBytes();
 		sizeofFile = new int[length_sizeFile];
@@ -1150,7 +1178,7 @@ public  double[] MQAMmod(int f, int[] bits){
 	for(int k=0;k<mconst.length;k++){
 		tx_const[k]=new Complex(mconst[k][0],mconst[k][1]);
 	}
-	save_c_to_file("tx_const.txt",tx_const,tx_const.length);
+	//save_c_to_file("tx_const.txt",tx_const,tx_const.length);
 	
 	for(int i=0;i<L/(2*levels);i++){
 		for(int ii=i*no_samp_period;ii<no_samp_period*(i+1);ii++){
@@ -1166,7 +1194,7 @@ public  double[] MQAMmod(int f, int[] bits){
 public double[] modulateQAM_ts(int length,int f,int levels){
 	SimpleInputFile in = new SimpleInputFile();
 	
-    in.open("ts_test.txt"); 
+    in.open("/Redfiles/ts_test.txt"); 
     length = in.readInt();
     ts_length=length;
 	final int [] ts = new int[length*2*levels];
@@ -1264,7 +1292,7 @@ public int[] MQAMreceiver(int f,int n_sym,double[] r){
 	System.arraycopy(decision_aux, 0, decision, current_position, decision_aux.length);
 	
 	// Current_position = current_position + decision_aux.length;
-	save_c_to_file("demconst.txt",demconst,demconst.length);
+	//save_c_to_file("demconst.txt",demconst,demconst.length);
 	
 	//	int decision[] = demod_const(mconst,levels);
 	return Arrays.copyOfRange(decision, ts_length*2*levels, decision.length);
@@ -1273,7 +1301,7 @@ public int[] MQAMreceiver(int f,int n_sym,double[] r){
 @SuppressLint("NewApi")
 public double[] LPfir(double[] input){
 	SimpleInputFile in = new SimpleInputFile();
-    in.open("coeffs8.txt");
+    in.open("/Redfiles/coeffs8.txt");
     int length = in.readInt();
 	final double [] coeffs = new double[length];
 	   // Read file from sdcard
@@ -1344,7 +1372,7 @@ public double[] create_window(int mode){ //MODE 0->RECT MODE 1->WINDOW.TXT
 	}else{
 		if(mode==1){
 			SimpleInputFile in = new SimpleInputFile();
-			in.open("window8.txt");
+			in.open("/Redfiles/window8.txt");
 			int length = in.readInt();
 			if(length==no_samp_period){
 				// Read file from sd card
@@ -1409,7 +1437,7 @@ public Complex[] phase_estimation(double[] Hx,double[] Hy, double[][] mconst_ts,
 // Equalizer
 public double[] EQ(double[] input){
 	SimpleInputFile in = new SimpleInputFile();
-    in.open("eqcoeffs8.txt");
+    in.open("/Redfiles/eqcoeffs8.txt");
     
 	final double [] a = new double[3];
 	final double [] b = new double[3];

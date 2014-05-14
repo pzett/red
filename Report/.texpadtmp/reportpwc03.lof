@@ -1,0 +1,45 @@
+\select@language {english}
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {2.1}{\ignorespaces ASK modulation example}}{11}{figure.caption.4}
+\contentsline {figure}{\numberline {2.2}{\ignorespaces Possible demodulator for ASK}}{12}{figure.caption.5}
+\contentsline {figure}{\numberline {2.3}{\ignorespaces Decision regions for 8-PSK}}{12}{figure.caption.6}
+\contentsline {figure}{\numberline {2.4}{\ignorespaces BFSK example}}{13}{figure.caption.7}
+\contentsline {figure}{\numberline {2.5}{\ignorespaces Possible Demodulators for FSK}}{14}{figure.caption.8}
+\contentsline {figure}{\numberline {2.6}{\ignorespaces FSK modulated signal}}{15}{figure.caption.10}
+\contentsline {figure}{\numberline {2.7}{\ignorespaces Schematic of M-QAM transmitter and receiver.}}{16}{figure.caption.11}
+\contentsline {figure}{\numberline {2.8}{\ignorespaces Constellation plot of combinations of phase an amplitude in 4-QAM}}{17}{figure.caption.13}
+\contentsline {figure}{\numberline {2.9}{\ignorespaces Two possible constellation mapping for 4-QAM}}{19}{figure.caption.15}
+\contentsline {figure}{\numberline {2.10}{\ignorespaces BER performances of M-ary QAM.}}{20}{figure.caption.17}
+\contentsline {figure}{\numberline {2.11}{\ignorespaces OFDM signal and PSD.}}{21}{figure.caption.18}
+\contentsline {figure}{\numberline {2.12}{\ignorespaces OFDM channel effect and estimation.}}{23}{figure.caption.20}
+\contentsline {figure}{\numberline {2.13}{\ignorespaces OFDM transceiver.}}{24}{figure.caption.21}
+\contentsline {figure}{\numberline {2.14}{\ignorespaces The importance of choosing the right window for pulse shaping}}{25}{figure.caption.22}
+\contentsline {figure}{\numberline {2.15}{\ignorespaces Ideal Gaussian filter with different values of $\alpha $}}{26}{figure.caption.23}
+\contentsline {figure}{\numberline {2.16}{\ignorespaces Output from the matched filter for successive signalling in absence of noise}}{27}{figure.caption.24}
+\contentsline {figure}{\numberline {2.17}{\ignorespaces Training sequence algorithm/length/modulation comparison}}{28}{figure.caption.25}
+\contentsline {figure}{\numberline {2.18}{\ignorespaces Block diagram of basic QPSK/QAM digital receiver}}{29}{figure.caption.26}
+\contentsline {figure}{\numberline {2.19}{\ignorespaces Carrier phase estimation diagrams}}{29}{figure.caption.27}
+\contentsline {figure}{\numberline {2.20}{\ignorespaces Example of frequency offset in a 16-QAM constellation}}{30}{figure.caption.28}
+\contentsline {figure}{\numberline {2.21}{\ignorespaces Estimated channel frequency response to WGN}}{31}{figure.caption.29}
+\contentsline {figure}{\numberline {2.22}{\ignorespaces Shift register implementation of an IIR filter.}}{32}{figure.caption.30}
+\contentsline {figure}{\numberline {2.23}{\ignorespaces Shift register implementation for a FIR filter.}}{32}{figure.caption.31}
+\contentsline {figure}{\numberline {2.24}{\ignorespaces Digital communication system with forward error correction.}}{33}{figure.caption.32}
+\contentsline {figure}{\numberline {2.25}{\ignorespaces Shift register implementation of convolutional encoder.}}{34}{figure.caption.33}
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {3.1}{\ignorespaces Description of FrameWork}}{36}{figure.caption.34}
+\contentsline {figure}{\numberline {3.2}{\ignorespaces Schematics system}}{37}{figure.caption.35}
+\contentsline {figure}{\numberline {3.3}{\ignorespaces FSK Transmitter}}{38}{figure.caption.36}
+\contentsline {figure}{\numberline {3.4}{\ignorespaces FSK Receiver}}{39}{figure.caption.37}
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {4.1}{\ignorespaces Direct-Form realisation of the Goertzel algorithm}}{42}{figure.caption.39}
+\contentsline {figure}{\numberline {4.2}{\ignorespaces Schematic of M-QAM Receiver.}}{47}{figure.caption.42}
+\contentsline {figure}{\numberline {4.3}{\ignorespaces Received 64-QAM constellation and the effect of the equaliser}}{48}{figure.caption.43}
+\contentsline {figure}{\numberline {4.4}{\ignorespaces Performance of 256-QAM system.}}{50}{figure.caption.45}
+\contentsline {figure}{\numberline {4.5}{\ignorespaces Estimated least-squares FIR model for the channel transfer function.}}{51}{figure.caption.47}
+\contentsline {figure}{\numberline {4.6}{\ignorespaces Channel reconstruction using the IIR peak filter.}}{51}{figure.caption.48}
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {5.1}{\ignorespaces Spectrum plots of the 4-FSK signal.}}{53}{figure.caption.49}
+\contentsline {figure}{\numberline {5.2}{\ignorespaces Spectrum plots of the 4-FSK signal.}}{53}{figure.caption.50}
+\contentsline {figure}{\numberline {5.3}{\ignorespaces Spectrum plots of the FDM-FSK signal.}}{54}{figure.caption.51}
+\addvspace {10\p@ }

@@ -308,48 +308,47 @@ public class StudentCode extends StudentCodeBase {
     	case RECEIVED:
     	if(trigger==2){
     		add_output_text_line("Stopped listening and started decoding...");
+    		
+    		// Time demodulation
     		long tstart0=System.currentTimeMillis();
+    		
     		int margin = 20;
     		int block_length=2*levels*no_samp_period*(gb_length+ts_length+margin); // Block to do cross correlation
-    		
-    		add_output_text_line("Block Length = "+block_length);
-    		add_output_text_line("GB Length = "+gb_length);
-    		add_output_text_line("TS Length = "+ts_length);
-    		
-    		double[] rx_bufferdouble = new double[rx_ind+4096-rx_ind%4096]; // Buffer of doubles
+    	    double[] rx_bufferdouble = new double[rx_ind+4096-rx_ind%4096]; // Buffer of doubles
     	
     		for (int j=0;j<rx_ind;j++){
     			rx_bufferdouble[j] = (double) rx_buffer[j]; // Convert received samples to doubles
     		}
     		
     		// Equalizer
-    		rx_bufferdouble = EQ(rx_bufferdouble); 
+    		rx_bufferdouble = EQ(rx_bufferdouble); 	
     		
     		// Correlation function used to find training sequence
-    		long tstart=System.currentTimeMillis();
     		int index = maxXcorr(Arrays.copyOfRange(rx_bufferdouble, 0, block_length),ts_modQAM);
-    		long tend=System.currentTimeMillis();
-    		add_output_text_line("Xcorr time = "+(float)(tend-tstart)/1000+"s");
-    		add_output_text_line("Index = "+index);
+    		
     		// Send the received data to the decision algorithm, copy only data part
     		int decision[] = MQAMreceiver(f1,no_samp_period,Arrays.copyOfRange(rx_bufferdouble,index-margin,rx_bufferdouble.length));
     		 
     		// Convert binary stream back into a file
     		rx_filename = retrieveData(decision);
 
-      	   // If an error occurs start again
-      	   if (error == true){
-      		   trigger=-1;
-          	   state=-1;
-          	   d_filename = null;
-      	   }
-      	   else{
-      		   
+      	    // If an error occurs start again
+      	    if (error == true){
+      		    trigger=-1;
+          	    state=-1;
+          	    d_filename = null;
+      	    }
+      	    else{
+      		
+      		long tend0=System.currentTimeMillis();
+      	    
+      		// Display demodulation time
+      	    add_output_text_line("Demodulation time = "+(float)(tend0-tstart0)/1000+"s");
+      	    
       		// Phone vibrates with "File received!" pop-up message
-      		 long tend0=System.currentTimeMillis();
-      		   please_vibrate();
-      		 add_output_text_line("Demod time = "+(float)(tend0-tstart0)/1000+"s");
-      		// File is finished transferring
+      	    please_vibrate();
+      	    
+      	    // File is finished transferring
     		add_output_text_line("File is received. If you would like to open "+rx_filename+" now, press the Menu button and select Open.");
     		
     		d_filename = null;
@@ -415,17 +414,7 @@ public class StudentCode extends StudentCodeBase {
     
     // Implement any plotting you need here 
     public void plot_data(Canvas plotCanvas, int width, int height) 
-    {           
-/*    	
-    	ImageView img = (ImageView)findViewById(R.id.activity_image);
-        try {
-            Drawable d = Drawable.createFromStream(getAssets().open("@ahd ic_launcher.png"), null);
-            img.setImageDrawable(d);
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-  */  	                     
+    {            	                     
     }
     
     // Function that stores that name of the file chosen
@@ -582,11 +571,9 @@ void send_data(){
 	SimpleInputFile in = new SimpleInputFile();
 	
 	// Open and read text file containing guard band bits
-	
 	in.open("/Redfiles/gb_test.txt");
 	
 	gb_length = in.readInt();
-	add_output_text_line("gb ="+gb_length);
 	
 	int[] guard_stream = new int[gb_length*2*levels];
 	for(int i = 0;i<gb_length*2*levels;i++){
@@ -667,6 +654,7 @@ void send_data(){
 	long endTime = System.currentTimeMillis();
 	
 	add_output_text_line("Transmission time: "+(float)(endTime - startTime)/1000+"s");
+	
 	// Calculate data rate
 	//float data_rate = ( ((float)(bit_buffer.length)/1024) / (float)(endTime - startTime))*1000;
 	float data_rate = ( ((float)(bit_buffer.length+sizeofFile.length+titleofFile.length)/1024) / (float)(endTime - startTime))*1000;
@@ -905,7 +893,7 @@ public String retrieveData(int[] received){
 		state_two = 1;
 
 	case SECOND:
-
+		
 		// Get title of file
 		byte[] data_buffer_received_title = new byte[length_titleFile/8];
 		for (int k=0;k<length_titleFile/8;k++){
@@ -914,19 +902,31 @@ public String retrieveData(int[] received){
 			}
 		}
 		
-		// Get size of file
+		// Get size of file, try and catch used for index out of bounds error
 		byte[] data_buffer_received_size = new byte[length_sizeFile/8];
 		int counter=length_titleFile/8;
 		while(data_buffer_received[counter]!=0){
-			data_buffer_received_size[counter-length_titleFile/8]=data_buffer_received[counter];
+			try {
+				data_buffer_received_size[counter-length_titleFile/8]=data_buffer_received[counter];
+			}catch (ArrayIndexOutOfBoundsException e) {
+				add_output_text_line("Something went wrong. Please try again.");
+				error = true;
+				return null;
+			}	
 			counter++;
 		}
-		
+
 		// Get checksum of file
 		byte[] data_buffer_received_checksum = new byte[length_checksum/8];
 		int counter_n=(length_titleFile+length_sizeFile)/8;
 		while(data_buffer_received[counter_n]!=0){
+			try{
 			data_buffer_received_checksum[counter_n-(length_titleFile+length_sizeFile)/8]=data_buffer_received[counter_n];
+			}catch (ArrayIndexOutOfBoundsException e) {
+				add_output_text_line("Something went wrong. Please try again.");
+				error = true;
+				return null;
+			}	
 			counter_n++;
 		}
 
@@ -965,10 +965,15 @@ public String retrieveData(int[] received){
 		// Get data, remove size and title of file from the received buffer
 		byte[] data_buffer_received_n = new byte[(received.length/8)-(length_titleFile+length_sizeFile+length_checksum)/8];
 		for (int k=(length_titleFile+length_sizeFile+length_checksum)/8;k<(length_titleFile+length_sizeFile+length_checksum)/8+size_i;k++){
-			data_buffer_received_n[k-(length_titleFile+length_sizeFile+length_checksum)/8]=data_buffer_received[k];
-		}
+			try{
+				data_buffer_received_n[k-(length_titleFile+length_sizeFile+length_checksum)/8]=data_buffer_received[k];
+			}catch (ArrayIndexOutOfBoundsException e) {
+				add_output_text_line("Something went wrong. Please try again.");
+				error = true;
+				return null;
+		    }
+        }
 		
-		// Remove zeros at the end
 		byte[] data_buffer_received_nn = new byte[size_i];
 		for (int i=0;i<size_i;i++){
 				data_buffer_received_nn[i]=data_buffer_received_n[i];

@@ -1,2 +1,0 @@
-This is the first and
- second line of a simple text file.

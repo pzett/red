@@ -10,8 +10,8 @@ function list = list_sensor_log_files_on_sdcard(time0)
 %
 %
 % Copyright KTH Royal Institute of Technology, Martin Ohlsson, Per Zetterberg
-% This software is provided  ’as is’. It is free to use for non-commercial purposes.
-% For commercial purposes please contact Peter Händel (peter.handel@ee.kth.se)
+% This software is provided  ?as is?. It is free to use for non-commercial purposes.
+% For commercial purposes please contact Peter H?ndel (peter.handel@ee.kth.se)
 % for a license. For non-commercial use, we appreciate citations of our work,
 % please contact, Per Zetterberg (per.zetterberg@ee.kth.se), 
 % for how information on how to cite.
@@ -20,7 +20,7 @@ function list = list_sensor_log_files_on_sdcard(time0)
     if ~exist('time0')
         time0=[2010,1,1,0,0,0];
     end;
-    [status,str]=system('C:\android\adt-bundle-windows-x86_64-20140321\sdk\platform-tools\adb shell ls sdcard/');
+    [status,str]=system('adb shell ls sdcard/');
     start_index=strfind(str,'sensorlog');
     stop_index=strfind(str,'.csv');
     for i1=1:length(start_index)

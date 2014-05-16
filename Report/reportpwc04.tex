@@ -473,7 +473,7 @@ The outcome of these expressions is displayed in figure \ref{fig:mqamber}.
 
 
 \subsection{OFDM}
-
+\label{sec:OFDM}
 OFDM or Orthogonal Frequency-Division Multiplexing is a multi-carrier modulation scheme that divides the available bandwidth $W$ into $N$ sub-bands with relatively narrow width, $\Delta f = \frac{W}{N}$. The signal in each sub-band can be independently encoded and modulated as a synchronous symbol with rate $T = \frac{1}{\Delta f}$. If $\Delta f$ is small enough the channel frequency response $C(f)$ is essentially constant across each sub-band. Hence, the ISI is negligible and OFDM provides a solution that could yield transmission rates close to the channel capacity. 
 
 By choosing the modulating waveforms to be \emph{eigen-functions} of a linear-time invariant channel (LTI), it can be guaranteed that the waveforms will remain orthogonal after going through the channel. Therefore, the fact that complex exponentials $\exp{(j2\pi f_k t)}$ are orthogonal at different frequencies $f_k$  can be exploited.  Suppose that the $N$ data to be transmitted are $X_k, k=0,1,...,N-1$, where $X_k$ is a complex number in a given constellation. If a carrier frequency $f_k$ is assigned to each symbol $X_k$ and each contribution is summed at the output, the following result is obtained:
@@ -559,25 +559,25 @@ As it will be discussed in part \ref{sec:ts} the amplitude and phase maybe estim
     \subcaption{Frequency-time grid containing the pilots. Reference symbols density should be chosen accordingly to the channel properties.}
    %% \label{}
  	\end{subfigure}
-    \caption[The effects of a non-flat channel and a grid containing the OFDM pilot symbols]{The effects of a non-flat channel and a grid containing the OFDM pilot symbols, in time and frequency domains for channel estimation.}
+    \caption[The effects of a non-flat channel and a grid containing the OFDM pilot symbols]{The effects of a non-flat channel and a grid containing the OFDM pilot symbols in time and frequency domains for channel estimation.}
     \label{fig:ofdmchannel}
 \end{figure}
 
-In the implementation of an OFDM communication system, the following basic OFDM parameters need to be decided upon:
+In the implementation of an OFDM communication system, the following basic OFDM parameters need to be decided:
 \begin{itemize}
 \item The subcarrier spacing $\Delta f = \frac{1}{T_u}$. The OFDM subcarrier spacing should be as small as possible to minimise the relative cyclic-prefix overhead $\frac{T_{CP}+T_{CS}}{T_u + T_{CP} + T_{CS}}$. However, a too small sub-carrier spacing increases the sensitivity of the OFDM transmission to Doppler spread and different kinds of frequency inaccuracies.
 
-\item The total number of subcarriers, defined by the size of the DFT, and the number of active subcarriers $N_c$. This parameter will define the basic bandwidth occupied by the signal: 
+\item The total number of subcarriers, defined by the size of the DFT and the number of active subcarriers $N_c$. This parameter will define the basic bandwidth occupied by the signal: 
 \begin{equation}\label{eq:OFDMbw}
 W = N_c \times \Delta f = \frac{N_c}{T_u}=\frac{N_c}{N_{FFT}}\times f_s
 \end{equation}
 
-\item The cyclic prefix and suffix length $T_g = T_{CP} + T_{CS}$, which will determine the overall symbol time $T = T_u + T_g$. In principle, the cyclic-prefix length $T_{CP}$, should cover the maximum length of the time dispersion that is expected in the channel. 
+\item The cyclic prefix and suffix length $T_g = T_{CP} + T_{CS}$, which will determine the overall symbol time $T = T_u + T_g$. In principle the cyclic-prefix length $T_{CP}$ should cover the maximum length of the time dispersion that is expected in the channel. 
 \end{itemize}
 
-This parameters, along with others, will determine the performance of the system and, hence, must be chosen carefully. 
+These parameters, along with others, determine the performance of the system and must be chosen carefully. 
 
-On the receiver side the, after the synchronization is complete, the inverse operations are perfomed, like depicted in figure \ref{fig:ofdmtransceiver}
+Therefore at the RX side after synchronization is complete the inverse operations are perfomed, as illustrated in figure \ref{fig:ofdmtransceiver}
 
  \begin{figure}[H]
   \centering
@@ -591,40 +591,40 @@ On the receiver side the, after the synchronization is complete, the inverse ope
 %
 \section{Pulse Shaping}
 \label{Sec:Pulse shapping}
-So far, we have considered the case where the modulated signal is shaped by a rectangular function, inside the interval $0\leq t \leq T_s$. If $g(t)$, the pulse shaping function, is a rectangular pulse of width of $T_s$, then the envelope of the signal is constant. However, a rectangular pulse has very high spectral sidelobes, which means that signals must use a larger bandwidth to eliminate some of the adjacent channel sidelobe energy. Pulse-shaping is a method to reduce the sidelobe energy relative to a rectangular pulse, however the shaping must be done in such a way that ISI between pulses in the received signals is not introduced (or, at least minimised). Assuming the channel model to be AWGN, the effective receive pulse is given by $p(t)=g(t) \ast c(t) \ast g^{*}(-t)=g(t) \ast g^{*}(-t)$, since the channel impulse response is given by $c(t)=\delta(t)$. This pulse must satisfy the Nyquist criterion, which requires the pulse to equal zero at the ideal sampling point associated with past or future symbols \cite{GoertzelPaper}: 
+So far we have considered the case where the modulated signal is shaped by a rectangular function inside the interval $0\leq t \leq T_s$. If the pulse shaping function $g(t)$ is a rectangular pulse of width of $T_s$ the envelope of the signal is constant. However, a rectangular pulse has very high spectral sidelobes, which means that signals must use a larger bandwidth to eliminate some of the adjacent channel sidelobe energy. Pulse-shaping is a method to reduce the sidelobe energy relative to a rectangular pulse. However the shaping must be done in such a way that the ISI between pulses in the received signals is not introduced (or at least minimised). Assuming the channel model is AWGN, the effective receive pulse is given by $p(t)=g(t) \ast c(t) \ast g^{*}(-t)=g(t) \ast g^{*}(-t)$ since the channel impulse response is given by $c(t)=\delta(t)$. This pulse must satisfy the Nyquist criterion, which requires the pulse to equal zero at the ideal sampling point associated with past or future symbols \cite{GoertzelPaper}: 
 
  \begin{equation}
  p(k{T_s}) = \left\{ \begin{array}{l}
  {p_0} = p(0),k = 0\\
  0,k \ne 0
- \end{array} \right.
+ \end{array} \right.\ ,
  \end{equation}
  
-Some of the pulses (also called windows) that satisfy this criterion are the rectangular, raised cosine (Hanning) and the root-raised cosine. Each pulse has advantages and disadvantages, but the last two are aimed to improve the spectral efficiency. The most common window in FSK is the Gaussian pulse, defined as: 
+Some examples of the pulses (also called windows) that satisfy this criterion are the rectangular, raised cosine (Hanning) and the root-raised cosine. Each pulse has advantages and disadvantages but the last two are aimed to improve the spectral efficiency. The most common window in FSK is the Gaussian pulse, defined as: 
 
  
 \begin{equation}\label{Eq:Gaussian Window}
-g(t) = \frac{{\sqrt \pi  }}{\alpha }{e^{ - {\pi ^2}{t^2}/{\alpha ^2}}}
+g(t) = \frac{{\sqrt \pi  }}{\alpha }{e^{ - {\pi ^2}{t^2}/{\alpha ^2}}}\ ,
 \end{equation}
 
  The parameter $\alpha$ in the gaussian window is related to the 3dB bandwidth $B_z$ of $g(t)$, and is defined as follows \cite{GoertzelPaper}:
 \begin{equation}
-\alpha  = \frac{{\sqrt { - \ln \sqrt {0.5} } }}{{{B_z}}}
+\alpha  = \frac{{\sqrt { - \ln \sqrt {0.5} } }}{{{B_z}}}\ ,
 \end{equation}
  
   Hence, the spectrum of $g(t)$ is given by: 
 \begin{equation}
-G(f) = {e^{ - {\alpha ^2}{f^2}}}
+G(f) = {e^{ - {\alpha ^2}{f^2}}}\ ,
 \end{equation}
 
-The different windows characteristics can be seen in figure \ref{fig:wc} and the effects when they are applied to a simple BFSK system are depicted in figure \ref{fig:wcomp}.
+The different windows characteristics are illustrated in figure \ref{fig:wc} and the effects when they are applied to a simple BFSK system are depicted in figure \ref{fig:wcomp}.
  \begin{figure}[H]
  \centering
   \label{fig:wincar}
 \begin{subfigure}[H]{1\textwidth}
  \centering
     \includegraphics[scale=0.45, trim=0 0 30cm 0, clip=true]{wincomp.eps}
-    \subcaption{Different windows in time and frequency domain. Blue, red and green lines correspond to the rectangular, Gaussian and Hanning window, respectively.}
+    \subcaption{Different windows in time and frequency domain. Blue, red and green lines correspond to the rectangular, Gaussian and Hanning window respectively.}
     \label{fig:wc}
 \end{subfigure}
 
@@ -643,7 +643,7 @@ The different windows characteristics can be seen in figure \ref{fig:wc} and the
     \label{fig:main}
 \end{figure}
 
-We can see that if we make $\alpha$ large, it will result in a higher spectral efficiency. The Gaussian pulse does not satisfy the Nyquist criterion, and therefore the pulse shape introduces ISI, which increases as $\alpha$ gets larger. Therefore, improving spectral efficiency by increasing $\alpha$ leads to a higher ISI level, creating an irreducible error floor from this self-interference. The variable $\alpha$ should, hence, be chosen with care. The gaussian window effect can be seen in figure \ref{fig:gaussianalpha} and will be further developed in section \ref{sec:ts}.
+We can see that if we make $\alpha$ large it will result in a higher spectral efficiency. The Gaussian pulse does not satisfy the Nyquist criterion and therefore the pulse shape introduces ISI, which increases as $\alpha$ gets larger. Therefore, improving spectral efficiency by increasing $\alpha$ leads to a higher ISI level creating an irreducible error floor from this self-interference. The variable $\alpha$ should, therefore be chosen with care. The gaussian window effect can be seen in figure \ref{fig:gaussianalpha} and will be further developed in section \ref{sec:ts}.
 
  \begin{figure}[H]
   \centering
@@ -655,16 +655,16 @@ We can see that if we make $\alpha$ large, it will result in a higher spectral e
 \section{Synchronisation}
 \label{sec:ts}
 
-Carrier synchronisation is an extremely important parameter for the performance of the system. Up to this point we have assumed that the receiver is perfectly synchronised with the transmitter, and the only channel impairment is AWGN. In practice, however, it is often found that there is also uncertainty due to the randomness of some signal parameters, caused by distortion in the transmission medium and hardware constraints. One of the most common random signal parameter is the carrier phase, especially for narrowband signals. A mistiming error in sampling may lead to a series of ISI components that converge and affects the overall system performance. 
+Carrier synchronisation is an extremely important parameter for the performance of the system. Up to this point we have assumed that the receiver is perfectly synchronised with the transmitter and the only channel impairment is AWGN. However in practice, it is often found that there is also uncertainty due to the randomness of some signal parameters caused by distortion in the transmission medium and hardware constraints. One of the most common random signal parameter is the carrier phase especially for narrowband signals. A mistiming error in sampling may lead to a series of ISI components that converge and affects the overall system performance. 
 
 There are two basic modes of synchronisation in the reception of a digitally modulated signal:
 \begin{enumerate}
 \item \textbf{Carrier Synchronisation.}  When coherent detection is used, knowledge of both  frequency and phase of the carrier are necessary. The process of estimating such parameters is called carrier recovery.
 
-\item \textbf{Clock recovery.} To perform demodulation, the receiver has to know the instants of time that at which the modulation in the transmitter changes its state. In other words, the receiver has to know the starting and finishing point of the individual symbols, so that it may determine when to sample. The estimation of these times is called symbol synchronisation.
+\item \textbf{Clock recovery.} To perform demodulation the receiver has to know the instants of time that at which the modulation in the transmitter changes its state. In other words, the receiver has to know the starting and finishing point of the individual symbols so that it may determine when to sample. The estimation of these times is called symbol synchronisation.
 \end{enumerate}
 
-The synchronisation algorithm is crucial for the operation of the system. Its task is to find the best sampling time for the sampling device. Ideally, the MF should be sampled such that the SNR for the decision variable is maximised. For a rectangular pulse shape, the best sampling time $t_{samp}$ is at the peaks coming out from the matched filter (see figure \ref{fig:mfpeaks}).
+The synchronisation algorithm is crucial for the operation of the system. Its task is to find the best sampling time for the sampling device. Ideally the MF should be sampled such that the SNR for the decision variable is maximised. For a rectangular pulse shape the best sampling time $t_{samp}$ is at the peaks coming out from the matched filter (see figure \ref{fig:mfpeaks}).
 
  \begin{figure}[H]
   \centering
@@ -673,13 +673,13 @@ The synchronisation algorithm is crucial for the operation of the system. Its ta
     \label{fig:mfpeaks}
 \end{figure}
 
-One of the most common synchronisation techniques is based on the usage of training sequences. When the signal is received, the receiver is able to identify the training sequence and recover the symbol time, by cross-correlating the samples after the matched filter with a locally generated time-shifted replica of the training sequence. This algorithm can be either applied directly to the received samples and correlating with a modulated training sequence (resolution of 1 sample but very sensitive), or applied at the symbol level (resolution of $T/Q$, where $Q$ is the number of samples per symbol). We will consider the last option to simplify. If ${\left\{ {c(n)} \right\}_{n = 0}^{L - 1}}$ is the locally generated symbol-spaced replica of the training sequence of length $L$, [$t_{start},t_{end}$] represents the search window, and $r(n)$ denotes the output from the matched filter. The timing can be found as \cite{HaykinBook}:
+One of the most common synchronisation techniques is based on the usage of training sequences. When the signal is received, the receiver is able to identify the training sequence and recover the symbol time by cross-correlating the samples after the matched filter with a locally generated time-shifted replica of the training sequence. This algorithm can be either applied directly to the received samples and correlating with a modulated training sequence (resolution of 1 sample but very sensitive) or applied at the symbol level (resolution of $T/Q$, where $Q$ is the number of samples per symbol). We consider simplifying as the last option. If ${\left\{ {c(n)} \right\}_{n = 0}^{L - 1}}$ is the locally generated symbol-spaced replica of the training sequence of length $L$, [$t_{start},t_{end}$] represents the search window and $r(n)$ denotes the output from the matched filter. The timing can be found as \cite{HaykinBook}:
 
 \begin{equation}
 {t_{samp}} = \arg \mathop {\max }\limits_{{t_{samp}} \in [{t_{start}},{t_{end}}]} \left| {\sum\limits_{k = 0}^{L - 1} {r(kQ + {t_{samp}})^*c(k)} } \right|
 \end{equation}
 
-The correlation properties of the training sequence are important as they affect the estimation accuracy. Ideally, the autocorrelation function for the training sequence should be equal to a delta pulse,which means it should have a zero correlation everywhere except at lag zero. Therefore, the training sequence should be carefully designed. If, for example, the training sequence is modulated with a different frequency or pulse shape than the rest of the signal, better results for the correlation will be obtained. Such effects are depicted in figure \ref{fig:tscomp}. 
+The correlation properties of the training sequence are important as they affect the estimation accuracy. Ideally the autocorrelation function for the training sequence should be equal to a delta pulse,which means it should have a zero correlation everywhere except at lag zero. Therefore the training sequence should be carefully designed. If for example the training sequence is modulated with a different frequency or pulse shape than the rest of the signal, better results for the correlation is obtained. Such effects are depicted in figure \ref{fig:tscomp}. 
 
 \begin{figure}[H] 
   \begin{subfigure}[b]{0.5\linewidth}
@@ -722,7 +722,7 @@ The basic operations required by an all digital MQAM receiver are illustrated in
  \begin{figure}[H]
   \centering
     \includegraphics[width=0.6\textwidth]{rxMQAM.pdf}
-    \caption[Block diagram of basic QPSK/QAM digital receiver]{Block diagram of basic QPSK/QAM digital receiver. In the digital implementation, the VCO takes the form of a direct digital synthesizer (DDS). }
+    \caption[Block diagram of basic QPSK/QAM digital receiver]{Block diagram of basic QPSK/QAM digital receiver. In the digital implementation, the \textcolor{red}{textVCO takes the form of a direct digital synthesizer (DDS)}. }
     \label{fig:rxMQAM}
 \end{figure}
 
@@ -746,17 +746,17 @@ There are many options for implementing carrier phase and frequency synchronisat
     \label{fig:carrierphase}
 \end{figure}
 
-The initial phase estimation can be done using the procedure described above, taking into account the training sequence is known at transmitter and receiver. Let's assume the channel causes a rotation of $\varphi$ to the symbol constellation. The value of $\varphi$ can be computed using the element-wise multiplication of the received symbol with the complex conjugate of a modulated training sequence replica and then averaging over the sequence. In other words, if ${\left\{ {\tilde r(n)} \right\}_{n = 0}^{L - 1}}$ denotes the $L$ received symbols and ${\left\{ {c(n)} \right\}_{n = 0}^{L - 1}}$ the local replica of the complex training sequence, an estimate of the phase offset can be obtained as \cite{ProjectEQ2310}:
+The initial phase estimation can be done using the procedure described above, taking into account the training sequence is known at transmitter and receiver. Let's assume the channel causes a rotation of $\varphi$ to the symbol constellation. The value of $\varphi$ can be computed using the element-wise multiplication of the received symbol with the complex conjugate of a modulated training sequence replica and then averaging over the sequence. In other words if ${\left\{ {\tilde r(n)} \right\}_{n = 0}^{L - 1}}$ denotes the $L$ received symbols and ${\left\{ {c(n)} \right\}_{n = 0}^{L - 1}}$ the local replica of the complex training sequence, an estimate of the phase offset can be obtained as \cite{ProjectEQ2310}:
 
 \begin{equation}
 \hat \varphi  = \frac{1}{L}\sum\limits_{k=0}^{L - 1} {\arg (\tilde r(k)c(k)^*)}
 \end{equation}
 
-The longer the training sequence, the better the phase estimate as the influence from the noise decreases. On the other hand, a long training sequence, reduces the amount of payload that can be transmitted during a given time.
+The longer the training sequence the better the phase estimate as the influence from the noise decreases. On the other hand a long training sequence reduces the amount of payload that can be transmitted during a given time.
 
 \subsection{Phase rotation}
 \label{subsec:Phase rotation}
-Another problem that may be faced in a real implementation is the Doppler shift introduced during the transmission, which causes the constellation to rotate further more (than the initial rotation). This frequency offset could be the result of relative motion between the transmitter and receiver, as would be the case with a mobile terminal travelling away or towards a receiver. It could also be attributed to small frequency variations of the various synthesisers in both the transmitter and receiver, which are functions of time and temperature. In order to overcome this problem, at least two approaches are possible. The first is to introduce a training sequence in the data so that a new phase estimation can be computed, resulting in a lower rate. The other solution, is to divide the decisions into various small blocks in which the offset does not influence the decision, estimate the phase rotation from the nearest points and rotate the constellation for future decisions. In this way, the rate is not affected but a correct decision in each block is assumed. The frequency offset effect can be seen in figure \ref{fig:phaseoff}, where a 16-QAM signal of 5 seconds is transmitted. 
+Another problem that may be faced in a real implementation is the Doppler shift introduced during the transmission, which causes an additional rotation to the constellation (relative to initial rotation). This frequency offset could be the result of relative motion between the transmitter and receiver. It would be the case with a mobile terminal travelling away or towards a receiver. It could also be attributed to small frequency variations of the various synthesisers in both the transmitter and receiver, which are functions of time and temperature. In order to overcome this problem, at least two approaches are possible. The first is to introduce a training sequence in the data so that a new phase estimation can be computed, resulting in a lower rate. The other solution is to divide the decisions into various small blocks in which the offset does not influence the decision and estimate the phase rotation from the nearest points and rotate the constellation for future decisions. In this way the rate is not affected but a correct decision in each block is assumed. The frequency offset effect can be seen in figure \ref{fig:phaseoff}, where a 16-QAM signal of 5 seconds is transmitted. 
 
 
  \begin{figure}[H]
@@ -789,7 +789,7 @@ Another problem that may be faced in a real implementation is the Doppler shift 
 
 \section{Channel Equalisation}
 \label{sec:chanEQ}
-The performance of a digital system is constrained by the type of channel in which the implementation is done. For our case, in theory, we have a nearly-ideal low-pass channel with low noise variance and limited up to about 20 kHz. However, the phone's audio card introduce non-linear distortion that affects the signal output and causes attenuation around 6kHz (see figure \ref{fig:channelresp}). This can both cause ISI as a result of the channel impulse response, as well as distortion of the signal spectrum. Thus, to improve the performance of our system, we can use channel equalisation techniques to reduce the ISI, and allow a better recovery of the transmitted symbols. The equalisation method will depended on the type of modulation scheme, as well as the channel response. For the case of FSK, the amplitude distortion will not affect at a great extent, but for M-QAM we shall compensate such distortion without affecting the carrier phase. In addition, we can expect a non-varying channel that allows the usage of parametric digital filters.  
+The performance of a digital system is constrained by the type of channel in which the implementation is done. In our case, in theory, we have a nearly-ideal low-pass channel with low noise variance and limited up to about 20 kHz. However, the phone's audio card introduces a non-linear distortion that affects the signal output and causes attenuation around 6kHz, see figure \ref{fig:channelresp}. This can cause both ISI as a result of the channel impulse response as well as distortion of the signal spectrum. Thus, to improve the performance of our system we can use channel equalisation techniques to reduce the ISI. It allows a better recovery of the transmitted symbols. The equalisation method will depended on the type of modulation scheme as well as the channel response. For an FSK scheme the amplitude distortion is negligible. However for M-QAM we need to compensate such distortion without affecting the carrier phase. In addition we can expect a non-varying channel that allows the usage of parametric digital filters.  
 
 \begin{figure}[H]
 \centering
@@ -806,7 +806,7 @@ Infinite Impulse Response (IIR) filters are recursive structures of a discrete L
 H\left( z \right) = \frac{{\sum\limits_{\ell  = 0}^M {{b_\ell }{z^{ - \ell }}} }}{{1 + \sum\limits_{\ell = 1}^N {{a_\ell }{z^{ - \ell }}} }}.
 \end{equation}
 
- The rational transfer function described in equation \ref{Eq:IIR} implies that the system will have an infinite response, when feeding it with a Dirac impulse. The coefficients from the numerator polynomial correspond to the feed-forward terms, and the ones from the denominator, correspond to the feedback terms (see figure \ref{fig:IIRimpl}). IIR filters can be represented in several forms or realisations, however, we generally have to base our design in a given set of initial parameters, such as pass-band, stop-band, ripple, or roll-off. Amongst the main advantages of these kind of filters, we have that they can efficiently meet a given specification with relative low complexity and efficiency.  In general, this  computational efficiency is rather large compared to FIR filters, described in the next section.
+ The rational transfer function described in equation \ref{Eq:IIR} implies that the system will have an infinite response when the input is a Dirac impulse. The coefficients from the numerator polynomial correspond to the feed-forward terms and the ones from the denominator correspond to the feedback terms (see figure \ref{fig:IIRimpl}). IIR filters can be represented in several forms and realisations. However, we generally have to base our design in a given set of initial parameters such as pass-band, stop-band, ripple, or roll-off. The main advantage of these type of filters is that they can efficiently meet a given specification with relative low complexity and efficiency.  In general, this  computational efficiency is rather large compared to FIR filters described in the next section.
  
   \begin{figure}[H]
    \centering
@@ -816,12 +816,12 @@ H\left( z \right) = \frac{{\sum\limits_{\ell  = 0}^M {{b_\ell }{z^{ - \ell }}} }
  \end{figure}  
 
 \subsection{FIR filters}
-Finite Impulse Response (FIR) filters are non-recursive linear systems that are also widely used in signal processing because of their stability and relative simple implementation. Their transfer function only contains feed-forward terms with coefficients $b_\ell$ directly related with the filter impulse response as follows\cite{DSPDiniz}: 
+Finite Impulse Response (FIR) filters are non-recursive linear systems that are also widely used in signal processing because of their stability and relative simple implementation. Their transfer function only contains feed-forward terms with coefficients $b_\ell$ directly related with the filter impulse response as follows \cite{DSPDiniz}: 
 \begin{equation}\label{Eq: FIR}
 H\left( z \right) = \sum\limits_{\ell  = 0}^M {{b_\ell }{z^{ - \ell }}}=\sum\limits_{\ell  = 0}^M {{h_\ell }{z^{ - \ell }}}
 \end{equation}
 
-As seen in equation \ref{Eq: FIR}, these kind of filters can be easily designed when we compute the coefficients that characterise the channel impulse response. FIR filters may also have good characteristics compared with the case of IIR filters, such as linear phase and stability. The biggest problem that we may face when using such designs, is that we need to have a relative high order compared to the case of a similar IIR filter. This adds additional delay to the signal processing and slows down the system. The shift register implementation of a typical FIR filter is depicted in figure \ref{fig:FIRfilter}.
+As equation \ref{Eq: FIR} suggest these kind of filters can be easily designed when we compute the coefficients that characterise the channel impulse response. FIR filters also have good characteristics compared to IIR filters such as linear phase and stability. The biggest problem that we may face when using these designs is that we need to have a relative high order compared to a similar IIR filter. This adds additional delay to the signal processing and slows down the system. The shift register implementation of a typical FIR filter is depicted in figure \ref{fig:FIRfilter}.
  
   \begin{figure}[H]
    \centering
@@ -832,9 +832,9 @@ As seen in equation \ref{Eq: FIR}, these kind of filters can be easily designed 
 
 \section{Channel Coding}
 \label{sec:channcod}
-The digital signal is subject to diverse perturbations that provoke distortion throughout a non-ideal channel. It is also likely that such distortion  cannot be fully compensated with an Equaliser or filter, thus, error correcting codes may be implemented. Our channel is bandwidth and power limited, these two parameters together with the noise spectral density will determine the bit-error rate (BER)\cite{HaykinBook}. In our system, the channel impairments result in frequency distortion and ISI. An orthogonal  modulation scheme may be able to mitigate such perturbations, however, it is still likely to have errors at the receiver that can be corrected by adding redundancy to the transmitted signal. This implies that the overall information rate will be decreased when using overheads such as training sequences or error correcting codes.
+The digital signal is subject to diverse perturbations that provoke distortion throughout a non-ideal channel. It is also likely that such distortion  cannot be fully compensated with an equaliser or filter, thus error correcting codes may be implemented. Our channel is bandwidth and power limited. These two parameters together with the noise spectral density will determine the bit-error rate (BER) \cite{HaykinBook}. In our system the channel impairments result in frequency distortion and ISI. An orthogonal  modulation scheme may be able to mitigate such perturbations. However, it is still likely to have errors at the receiver that can be corrected by adding redundancy to the transmitted signal. This implies that the overall information rate will be decreased when using overheads such as training sequences or error correcting codes.
  
- There are two basic schemes to implement error correction capabilities into our system: error detection/retransmission, and forward error correction (FEC)\cite{SklarBook}. In the first scheme, the receiver terminal asks the transmitter to retransmit the data if it detects an error. When FEC is used, the receiver tries to recover the signal using the added redundancy. Hence, the detection and retransmission scheme requires a two-way communication contrary to the case of using forward error correction. We will focus on the last scheme since our system is only able to send data in one direction. In this fashion, the information message shall be encoded before it is modulated and sent trough the channel (figure \ref{fig:ChanCodTX}). The reverse process is done at the receiver, as shown in figure \ref{fig:ChanCodRX}. The most widely used codes are linear codes, which can be classified into two general forms: block codes and convolutional codes. One of the principal differences between the two groups is that the encoder for the case of convolutional codes has memory elements.
+ There are two basic schemes to implement error correction capabilities into our system: error detection/retransmission and forward error correction (FEC)\cite{SklarBook}. In the first scheme the receiver terminal asks the transmitter to retransmit the data if it detects an error. When FEC is used the receiver tries to recover the signal using the added redundancy. Hence, the detection and retransmission scheme requires a two-way communication contrary to the case of using forward error correction. We focus on the last scheme since our system is only able to send data in one direction. In this fashion the information message shall be encoded before it is modulated and sent trough the channel (figure \ref{fig:ChanCodTX}). The reverse process is done at the receiver as shown in figure \ref{fig:ChanCodRX}. The most widely used codes are linear codes, which can be classified into two general forms: block codes and convolutional codes. One of the principal differences between the two groups is that the encoder for convolutional codes has memory elements.
  
   \begin{figure}[H]
   \centering
@@ -859,17 +859,17 @@ The digital signal is subject to diverse perturbations that provoke distortion t
  
  
  \subsection{Block Codes} 
- In general, binary block codes  are parity check codes that can be characterised by the parameters $(n,k)$. In this notation, $n$ represents the number of encoded bits, and $k$ is the number of information bits. We can define the ratio $k/n$ as the rate of the code. The mapping from the set of $M=2^k$ information sequences of length $k$ can be represented by a $k\times n$ generator matrix, conventionally denoted as $\bf{G}$. Therefore, we can write the encoded sequence $\bf{c}$ (of length $n$) in matrix form as follows:
+ In general, binary block codes  are parity check codes that can be characterised by the parameters $(n,k)$. In this notation, $n$ represents the number of encoded bits and $k$ is the number of information bits. We define the ratio $k/n$ as the rate of the code. The mapping from the set of $M=2^k$ information sequences of length $k$ can be represented by a $k\times n$ generator matrix, conventionally denoted as $\bf{G}$. Therefore, we can write the encoded sequence $\bf{c}$ (of length $n$) in matrix form as follows:
 \begin{equation}
  {\bf{c}} ={{\bf{u}}}{\bf{G}}
  \end{equation}
-The vector  $\bf{u}$ denotes the information sequence (of length $k$), and the row vectors of $\bf{G}$ determine the basis of a non-unique vector space. When $\bf{G}$ has the form ${\bf{G = }}\left[ {{{\bf{I}}_k}{\bf{|P}}} \right]$, we could find a parity matrix ${\bf{H = }}\left[ {{{\bf{I}}_{n - k}}{\bf{|}}{{\bf{P}}^T}} \right]$ that would lead us to decode the original data\cite{SklarBook}. These codes are mainly used for hard-decision decoding with a built-in algebraic structure based in the properties of finite fields. There exist a variety of block codes termed as Long-Density Parity-Check Codes (LDPC) that can achieve performance very close to the channel capacity.  
+The vector  $\bf{u}$ denotes the information sequence (of length $k$) and the row vectors of $\bf{G}$ determine the basis of a non-unique vector space. When $\bf{G}$ has the form ${\bf{G = }}\left[ {{{\bf{I}}_k}{\bf{|P}}} \right]$ we could find a parity matrix ${\bf{H = }}\left[ {{{\bf{I}}_{n - k}}{\bf{|}}{{\bf{P}}^T}} \right]$ that would lead us to decode the original data\cite{SklarBook}. These codes are mainly used for hard-decision decoding with a built-in algebraic structure based in the properties of finite fields. There exist a variety of block codes called Long-Density Parity-Check Codes (LDPC) that can achieve performance very close to the channel capacity.  
 
 
  \subsection{Convolutional Codes}
- Convolutional codes are linear codes which are generated by passing the information sequence through a shift register. They can be described by some encoding function $G({\bf{u}})$, such that ${\bf{c}}=G({\bf{u}})$. The encoder outputs at any given time will only depend on the inputs. The number of output bits for each $k$-bit input is a sequence of length $n$. We also need to define the parameter $K$ as the code constraint length, which represents the number of stages (of $k$-bits) in the encoder. 
+ Convolutional codes are linear codes that are generated by passing the information sequence through a shift register. They can be described by some encoding function $G({\bf{u}})$, such that ${\bf{c}}=G({\bf{u}})$. The encoder outputs at any given time will only depend on the inputs. The number of output bits for each $k$-bit input is a sequence of length $n$. We also need to define the parameter $K$ as the code constraint length, which represents the number of stages (of $k$-bits) in the encoder. 
 
-One possible method to describe a convolutional code is by giving its generator matrix. Nevertheless, such matrix would be semi-infinite since the input sequence can have any arbitrary length\cite{Proakis}. A different method to describe a convolutional code, comes from the fact that each of the output sequences, can be interpreted as the convolution of the input sequence with a binary filter, defined by some ``impulse response" or, generator polynomial\footnote{Since we are using binary arithmetic operations, the polinomyals are typically given in octal form.}, denoting the links between the input, output and shift registers. A typical shift register implementation of such codes is shown in figure \ref{fig:convCodeImp}.
+One possible method to describe a convolutional code is by giving its generator matrix. Nevertheless, such matrix would be semi-infinite since the input sequence can have any arbitrary length\cite{Proakis}. A different method to describe a convolutional code comes from the fact that each of the output sequences can be interpreted as the convolution of the input sequence with a binary filter defined by some ``impulse response" or generator polynomial\footnote{Since we are using binary arithmetic operations, the polinomyals are typically given in octal form.}, denoting the links between the input, output and shift registers. A typical shift register implementation of such codes is shown in figure \ref{fig:convCodeImp}.
  
  
   \begin{figure}[H]
@@ -879,7 +879,8 @@ One possible method to describe a convolutional code is by giving its generator 
      \label{fig:convCodeImp}
  \end{figure}  
  
- Convolutional codes may be used as a building block for turbo-codes, which can perform very close to the channel capacity, as well as LDPC codes do. The major disadvantages for those two approaches are the relative complexity and hard processing that are required to achieve a good performance. 
+ The decoding 
+ Convolutional codes may be used as a building block for turbo-codes, which can perform very close to the channel capacity as well as LDPC codes do. The major disadvantages for those two approaches are the relative complexity and hard processing that are required to achieve a good performance. 
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % %
@@ -997,8 +998,8 @@ In figure \ref{fig:RXclient} a flow diagram of the receiver functionalities is i
       \subcaption{Reconstruct file algorithm.}
       \label{fig:RXclientRecFile}
    \end{subfigure}
-     \label{fig:RXclient}
-      \caption[Receiver client flow diagram]{Receiver client flow diagram.}
+       \caption[Receiver client flow diagram]{Receiver client flow diagram.}
+         \label{fig:RXclient}
  \end{figure} 
 
  
@@ -1262,18 +1263,18 @@ We will now describe the demodulation process. The received signal is filtered w
 
  \begin{figure}[H]
  \centering
- \begin{subfigure}{.4\textwidth}
+ \begin{subfigure}{.45\textwidth}
    \centering
-   \includegraphics[width=\textwidth]{rcvdNOEQ.png}
+   \includegraphics[width=0.9\textwidth]{rcvdNOEQ.png}
    \subcaption{Constellation after phase\\ estimation without equaliser.}
    \label{fig:ConstBeforeFilt}
     \end{subfigure}%
- \begin{subfigure}{.4\textwidth}
-   \includegraphics[width=\textwidth]{rcvdEQ.png}
+ \begin{subfigure}{.45\textwidth}
+   \includegraphics[width=0.9\textwidth]{rcvdEQ.png}
        \subcaption{Constellation after phase\\ estimation with equaliser.}
      \label{fig:ConstAfterFilt}
     \end{subfigure}
- \caption[Received 64-QAM constellation and the effect of the equaliser]{Received 64-QAM constellation and the effect of the equaliser. There is a clear improvement in the BER when using the filter.}
+ \caption[Received 256-QAM constellation and the effect of the equaliser]{Received 256-QAM constellation and the effect of the equaliser. There is a clear improvement in the BER when using the filter.}
     \label{fig:RcvdQAMsignal}
  \end{figure} 
 
@@ -1313,44 +1314,50 @@ For the implementation of the OFDM system, the block schematic in figure \ref{fi
 
 \end{itemize}
 
-After these parameters are set and the size of the constellation is defined, the modulation algorithm takes place. Guard bits, training sequence and data to be transmitted are first merged and then mapped into the complex constellation. In the implementation, there is an option to insert pilots after each $N_{interval}$ transmitted bits. These pilots are used to reestimate the channel. However, apart from the frequency offset, the channel is time-invariant and hence, better performance is obtained when these reference symbols are not used. Then, the symbols are input into the OFDM modulation function. There are $N_{FFT}$ subcarriers for each OFDM symbol, but only $N_c$ are used (the number of virtual subcarriers is $N_{FFT}-N_c$). Each of these blocks of size $N_c$ is split into two, and saved into the corners of a buffer of size $N_{FFT}$, as depicted in figure \ref{}. Then, the FFT of each of these blocks is computed and cyclic prefix and suffix are added, according to the mentioned in section \ref{} (this operation is shown in figure \ref{}). The resulting signal is then upconverted using a complex exponential of frequency  $f_c$ and its real part is transmitted.   
+After these parameters are set and the size of the constellation is defined, the modulation algorithm takes place. Guard bits, training sequence and data to be transmitted are first merged and then mapped into the complex constellation. In the implementation, there is an option to insert pilots after each $N_{interval}$ transmitted bits. These pilots are used to re-estimate the channel. However, apart from the frequency offset, the channel is time-invariant and hence, better performance is obtained when these reference symbols are not used. Then, the symbols are input into the OFDM modulation function. There are $N_{FFT}$ sub-carriers for each OFDM symbol, but only $N_c$ are used (the number of virtual subcarriers is $N_{FFT}-N_c$). Each of these blocks of size $N_c$ is split into two, and saved into the corners of a buffer of size $N_{FFT}$, as depicted in figure \ref{fig:OFDMdata}. Then, the FFT of each of these blocks is computed and cyclic prefix and suffix are added, according to the mentioned in section \ref{sec:OFDM}. Then, the resulting signal is up-converted using a complex exponential of frequency  $f_c$, and its real part is transmitted.   
 
-On the receiver side there is no need for equaliser, since OFDM is being used. An high pass filter might be used to filter the low components of the noise. The received signal is then cross-correlated with the training sequence and the guard bands and silent parts are cropped. Afterwards, down conversion is performed, using the carrier frequency exponential and, subsequently, the cyclic prefixes and suffixes removed. To retrieve the complex transmitted symbols, the resulting samples are divided into blocks of $N_{FFT}$ size and FFT is applied. The received training sequence symbols are compared with the transmitted and the phase and gain estimations are computed for each of the subcarrier frequencies. An example of the outcome of these estimations is depicted in figure \ref{}. It is possible to verify the non-linearities of the channel in both amplitude and phases. Since it is known in which subcarrier the symbols are transmitted, the corresponding phase and amplitude corrections are applied accordingly. The frequency offset correction algorithm is the same as the one used in the complex baseband implementation, and is explained in section \ref{}. An example of the received constellations in OFDM before and after correction is depicted in figure \ref{}.
+\begin{figure}[h]
+  \centering
+    \includegraphics[width=1\textwidth]{OFDMcAdaptTX.png}
+    \caption[OFDM data-stream handling.]{OFDM data-stream handling.}
+    \label{fig:OFDMdata}
+\end{figure}
+
+
+On the receiver side there is no need for equaliser, since OFDM is being used. A high pass filter might be used to cancel out the low frequency components of the noise. Next, the received signal is cross-correlated with the training sequence and the guard bands and silent parts are cropped. Afterwards, down conversion is performed using the carrier frequency exponential and, subsequently, the cyclic prefixes and suffixes are removed. To retrieve the complex transmitted symbols, the resulting samples are divided into blocks of size $N_{FFT}$ and the FFT is applied. The received training sequence symbols are compared with the one transmitted, and the phase and gain estimations are computed for each of the subcarrier frequencies. An example of the outcome of these estimations is depicted in figure \ref{fig:OFDMphase-amp}. 
+
+\begin{figure}[h]
+  \centering
+    \includegraphics[width=1\textwidth]{OFDMchannelestim.eps}
+    \caption[OFDM phase and amplitude estimation for each subcarrier.]{OFDM phase and amplitude estimation for each subcarrier.}
+    \label{fig:OFDMphase-amp}
+\end{figure}
+
+
+It is possible to verify the non-linearities of the channel in both amplitude and phase. Since it is known in which subcarrier the symbols are transmitted, the corresponding phase and amplitude corrections are applied accordingly. The frequency offset correction algorithm is the same as the one used in the complex baseband implementation, and is explained in section \ref{subsec:Phase rotation}. An example of the received constellations in OFDM before and after correction is depicted in figure \ref{fig:OFDMconst}.
+
+\begin{figure}[h]
+  \centering
+    \includegraphics[width=1\textwidth]{ofdm64const.eps}
+    \caption[Received OFDM constellation in each sub-carrier before and after phase correction.]{Received OFDM constellation in each sub-carrier before and after phase correction.}
+    \label{fig:OFDMconst}
+\end{figure}
+
 
 \section{Channel Coding}
 \label{sec:ChanCodTests}
 Since our system is implemented purely in software, we have to use a coding scheme that does not introduce too much delay and heavy processing to the phone. On the other hand, our goal is to implement an application capable to transmit digital files, thereby we should guarantee a transmission with zero errors or being capable to correct all of them. Such task is not completely straightforward, since the BER will depend in many different factors that shall be analysed separately to measure the effect in the transmitted data. 
-The chosen modulation scheme for our performance analysis test is 256-QAM. We selected such configuration, since it was not possible to get an error free transmission with this setup. The first step, is to compare the performance of our MATLAB implementation with the theoretical performance of uncoded 256-QAM. Using MATLAB's embedded function \texttt{berawgn}\footnote{Computed according to equation \ref{eq:mqamBER} from section \ref{sec:MQAMperf}.}, and simulating an AWGN channel, we see in figure \ref{fig:MQAMperf} that the achieved performance with our implementation approximates the theoretical one.
-
-
- \begin{figure}[H]
-  \centering
-    \includegraphics[width=0.5\textwidth]{BERuncoded.png}
-    \caption[Performance of 256-QAM system]{Performance of 256-QAM system compared with the theoretical.}
-    \label{fig:MQAMperf}
-\end{figure}
+The chosen modulation scheme for our performance analysis test is 256-QAM. We selected such configuration, since it was not possible to get an error free transmission with this setup. 
 
 From this point, we can introduce coding into our simulation and measure the performance for different code rates. The suggested FEC implementation is a variable rate convolutional encoder with maximum free distance (according to \cite{Proakis}) at the following code rates: $1/2$, $2/3$,$3/4$, and $4/5$. The used generator polynomials are $[15,17]$, $[27,75,72]$, $[13,25,61,47]$, and $[237,274,156,255,337]$, respectively. 
-The simulation shows that for the theoretical case, one can reduce the number of errors significantly. Despite of this, we could not correct all the errors in the real channel, even with using the lowest code rate ($1/2 $). In addition, using 256-QAM with a coding scheme would end up getting us practically the same throughput compared to the case of uncoded 64-QAM. The results can be summarised in table \ref{table:Rates}.
+
+There are many ways to implement such kind of functionality in software. In addition, convolutional codes have been studied for several years and there are many implementations developed. The major challenges here, are to  handle different code rates and manage the length of the data sequence. In addition, the Viterbi algorithm for decoding may add considerable time to the decoding process. We found an implementation in \cite{concodeSource} that was able to use different code rates and it was adapted to our system . The performance of the codes in a binary-symmetric channel (BSC) is depicted in \ref{fig:convBSC}.
 
 
-\textcolor{red}{Add performance results.}
-\begin{table} [h]
-\centering
-\begin{tabular}{lcccc} 
-\hline
-\bf{Scheme} 				       & \bf{Raw data rate}\textnormal{[kbps]}    & \bf{Real data rate}\textnormal{[kbps]} & ${{\text{\bf E}}_{\text{\bf b}}}/{{\text{\bf N}}_{\text{\bf 0}}}$ [dB] &\bf{BER} \\
-\hline
-\emph{256-QAM, NO FEC}           & 44.10            & 35.46      & 21        & 1.397$\times 10^{-4}$      \\
-\emph{256-QAM, FEC:$1/2$}        & 44.10            & 4          & 6       & 1.397$\times 10^{-4}$                      \\
-\emph{256-QAM, FEC:$3/4$}        & 44.10            & 4          & 4      & 1.397$\times 10^{-4}$\\
-\hline
-\emph{64-QAM, NO FEC}            & 33.08           & 27.96       & 7     & 1.397$\times 10^{-4}$  \\
-\hline
-\end{tabular}
-\caption[Performance of different modulation/coding schemes]{Performance of different modulation/coding schemes.}
-\label{table:Rates}
-\end{table}
+\subsection{Real time implementation}
+\label{subsec:Checksum}
+Checksum
+
 
 
 
@@ -1407,72 +1414,157 @@ In the offline mode, transmitter and receiver processing is done solely in MATLA
 MATLAB is a powerful tool for simulation due to its computation power and adaptability and was, hence, chosen to find the optimal algorithms/methods/parameters for the implementation of a robust system. Once found, these methods can, with a little effort, be translated into Java. If done correctly this translation should not cause the final results to be much different in both real-time and off-line systems. 
 
 \textcolor{red}{Write about major differences in algorithm implementation.}%
-\section{Binary FSK}
-Our first and basic test was to generate a random sequence and transmit it with binary FSK throughout the channel. As discussed in section \ref{sec:FSKdemod}, we used the Goertzel algorithm to decode the received modulated signal with generally good results. The maximum bit rate was about 1.5 kbps. We end up using binary shift keying only to modulate the training sequence in the 4-FSK scheme that will be described next. 
 
-\begin{figure}[H]
-  \centering
-    \includegraphics[width=0.5\textwidth]{demo.png}
-    \caption[Add caption]{Add plots}
-    \label{fig:4FSKplots}
-\end{figure}
+\section{Binary FSK}
+Our first and basic test was to generate a random sequence and transmit it with binary FSK throughout the channel. As discussed in section \ref{sec:FSKdemod}, we used the Goertzel algorithm to decode the received modulated signal with generally good results. The maximum bit overall rate was about 1.5 kbps. We end up using binary shift keying only to modulate the training sequence in the 4-FSK scheme which results are presented next. 
+
 
 \section{4-FSK}
 
- In the implementation, $n_{sym}= 35$ samples were used, resulting in a rate of $R=2.52$ kbps with no errors and without the use of any coding scheme. This value for the rate considers all the bits that were transmitted, including guard band and training sequence (of length 100 bits). Hence, the effective rate is lower than this value but still well above the basic requirements of 1 kbps. A section of the  transmitted/received samples and corresponding spectrum is depicted in figure \ref{fig:4FSKplots}, using rectangular and Hanning window.
- 
-\begin{figure}[H]
-  \centering
-    \includegraphics[width=0.5\textwidth]{demo.png}
-    \caption[Add caption]{Add plots}
-    \label{fig:4FSKplots}
-\end{figure}
- 
- 
-\section{4-FSK and FDM}
-In order to improve the rate and to exploit all the available bandwidth, a FDM (frequency division multiplexing) system is used. The idea is to replicate the 4-FSK transmission in the previous section $N_r$ times until all available bandwidth is used. Replicating the system $N_r=7$ times, it was still possible to obtain a reliable transmission. However, it was necessary to increase $n_{sym}$ to $102$ samples, resulting in a rate of:
-
-$$ R = \frac{N_r\times log_2(4)}{n_{sym}}\times f_s = 7 \times \frac{2}{102}\times f_s = 6052 \text{ bps}$$
-
-This value more than doubles the value achieved with the single 4FSK system. A gaussian window was used in order to modulate the samples. The resulting signals and power spectrum densities  are depicted in Fig. \ref{fig:FDMplots}.
+In the implementation, 35 samples per symbol ($n_{sym}=35$)and the frequencies \(kF_s/24\) for \(k=1,4,7,10\) were used. This resulted in a rate of 2520 bps with no errors.  This value for the rate considers all the bits that were transmitted, including guard band and training sequence in total consisting of 400 bits. Hence, the effective rate is lower than this value but still well above the basic requirements of 1 kbps. 
+In Figure \ref{fig:4FSKspectrum} plots of the transmitted spectrum is shown with rectangular and Gaussian window. 
 
 \begin{figure}[H]
   \centering
-    \includegraphics[width=0.5\textwidth]{demo.png}
-    \caption[Spectrum plots of the FDM-FSK signal.]{Spectrum plots of the FDM-FSK signal. }
-    \label{fig:FDMplots}
+    \includegraphics[width=1.0\textwidth]{4FSKspectrum_windoweffect.eps}
+    \caption[4-FSK spectrum]{Spectrum of the transmitted 4-FSK signals with rectangular and gaussian window.}
+    \label{fig:4FSKspectrum}
 \end{figure}
+
+
+\section{FDM + 4-FSK}
+
+
+In order to improve the rate and more efficiently exploit all the available bandwidth, a frequency division multiplexing (FDM) system was used. The idea is to put the frequencies in the 4-FSK scheme closer together and divide the spectrum into \(N_r\) parallel channels. \(N_r = 7\) was the highest number of channels that the system could demodulate reliably i.e 0 \% BER. However, it was necessary to lower the rate by increasing \(n_{sym}\) to 88 samples per symbol. The resulting rate was
+
+$$ R = \frac{N_r\times log_2(4)}{n_{sym}}\times f_s = 7 \times \frac{2}{88}\times f_s =7015 \text{ bps}$$
+
+
+Hence, this approach more than doubles the rate that was achieved with the single 4-FSK system. A Gaussian pulse shape was used to reduce the interference between frequencies close to each other. We tested the system to find the minimum number of samples per symbol needed for 0 \% BER with \(N_r=2,4,7\).
+The results can be found in Table \ref{table:FDM}. The transmitted power spectrum for the case \(N_r= 4\) is depicted in Figure \ref{fig:4FSKFDM}.
+
+\begin{table} [h]
+\centering
+\begin{tabular}{lcc} 
+\(N_r\)	&  Samples per symbol  & Rate \textnormal{[bps]} \\
+\hline
+\emph{2}        & 37           & 4767           \\
+\emph{4}        & 63           & 5600           \\
+\emph{7}        & 88           & 7015           \\
+\end{tabular}
+\caption[Result of 4-FSK + FDM]{4-FSK + FDM results for different values of \(N_r\)}
+\label{table:FDM}
+\end{table}
+
+
+\begin{figure}[H]
+  \centering
+    \includegraphics[width=1.0\textwidth]{4FDMspectrum.eps}
+    \caption[4-FSK spectrum]{Spectrum of the 4-FSK signal extended to 4 FDM.}
+    \label{fig:4FSKFDM}
+\end{figure}
+
 
 
 \section{M-QAM}
 
-The 64 MQAM framework is tested by sending different types of files of different sizes
-and making sure the received file is not corruupt by using the check sum method described in section. In Fig. \ref{fig:20140508Transmittermoreexample} a screenshot
-is provided of an example where a text file (more.txt) of size 10kB (9707 bytes) is sent. The functions at the receiver are
-timed in order to make sure that the data rate requirement is achieved. The checksum number is displayed in both
-the transmitter and receiver. If these numbers are the same the file transfer is successful.
+\subsection{Off-line test}
+In this implementation we found the best performance with 64-QAM and 8 samples per symbol. We used a carrier frequency of 11025 Hz and a Gaussian pulse shape for the modulation which gave us an effective rate of 28.6 kbps when transmitting a file of 10 kB. As the size of the file gets larger, the effective rate is about 30kbps, since the added overhead is less significant. The power spectrum of the transmitted signal and the received constellation is shown in figures \ref{fig:qam_spectrum} and \ref{fig:64qam_constellation}. Reducing the number of samples per symbol to 7 widens the main lobe of the signal such that its bandwidth exceeds the bandwidth of the system. This and possibly the effect of ISI made it impossible to demodulate such a signal without getting errors.
+
+ \begin{figure}[H]
+ \centering
+ \begin{subfigure}[t]{.45\textwidth}
+   \centering
+       \includegraphics[scale=0.6, trim=1.3cm 0 1cm 0cm, clip=true]{64QAMspectrum.eps}
+       \subcaption[64-QAM spectrum]{Power spectrum of the transmitted 64-QAM\\ signal with gaussian window.}
+       \label{fig:qam_spectrum}
+ \end{subfigure}%
+ \begin{subfigure}[t]{.45\textwidth}
+    \centering
+     \includegraphics[scale=0.26, trim=14cm 0 12cm 0cm, clip=true]{64QAMscatter.eps}
+     \subcaption[64-QAM constellation]{Received constellation after offline\\ transmission with 64 QAM.}
+     \label{fig:64qam_constellation}
+    \end{subfigure}
+ \caption[Received 256-QAM constellation and the effect of the equaliser]{Received 256-QAM constellation and the effect of the equaliser. There is a clear improvement in the BER when using the filter.}
+    \label{fig:RcvdQAMsignal}
+ \end{figure} 
+
+\subsection{Real Time implementation}
+
+The 64-QAM framework is tested by sending different types of files of different sizes and making sure the received file is not corrupt by using the check sum method described in section \ref{subsec:Checksum}.  In figure \ref{fig:appTXside} we present a screenshot of the transmission client displaying the processes that take place when sending a file, as well as the processing time of the two major transmission blocks: modulation and transmission. At the receiving side in figure \ref{fig:appRXside}, we can see the converse process displaying a successful transmission that achieved an effective data rate of 30.7 kbps transmitting a 27kB file. If the sent checksum is not equal to the one computed at the receiver side, then an error occurred and the application triggers an error message (see figure \ref{fig:appRXsideError}).
 
 \begin{figure}[H]
  \centering
- \begin{subfigure}{.5\textwidth}
+ \begin{subfigure}{.3\textwidth}
  \centering
-    \includegraphics[width=0.8\textwidth]{20140508Receivermoreexample.png}
-    \subcaption{Receiver}
-    \label{fig:20140508Receivermoreexample}
+    \includegraphics[width=0.9\textwidth]{transmissioncomplete.png}
+    \subcaption{Transmitter}
+    \label{fig:appTXside}
     \end{subfigure}%
- \begin{subfigure}{.5\textwidth}
+ \begin{subfigure}{.3\textwidth}
   	 \centering
-      \includegraphics[width=0.8\textwidth]{20140508Transmittermoreexample.png}
-      \subcaption{Transmitter}
-      \label{fig:20140508Transmittermoreexample}
+      \includegraphics[width=0.9\textwidth]{filereceived.png}
+      \subcaption{Receiver}
+      \label{fig:appRXside}
    \end{subfigure}
-\caption[Screenshots of receiver and transmitter in M-QAM application]{Screenshots of receiver and transmitter in M-QAM application}
+    \begin{subfigure}{.3\textwidth}
+     	 \centering
+         \includegraphics[width=0.9\textwidth]{somethingwentwrong.png}
+         \subcaption{Error message}
+         \label{fig:appRXsideError}
+      \end{subfigure}
+     \caption[Screenshots of receiver and transmitter in M-QAM application]{Screenshots of receiver and transmitter in M-QAM application}
+     \label{fig:screenshots}
  \end{figure} 
+
+
+The functions at the transmitter and at the receiver are timed to ensure that the data rate requirement is achieved. We recall that the receiver should finish decoding within $0.5\times F/C$ seconds after the transmitter has finished sending the data. Therefore, for this example we have:
+
+\[
+\frac{F}{C} = 0.5 \times \frac{{27.729 \times 8 \left[ {{\text{kb}}} \right]}}{{30.693\left[ {{\text{kb/s}}} \right]}} = 3.614\left[ \text{s} \right] \ngeq 5.449\left[ \text{s} \right]
+\]
+
+In this example, the decoding time constraint is not meet, nevertheless this mostly because of the usage of \texttt{try} and \texttt{catch} sentences in the \texttt{StudentCode} to make the application more resilient.  
+
+\textcolor{red}{Add more comments about the results.}
+
 
 \section{OFDM}
 
-\section{M-FSK}
+\section{Channel Coding}
 
+The first step, is to compare the performance of our MATLAB implementation with the theoretical performance of uncoded 256-QAM. Using MATLAB's embedded function \texttt{berawgn}\footnote{Computed according to equation \ref{eq:mqamBER} from section \ref{sec:MQAMperf}.}, and simulating an AWGN channel, we see in figure \ref{fig:MQAMperf} that we achieve a performance approximately 2dB worse in the simulation compared with the theoretical performance.
+
+The simulation shows that for the theoretical case, one can reduce the number of errors significantly. Despite of this, we could not correct all the errors in the real channel, even with using the lowest code rate ($1/2 $). In addition, using 256-QAM with a coding scheme would end up getting us practically the same throughput compared to the case of uncoded 64-QAM. The results can be summarised in table \ref{table:Rates}.
+
+
+\textcolor{red}{Add performance results.}
+\begin{table} [h]
+\centering
+\begin{tabular}{lcccc} 
+\hline
+\bf{Scheme} 				       & \bf{Raw data rate}\textnormal{[kbps]}    & \bf{Real data rate}\textnormal{[kbps]} & ${{\text{\bf E}}_{\text{\bf b}}}/{{\text{\bf N}}_{\text{\bf 0}}}$ [dB] &\bf{BER} \\
+\hline
+\emph{256-QAM, NO FEC}           & 44.10            & 35.46      & 21        & 1.397$\times 10^{-4}$      \\
+\emph{256-QAM, FEC:$1/2$}        & 44.10            & 4          & 6       & 1.397$\times 10^{-4}$                      \\
+\emph{256-QAM, FEC:$3/4$}        & 44.10            & 4          & 4      & 1.397$\times 10^{-4}$\\
+\hline
+\emph{64-QAM, NO FEC}            & 33.08           & 27.96       & 7     & 1.397$\times 10^{-4}$  \\
+\hline
+\end{tabular}
+\caption[Performance of different modulation/coding schemes]{Performance of different modulation/coding schemes.}
+\label{table:Rates}
+\end{table}
+
+
+% 
+
+ \begin{figure}[H]
+  \centering
+    \includegraphics[width=0.5\textwidth]{BERuncoded.png}
+    \caption[Performance of 256-QAM system]{Performance of 256-QAM system compared with the theoretical.}
+    \label{fig:MQAMperf}
+\end{figure}
 
 
 

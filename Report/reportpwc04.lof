@@ -34,13 +34,16 @@
 \addvspace {10\p@ }
 \contentsline {figure}{\numberline {4.1}{\ignorespaces Direct-Form realisation of the Goertzel algorithm}}{42}{figure.caption.39}
 \contentsline {figure}{\numberline {4.2}{\ignorespaces Schematic of M-QAM Receiver}}{47}{figure.caption.42}
-\contentsline {figure}{\numberline {4.3}{\ignorespaces Received 64-QAM constellation and the effect of the equaliser}}{48}{figure.caption.43}
-\contentsline {figure}{\numberline {4.4}{\ignorespaces Performance of 256-QAM system}}{51}{figure.caption.45}
-\contentsline {figure}{\numberline {4.5}{\ignorespaces Estimated least-squares FIR model for the channel transfer function}}{52}{figure.caption.47}
-\contentsline {figure}{\numberline {4.6}{\ignorespaces Channel reconstruction using the IIR peak filter}}{52}{figure.caption.48}
+\contentsline {figure}{\numberline {4.3}{\ignorespaces Received 256-QAM constellation and the effect of the equaliser}}{48}{figure.caption.43}
+\contentsline {figure}{\numberline {4.4}{\ignorespaces OFDM data-stream handling.}}{50}{figure.caption.45}
+\contentsline {figure}{\numberline {4.5}{\ignorespaces OFDM phase and amplitude estimation for each subcarrier.}}{50}{figure.caption.46}
+\contentsline {figure}{\numberline {4.6}{\ignorespaces Received OFDM constellation in each sub-carrier before and after phase correction.}}{51}{figure.caption.47}
+\contentsline {figure}{\numberline {4.7}{\ignorespaces Estimated least-squares FIR model for the channel transfer function}}{52}{figure.caption.48}
+\contentsline {figure}{\numberline {4.8}{\ignorespaces Channel reconstruction using the IIR peak filter}}{52}{figure.caption.49}
 \addvspace {10\p@ }
-\contentsline {figure}{\numberline {5.1}{\ignorespaces Add caption}}{54}{figure.caption.49}
-\contentsline {figure}{\numberline {5.2}{\ignorespaces Add caption}}{54}{figure.caption.50}
-\contentsline {figure}{\numberline {5.3}{\ignorespaces Spectrum plots of the FDM-FSK signal.}}{55}{figure.caption.51}
-\contentsline {figure}{\numberline {5.4}{\ignorespaces Screenshots of receiver and transmitter in M-QAM application}}{56}{figure.caption.52}
+\contentsline {figure}{\numberline {5.1}{\ignorespaces 4-FSK spectrum}}{54}{figure.caption.50}
+\contentsline {figure}{\numberline {5.2}{\ignorespaces 4-FSK spectrum}}{55}{figure.caption.52}
+\contentsline {figure}{\numberline {5.3}{\ignorespaces Received 256-QAM constellation and the effect of the equaliser}}{56}{figure.caption.53}
+\contentsline {figure}{\numberline {5.4}{\ignorespaces Screenshots of receiver and transmitter in M-QAM application}}{57}{figure.caption.54}
+\contentsline {figure}{\numberline {5.5}{\ignorespaces Performance of 256-QAM system}}{58}{figure.caption.56}
 \addvspace {10\p@ }

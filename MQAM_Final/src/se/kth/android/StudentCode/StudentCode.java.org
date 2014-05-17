@@ -151,8 +151,6 @@ public class StudentCode extends StudentCodeBase {
 	long C_sum_tx;
 	long C_sum_rx;
 	
-	final int sizeofFileLimit= 36864;
-	
 	// Variables used in the switch cases
 	final int GETDATA = 0; 
 	final int RECEIVED = 1;
@@ -351,8 +349,7 @@ public class StudentCode extends StudentCodeBase {
       	    please_vibrate();
       	    
       	    // File is finished transferring
-    		add_output_text_line("File was received correctly.");
-    		add_output_text_line("Press the Menu button and select Open to see: "+rx_filename);
+    		add_output_text_line("File is received. If you would like to open "+rx_filename+" now, press the Menu button and select Open.");
     		
     		d_filename = null;
           	bit_buffer = null;
@@ -660,7 +657,7 @@ void send_data(){
 	
 	// Calculate data rate
 	//float data_rate = ( ((float)(bit_buffer.length)/1024) / (float)(endTime - startTime))*1000;
-	float data_rate = ( ((float)(bit_buffer.length+sizeofFile.length+titleofFile.length+checksumofFile.length)/1024) / (float)(endTime - startTime))*1000;
+	float data_rate = ( ((float)(bit_buffer.length+sizeofFile.length+titleofFile.length)/1024) / (float)(endTime - startTime))*1000;
 	//float data_rate = ( ((float)(bit_buffer.length+sizeofFile.length+titleofFile.length+checksumofFile.length)/1024) / tx_signal.length*mysampleRate);
 	add_output_text_line("Done with transmission, data rate achieved ="+data_rate+" kbps");
 	state=-1;
@@ -788,13 +785,13 @@ public int[] data_buffer_bits(){
 		int sizeofFile_i = Integer.valueOf(the_file_contents.length);
 	
 		// Warning message: File is too large
-		
-		if (sizeofFile_i>sizeofFileLimit){
+		/*
+		if (sizeofFile_i>36864){
 			add_output_text_line("The file is too big (over 36kB). Please press stop and send a smaller file.");
 			error = true;
 			return null;
 		}
-    
+    */
 		// Store size of file in int[] of bits
 		byte[] sizeofFile_b = sizeofFile_s.getBytes();
 		sizeofFile = new int[length_sizeFile];
@@ -896,11 +893,9 @@ public String retrieveData(int[] received){
 		state_two = 1;
 
 	case SECOND:
-
+		
 		// Get title of file
 		byte[] data_buffer_received_title = new byte[length_titleFile/8];
-		
-		try{
 		for (int k=0;k<length_titleFile/8;k++){
 		    if(data_buffer_received[k]!=0){
 				data_buffer_received_title[k]=data_buffer_received[k];
@@ -911,7 +906,13 @@ public String retrieveData(int[] received){
 		byte[] data_buffer_received_size = new byte[length_sizeFile/8];
 		int counter=length_titleFile/8;
 		while(data_buffer_received[counter]!=0){
-			data_buffer_received_size[counter-length_titleFile/8]=data_buffer_received[counter];
+			try {
+				data_buffer_received_size[counter-length_titleFile/8]=data_buffer_received[counter];
+			}catch (ArrayIndexOutOfBoundsException e) {
+				add_output_text_line("Something went wrong. Please try again.");
+				error = true;
+				return null;
+			}	
 			counter++;
 		}
 
@@ -919,7 +920,13 @@ public String retrieveData(int[] received){
 		byte[] data_buffer_received_checksum = new byte[length_checksum/8];
 		int counter_n=(length_titleFile+length_sizeFile)/8;
 		while(data_buffer_received[counter_n]!=0){
+			try{
 			data_buffer_received_checksum[counter_n-(length_titleFile+length_sizeFile)/8]=data_buffer_received[counter_n];
+			}catch (ArrayIndexOutOfBoundsException e) {
+				add_output_text_line("Something went wrong. Please try again.");
+				error = true;
+				return null;
+			}	
 			counter_n++;
 		}
 
@@ -931,8 +938,13 @@ public String retrieveData(int[] received){
 		
 		// Turn checksum of file into a byte
 		int checksum_rx;
+		try {
 			checksum_rx = Integer.parseInt(data_buffer_received_checksum_c,2);
-		
+		} catch (NumberFormatException e) {
+			add_output_text_line("Something went wrong. Please try again.");
+			error = true;
+			return null;
+		}
 		
 		// Turn size of file into a string
 		String data_buffer_received_size_c="";
@@ -942,14 +954,25 @@ public String retrieveData(int[] received){
 		
 		// Turn size of file into a byte
 		int size_i;
+		try {
 			size_i= Integer.parseInt(data_buffer_received_size_c,2);
+		} catch (NumberFormatException e) {
+			add_output_text_line("Something went wrong. Please try again.");
+			error = true;
+			return null;
+		}
 		
 		// Get data, remove size and title of file from the received buffer
 		byte[] data_buffer_received_n = new byte[(received.length/8)-(length_titleFile+length_sizeFile+length_checksum)/8];
-		for (int k=(length_titleFile+length_sizeFile+length_checksum)/8;k<(length_titleFile+length_sizeFile+length_checksum)/8+size_i;k++)
-		        {
+		for (int k=(length_titleFile+length_sizeFile+length_checksum)/8;k<(length_titleFile+length_sizeFile+length_checksum)/8+size_i;k++){
+			try{
 				data_buffer_received_n[k-(length_titleFile+length_sizeFile+length_checksum)/8]=data_buffer_received[k];
-		        }
+			}catch (ArrayIndexOutOfBoundsException e) {
+				add_output_text_line("Something went wrong. Please try again.");
+				error = true;
+				return null;
+		    }
+        }
 		
 		byte[] data_buffer_received_nn = new byte[size_i];
 		for (int i=0;i<size_i;i++){
@@ -960,9 +983,8 @@ public String retrieveData(int[] received){
 		C_sum_rx = checksum(data_buffer_received_nn,data_buffer_received_nn.length);
         
         // If the checksums are not equal, transmit again
-        
-		if (checksum_rx!=C_sum_rx){
-        	add_output_text_line("File was received with errors. Please try again.");
+        if (checksum_rx!=C_sum_rx){
+        	add_output_text_line("Something went wrong. Please try again.");
         	error = true;
         	return null;
         }
@@ -994,32 +1016,17 @@ public String retrieveData(int[] received){
 		// The file name to be written and stored
 		String filename_w_ext =new String(data_buffer_received_title_n+"."+data_buffer_received_ext);
 
-		File file = new File(out+"/"+data_buffer_received_title_n+"."+data_buffer_received_ext);
+		try {
+			File file = new File(out+"/"+data_buffer_received_title_n+"."+data_buffer_received_ext);
 			outFile = new FileOutputStream(file);
 			
-		// Write the data of received buffer
+			// Write the data of received buffer
 			outFile.write(data_buffer_received_nn);
 			outFile.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		};
 		return filename_w_ext;
-	} // End try
-		catch (ArrayIndexOutOfBoundsException e) {
-			add_output_text_line("Could not decode file. Please try again.");
-			error = true;
-			return null; 
-		    }	
-		 catch (NumberFormatException e) {
-			add_output_text_line("Something went wrong. Please try again.");
-			error = true;
-			return null;
-		}
-	     catch (IOException e) {
-		   e.printStackTrace();
-		   add_output_text_line("Something went wrong. Please try again.");
-		   error = true;
-		   return null; 
-	      }
-	
-		
 	}
 	return null;
 }

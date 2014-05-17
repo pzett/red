@@ -15,7 +15,7 @@ fs=44100; %Sampling frequency
 
 levels = 4;
 Nb=40002; %Number of bits to transmit
-rate='3/4';
+rate='1/2';
 f1=fs/4;
 %f1=10000;
 n_sym=8;

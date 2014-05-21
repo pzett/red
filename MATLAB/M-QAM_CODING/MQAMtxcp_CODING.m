@@ -14,7 +14,7 @@ fs=44100; %Sampling frequency
 
 
 levels = 4;
-Nb=40002; %Number of bits to transmit
+Nb=8*10002; %Number of bits to transmit
 rate='1/2';
 f1=fs/4;
 %f1=10000;
@@ -147,13 +147,13 @@ else %rectangular/hanning window window
    ts_mod=ts_mod/(max(abs(ts_mod)+0.001));
 end
 
-
+mod_signal_length = length(mod_signal)/fs; % Length of modulated signal in seconds
+R=Nb/mod_signal_length
 wavwrite(mod_signal, fs, 'mod_signal.wav');
 create_file_of_shorts('test_signal.dat',mod_signal*2^14)
 copy_file_from_working_directory_to_sdcard( 'test_signal.dat' );
 save('MQAM.mat','Nb','levels','f1','data','span','ts_length','gb_length','A','n_sym','mod_signal','continuous','qam','rate','Nb_enc');
 save('ts_mod.mat','ts_mod','mconst_ts','ts')
-mod_signal_length = length(mod_signal)/fs; % Length of modulated signal in seconds
 fprintf('Modulated signal: %g seconds long \n',mod_signal_length)
 
 

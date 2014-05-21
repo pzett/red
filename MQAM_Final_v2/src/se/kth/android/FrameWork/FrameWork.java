@@ -28,7 +28,7 @@ import android.media.AudioManager;
 //import java.net.URI;
 import edu.dhbw.andar.CameraPreviewHandler;
 import android.webkit.MimeTypeMap;
-import se.kth.android.GroupRed2014MQAM.R;
+import se.kth.android.GroupRed2014MQAMvF.R;
 import se.kth.android.StudentCode.StudentCode;
 import android.webkit.MimeTypeMap;
 import android.app.Activity;
@@ -537,7 +537,7 @@ public class FrameWork extends Activity implements OnRecordPositionUpdateListene
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		menu.add(0,1,0,"TX");
-		menu.add(0,2,0,"Kill");
+		menu.add(0,2,0,"Quit");
 		menu.add(0,4,0,"RX");
 		if (studentCode.userInputString) {
 			menu.add(0,3,0,studentCode.userInputStringMenuItem);
@@ -545,6 +545,34 @@ public class FrameWork extends Activity implements OnRecordPositionUpdateListene
 		
 		return super.onCreateOptionsMenu(menu);
 	}
+	
+	@Override
+	public boolean onPrepareOptionsMenu(Menu menu){
+		menu.clear();
+		if(!active){
+			menu.add(0,1,0,"TX");
+			menu.add(0,2,0,"Quit");
+			menu.add(0,4,0,"RX");
+			if (studentCode.userInputString) {
+				menu.add(0,3,0,studentCode.userInputStringMenuItem);
+			};	
+		}else{
+			if(studentCode.side == 1 ){
+				//MenuItem rx_button = menu.findItem(4);
+				if(studentCode.error || studentCode.state != studentCode.RECEIVED){ menu.add(0,4,0,"Return");}else{
+					//rx_button.setTitle("Open");
+					menu.add(0,4,0,"Open");
+				}
+				menu.add(0,2,0,"Quit");
+			}else{
+				menu.add(0,4,0,"Return");
+				menu.add(0,2,0,"Quit");
+
+			}
+		}
+		return true;
+	}
+	
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) 
@@ -555,6 +583,7 @@ public class FrameWork extends Activity implements OnRecordPositionUpdateListene
 				item.setTitle("Open");
 				studentCode.init(1);
 
+				
 				
 			    if((studentCode.useSensors & StudentCode.CAMERA) == StudentCode.CAMERA || (studentCode.useSensors & StudentCode.CAMERA_RGB) == StudentCode.CAMERA_RGB) {
 			    	if (studentCode.useCameraGUI)
@@ -1283,7 +1312,7 @@ public class FrameWork extends Activity implements OnRecordPositionUpdateListene
 	}
 	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
-	    if (requestCode==CHOOSE_FILE_REQUESTCODE)
+	    if (requestCode==CHOOSE_FILE_REQUESTCODE && resultCode != RESULT_CANCELED)
 	    {
 	        String Fpath = data.getDataString();
 	        String stringParts[] = Fpath.split("/");
@@ -1291,17 +1320,17 @@ public class FrameWork extends Activity implements OnRecordPositionUpdateListene
 	        studentCode.stringFromBrowseForFile(filename);
 	        // do something...
 	    }
-	 super.onActivityResult(requestCode, resultCode, data);
+	    if(requestCode==CHOOSE_FILE_REQUESTCODE && resultCode == RESULT_CANCELED)
+	    {
+	    	studentCode.stringFromBrowseForFile(null);
+	    }
+	    super.onActivityResult(requestCode, resultCode, data);
 
 	}
 	
+	// Function that allows user to open the file after receiving it  
 	public void open_text_file(final String filename){ 
-		
 
-	
-//		runOnUiThread(new Runnable() {
-//            @Override
-//            public void run() {
         		AlertDialog.Builder builder = new AlertDialog.Builder(this);
         		builder.setMessage("You received"+filename+". Do you want to open it?")
         		       .setCancelable(false)
@@ -1328,32 +1357,11 @@ public class FrameWork extends Activity implements OnRecordPositionUpdateListene
         		       });
         		AlertDialog alert = builder.create();
         		alert.show();
-//            }
-//        });
-//		  File file = new File(filename);
-//     		Intent intent = new Intent();
-//     		intent.setAction(android.content.Intent.ACTION_VIEW);
-//     		intent.setDataAndType(Uri.fromFile(file), "*/*");
-//     		//intent.setData(Uri.fromFile(file));
-//     		startActivity(intent);
-		
-		
-		
-//		File videoFile2Play = new File("/sdcard/nice_movie.mpeg");
-//		Intent i = new Intent();
-//		i.setAction(android.content.Intent.ACTION_VIEW);
-//		i.setDataAndType(Uri.fromFile(videoFile2Play), "video/mpeg");
-//		startActivity(i);
-//		Intent intent = new Intent();
-//		intent.setAction(android.content.Intent.ACTION_VIEW);
-//		File file = new File("/sdcard/test.mp3");
-//		intent.setDataAndType(Uri.fromFile(file), "audio/*");
-//		startActivity(intent); 
-		
 		
 		
 	}
 	
+	// Function that vibrates the phone
 	public void vibrate(){
 		 Vibrator v = (Vibrator) this.context.getSystemService(Context.VIBRATOR_SERVICE);
 		 v.vibrate(500);
@@ -1371,5 +1379,7 @@ public class FrameWork extends Activity implements OnRecordPositionUpdateListene
 	}
 		 });
 	}
+	
+	
 
 };

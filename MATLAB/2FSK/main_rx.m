@@ -11,10 +11,10 @@ fclose('all');
 %Initialize variables
 fs = 44100;
 load('tx_file.mat');
-load('pilot.mat')
-%load('FSK.mat')
-load('MFSK.mat');
-load('FDM.mat');
+% load('pilot.mat')
+load('FSK.mat')
+% load('MFSK.mat');
+% load('FDM.mat');
 
 %Pull out info from sensor
 names=list_sensor_log_files_on_sdcard;%grabs list of .csv files on phone
@@ -24,7 +24,7 @@ log_data=get_log_data_from_FrameWork(filename); %grab log data
 r=extract_sound_from_log_data(log_data); %extract sound from log data.
 %%
 %------Syncronization--------------
-load('mod_ts.mat')
+% load('mod_ts.mat')
 
 [k_start nr_of_bits] = pilot_demodulator(r,mod_ts,gb_length,Tb,fs,f1_ts,f2_ts,d_length);
 

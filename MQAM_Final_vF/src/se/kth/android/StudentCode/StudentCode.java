@@ -129,6 +129,7 @@ public class StudentCode extends StudentCodeBase {
     int[] receivedBits;
     int[] received_buffer;
     String d_filename;
+    String d_path;
     int numberBits;
     int[] bit_buffer;
     public int state=-1;
@@ -414,11 +415,20 @@ public class StudentCode extends StudentCodeBase {
     }
 
     // Function that stores that name of the file chosen
-    public void stringFromBrowseForFile(String filename){
+    public void stringFromBrowseForFile(String Fpath,String filename){
     	if(filename != null){
     		// Store name and extension of file in d_filename
     		d_filename=filename;
-
+            
+    		// Get path
+    		String dir_t = new String(Environment.getExternalStorageDirectory().getPath());
+    		
+    		// Find index of correct path 
+    		int ind = Fpath.indexOf(dir_t);
+    		
+    		// Extract correct path 
+    		d_path = Fpath.substring((int) dir_t.length()+ind);
+    		
     		// Display file chosen for sending
     		add_output_text_line("You chose "+d_filename+" for sending.");
     	}else{
@@ -752,11 +762,11 @@ public int[] data_buffer_bits(){
 	if (init_done && (!file_loaded) && (!(d_filename==null))) {
 
 		// Read file from plain file of samples in form of shorts
-		the_file_contents=read_data_from_file(d_filename);
+		the_file_contents=read_data_from_file(d_filename,d_path);
 		
 		// Calculate checksum value of bybte array
 		C_sum_tx = checksum(the_file_contents,the_file_contents.length);
-		
+		//add_output_text_line("checksum = "+C_sum_tx);
 		// Store length of file in in int[] of bits
 		String checksumofFile_s = Integer.toBinaryString((int) C_sum_tx);
 		

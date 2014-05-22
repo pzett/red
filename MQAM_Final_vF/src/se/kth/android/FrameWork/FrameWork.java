@@ -1087,10 +1087,11 @@ public class FrameWork extends Activity implements OnRecordPositionUpdateListene
 			}
  	}
 	
-	public byte[] read_data_from_file(String filename) {
+	public byte[] read_data_from_file(String filename, String path) {
 		FileInputStream dataFile;
 		File dir = new File(Environment.getExternalStorageDirectory().getPath());
-		String filename_with_path = new String(dir+"/"+filename);
+		
+		String filename_with_path = new String(dir+""+path);//+"/"+filename);
 		
 		byte[] dataBuffer=null;
 		
@@ -1283,8 +1284,10 @@ public class FrameWork extends Activity implements OnRecordPositionUpdateListene
 	
 	int CHOOSE_FILE_REQUESTCODE = 3645;
 	public void openFile() {
-
-        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+		
+		//File file = new File(Environment.getExternalStorageDirectory().getPath());
+        
+		Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("file/*"); // Eller byt till "*/*" om det inte fungerar
         intent.addCategory(Intent.CATEGORY_OPENABLE);
 
@@ -1293,7 +1296,7 @@ public class FrameWork extends Activity implements OnRecordPositionUpdateListene
          // if you want any file type, you can skip next line 
         //sIntent.putExtra("CONTENT_TYPE", minmeType); 
         sIntent.addCategory(Intent.CATEGORY_DEFAULT);
-
+ 
         Intent chooserIntent;
         if (getPackageManager().resolveActivity(sIntent, 0) != null){
             // it is device with samsung file manager
@@ -1317,7 +1320,7 @@ public class FrameWork extends Activity implements OnRecordPositionUpdateListene
 	        String Fpath = data.getDataString();
 	        String stringParts[] = Fpath.split("/");
 	        String filename=stringParts[stringParts.length-1];
-	        studentCode.stringFromBrowseForFile(filename);
+	        studentCode.stringFromBrowseForFile(Fpath,filename);
 	        // do something...
 	    }
 	    if(requestCode==CHOOSE_FILE_REQUESTCODE && resultCode == RESULT_CANCELED)

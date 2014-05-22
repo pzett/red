@@ -67,8 +67,8 @@ public class StudentCodeBase implements OnPlaybackPositionUpdateListener  {
 	
 	public boolean userInputString=false;
 	public String userInputStringMenuItem="Input String";
-	public String userInputStringTitle="Input a message,";
-	public String userInputStringMessage="it will be stored as a text file on the phone.";
+	public String userInputStringTitle="Input String,";
+	public String userInputStringMessage="Input a message and it will be stored as a text file on the phone.";
 
 	
 	public boolean logSound=true;
@@ -355,8 +355,8 @@ Runnable() {
 		frameWork.write_string_on_logfile(s+"\n");
 	}
 	
-	public byte[] read_data_from_file(String filename) {
-		return frameWork.read_data_from_file(filename);
+	public byte[] read_data_from_file(String filename,String path) {
+		return frameWork.read_data_from_file(filename,path);
 	}
 	
 	public byte[] read_rgb_frame_from_file(int image_number, String filename) {		

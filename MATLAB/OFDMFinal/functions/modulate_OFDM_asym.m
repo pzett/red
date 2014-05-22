@@ -1,4 +1,4 @@
-function [ data_OFDM ] = modulate_OFDM_asym(mconst,Nc,FS,P,S,high)
+function [ data_OFDM ] = modulate_OFDM_asym(mconst,Nc,FS,P,S,high,window)
 %Author : Red Group - Francisco Rosario (frosario@kth.se)
 % Modulates constellation into OFDM symbols.
 % Nc complex symbols are put into an OFDM symbol of FS size and then put into the FFT.
@@ -18,6 +18,6 @@ for (k=1:num_cols)
     unmod_data(:,k) = info; % fill the column
 end
 
-data_OFDM = OFDMmod(unmod_data,P,S); % do the fft and insert cyclic prefix
+data_OFDM = OFDMmod(unmod_data,P,S,window); % do the fft and insert cyclic prefix
 
 end

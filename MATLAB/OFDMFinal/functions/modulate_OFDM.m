@@ -1,6 +1,5 @@
-function [ data_OFDM ] = modulate_OFDM( mconst,Nc,FS,P,S)
-%UNTITLED10 Summary of this function goes here
-%   Detailed explanation goes here
+function [ data_OFDM ] = modulate_OFDM( mconst,Nc,FS,P,S,window)
+%Author : Red Group - Francisco Rosario (frosario@kth.se)
 
 num_cols=length(mconst)/Nc; %divide in columns of the size of virtual carriers
 data_matrix = reshape(mconst, Nc, num_cols);
@@ -14,6 +13,6 @@ for (k=1:num_cols)
     unmod_data(:,k) = info; % fill the column
 end
 
-data_OFDM = OFDMmod_window(unmod_data,P,S); % do the fft and insert cyclic prefix
+data_OFDM = OFDMmod_window(unmod_data,P,S,window); % do the fft and insert cyclic prefix
 
 end

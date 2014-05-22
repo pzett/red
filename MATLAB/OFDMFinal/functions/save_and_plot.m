@@ -22,10 +22,10 @@ fprintf('Rate according to equation is %g bps \n',rate_eq);
 
 
 figure(1)
-subplot(211)
-segment = up_signal(200:400); tt = 0 : 1/fs : (length(segment)-1)/fs;
-plot(tt,segment); title('Segment of transmitted signal (OFDM) in time'); xlabel('time'); ylabel('Amplitude');
-subplot(212)
+% subplot(211)
+% segment = up_signal(200:400); tt = 0 : 1/fs : (length(segment)-1)/fs;
+% plot(tt,segment); title('Segment of transmitted signal (OFDM) in time'); xlabel('time'); ylabel('Amplitude');
+%subplot(212)
 pwelch(up_signal,[],[],[],fs); title('PSD of transmitted signal (OFDM)')
 
 

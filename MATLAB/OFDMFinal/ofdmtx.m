@@ -25,6 +25,7 @@ fs = 44100; %Sampling frequency
 intlv = 1; % use scrambler ?
 %Constellation 
 levels = 3; %numbers of levels in constellation /1->4,2->16,3->64-QAM) 
+window = 1;
 
 asym = 1; % use asymmetric number of active carriers around carrier frequency
 high = 460; % Parameter used in asymmetric OFDM
@@ -72,9 +73,9 @@ L=length(bit_stream); %raw data length
 
 %% Initialize OFDM modulation
 if(asym)
-    data_OFDM = modulate_OFDM_asym(mconst,Nc,FS,P,S,high); %asymetric OFDM modulation
+    data_OFDM = modulate_OFDM_asym(mconst,Nc,FS,P,S,high,window); %asymetric OFDM modulation
 else
-    data_OFDM = modulate_OFDM(mconst,Nc,FS,P,S); %symmetric OFDM modulation
+    data_OFDM = modulate_OFDM(mconst,Nc,FS,P,S,window); %symmetric OFDM modulation
     %data_OFDM = OFDMmod_window(unmod_data,P,S); % do the fft and insert cyclic prefix
 end
 

@@ -1,4 +1,4 @@
-function [data_OFDM] = OFDMmod(data,L,M)
+function [data_OFDM] = OFDMmod(data,L,M,window)
 %Authors : Red/Green Groups - Francisco Rosario/Frederic de Poret 
 %This function creates a downsampled OFDM signal. It takes the input as a
 %matrix in which the columns have length FS and contain the data to be
@@ -13,15 +13,21 @@ function [data_OFDM] = OFDMmod(data,L,M)
 % data_OFDM : samples of the OFDM signal ready to be upconverted.
 
 
-%data1=reshape(data,N,length(data)/N);
+
 N=size(data,1);                         %Number of subcarriers
 data_OFDM=zeros(N+L+M,size(data,2)); % Initialize matrix
 papr = zeros(1,size(data,2));
+if(window)
+    win = gausswin(N+L+M);
+else
+    win = ones(N+L+M,1);
+end
 
 for i=1:size(data,2)
     data_OFDM(end-N+1-M:end-M,i)=ifft(data(:,i)); %apply FFT to data
     data_OFDM(1:L,i)=data_OFDM(end-L+1-M:end-M,i); % apply prefix
     data_OFDM(end-M+1:end,i)=data_OFDM(L+1:L+M,i); % apply suffix
+    data_OFDM(:,i)=win.*data_OFDM(:,i);
     papr(i) = compute_par(data_OFDM(:,i));
 end
 

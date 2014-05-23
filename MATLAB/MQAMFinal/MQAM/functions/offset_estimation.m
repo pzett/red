@@ -24,9 +24,7 @@ end
 
 phihat=arg_sum/size_b;
 ref2=ref2/size_b;
-fileID = fopen('thetaML.txt','a+');
-fprintf(fileID,'%f\n',phihat);
-fclose(fileID);
+
 
 
 end

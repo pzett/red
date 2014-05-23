@@ -1,12 +1,12 @@
 function [ y,b,a ] = peakEQ( x,G0,F0)
 %fdesign.parameq('F0,BW,BWp,Gref,G0,GBW,Gp',0.2732,0.15,0.03,0,8,3,5);
-% F0 — Center Frequency
-% BW — Bandwidth
-% BWp — Passband Bandwidth
-% Gref — Reference Gain (decibels)
-% G0 — Center Frequency Gain (decibels)
-% GBW — Gain at which Bandwidth (BW) is measured (decibels)
-% Gp — Passband Gain (decibels)
+% F0 ? Center Frequency
+% BW ? Bandwidth
+% BWp ? Passband Bandwidth
+% Gref ? Reference Gain (decibels)
+% G0 ? Center Frequency Gain (decibels)
+% GBW ? Gain at which Bandwidth (BW) is measured (decibels)
+% Gp ? Passband Gain (decibels)
 % x -- x(n) discrete data input
 % y -- y(n) discrete data output
 
@@ -31,14 +31,14 @@ Hiir=design(d,'cheby1');
 %       1 +  a1k z^-1 +  a2k  z^-2
 
 %% Write coefficients into file
-fid=fopen('eqcoeffs.txt','w');
- for(k=1:length(b))
-    fprintf(fid,'%f\n',b(k));
- end
- for(k=1:length(a))
-    fprintf(fid,'%1.10f\n',a(k));
- end
-fclose(fid);
+% fid=fopen('eqcoeffs.txt','w');
+%  for(k=1:length(b))
+%     fprintf(fid,'%f\n',b(k));
+%  end
+%  for(k=1:length(a))
+%     fprintf(fid,'%1.10f\n',a(k));
+%  end
+% fclose(fid);
 
 %% Filter sequence with direct form implementation
 z = zeros(1,2);

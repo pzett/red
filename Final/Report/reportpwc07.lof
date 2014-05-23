@@ -1,0 +1,64 @@
+\select@language {english}
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {2.1}{\ignorespaces ASK modulation example}}{11}{figure.caption.4}
+\contentsline {figure}{\numberline {2.2}{\ignorespaces Possible demodulator for ASK}}{12}{figure.caption.5}
+\contentsline {figure}{\numberline {2.3}{\ignorespaces Decision regions for 8-PSK}}{12}{figure.caption.6}
+\contentsline {figure}{\numberline {2.4}{\ignorespaces BFSK example}}{13}{figure.caption.7}
+\contentsline {figure}{\numberline {2.5}{\ignorespaces Possible demodulators for FSK}}{14}{figure.caption.8}
+\contentsline {figure}{\numberline {2.6}{\ignorespaces Effects of phase discontinuity in FSK signal}}{15}{figure.caption.10}
+\contentsline {figure}{\numberline {2.7}{\ignorespaces Schematic of M-QAM transmitter and receiver}}{16}{figure.caption.11}
+\contentsline {figure}{\numberline {2.8}{\ignorespaces Symbol transitions in 4-QAM}}{17}{figure.caption.13}
+\contentsline {figure}{\numberline {2.9}{\ignorespaces Two possible constellation mappings for 4-QAM}}{19}{figure.caption.15}
+\contentsline {figure}{\numberline {2.10}{\ignorespaces BER Performance of M-ary QAM in function to $E_b / N_0$}}{20}{figure.caption.17}
+\contentsline {figure}{\numberline {2.11}{\ignorespaces OFDM signal in time and frequency domains.}}{21}{figure.caption.18}
+\contentsline {figure}{\numberline {2.12}{\ignorespaces The effects of a non-flat channel and a grid containing the OFDM pilot symbols}}{23}{figure.caption.21}
+\contentsline {figure}{\numberline {2.13}{\ignorespaces OFDM transceiver using QAM symbol mapping.}}{24}{figure.caption.22}
+\contentsline {figure}{\numberline {2.14}{\ignorespaces Effects of pulse shaping in a modulated signal}}{25}{figure.caption.23}
+\contentsline {figure}{\numberline {2.15}{\ignorespaces Ideal Gaussian filter with different values of $\alpha $}}{26}{figure.caption.24}
+\contentsline {figure}{\numberline {2.16}{\ignorespaces Matched filter output for successive signalling in absence of noise}}{27}{figure.caption.25}
+\contentsline {figure}{\numberline {2.17}{\ignorespaces Training sequence algorithm/length/modulation comparison}}{28}{figure.caption.26}
+\contentsline {figure}{\numberline {2.18}{\ignorespaces Block diagram of basic QPSK/QAM digital receiver}}{29}{figure.caption.27}
+\contentsline {figure}{\numberline {2.19}{\ignorespaces Carrier phase estimation diagrams}}{29}{figure.caption.28}
+\contentsline {figure}{\numberline {2.20}{\ignorespaces Example of frequency offset in a 16-QAM constellation}}{30}{figure.caption.29}
+\contentsline {figure}{\numberline {2.21}{\ignorespaces Estimated channel frequency response to WGN}}{31}{figure.caption.30}
+\contentsline {figure}{\numberline {2.22}{\ignorespaces Shift register implementation of an IIR filter}}{32}{figure.caption.31}
+\contentsline {figure}{\numberline {2.23}{\ignorespaces Shift register implementation for a FIR filter}}{32}{figure.caption.32}
+\contentsline {figure}{\numberline {2.24}{\ignorespaces Digital communication system with forward error correction}}{33}{figure.caption.33}
+\contentsline {figure}{\numberline {2.25}{\ignorespaces Shift register implementation of convolutional encoder}}{34}{figure.caption.34}
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {3.1}{\ignorespaces Simplified UML diagram of Application FrameWork}}{38}{figure.caption.35}
+\contentsline {figure}{\numberline {3.2}{\ignorespaces Schematic of the file transfer system}}{39}{figure.caption.36}
+\contentsline {figure}{\numberline {3.3}{\ignorespaces Start Menu options}}{39}{figure.caption.37}
+\contentsline {figure}{\numberline {3.4}{\ignorespaces Transmitter client flow diagram}}{40}{figure.caption.39}
+\contentsline {figure}{\numberline {3.5}{\ignorespaces Receiver client flow diagram}}{41}{figure.caption.40}
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {4.1}{\ignorespaces Direct-form realisation of the Goertzel algorithm}}{45}{figure.caption.42}
+\contentsline {figure}{\numberline {4.2}{\ignorespaces Schematic of M-QAM receiver main processes}}{50}{figure.caption.45}
+\contentsline {figure}{\numberline {4.3}{\ignorespaces Received 256-QAM constellation and the effect of the equaliser}}{51}{figure.caption.46}
+\contentsline {figure}{\numberline {4.4}{\ignorespaces Frequency response for LPF used in M-QAM receiver.}}{51}{figure.caption.47}
+\contentsline {figure}{\numberline {4.5}{\ignorespaces Shift register implementation of a pseudo-random sequence generator.}}{53}{figure.caption.49}
+\contentsline {figure}{\numberline {4.6}{\ignorespaces Construction of an OFDM symbol.}}{54}{figure.caption.50}
+\contentsline {figure}{\numberline {4.7}{\ignorespaces Phase and amplitude estimation for each sub-carrier in an OFDM system.}}{54}{figure.caption.51}
+\contentsline {figure}{\numberline {4.8}{\ignorespaces Received OFDM constellation in each sub-carrier.}}{55}{figure.caption.52}
+\contentsline {figure}{\numberline {4.9}{\ignorespaces Performance of different convolutional codes in a BSC Channel.}}{56}{figure.caption.53}
+\contentsline {figure}{\numberline {4.10}{\ignorespaces Estimated least-squares FIR model for the channel transfer function}}{57}{figure.caption.54}
+\contentsline {figure}{\numberline {4.11}{\ignorespaces Channel reconstruction using the IIR peak filter}}{58}{figure.caption.55}
+\contentsline {figure}{\numberline {4.12}{\ignorespaces Sinusoid carrier fit to estimate the SINAD.}}{59}{figure.caption.56}
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {5.1}{\ignorespaces PSD of transmitted 4-FSK signals.}}{61}{figure.caption.57}
+\contentsline {figure}{\numberline {5.2}{\ignorespaces Screenshots of receiver and transmitter in 4-FSK application}}{62}{figure.caption.58}
+\contentsline {figure}{\numberline {5.3}{\ignorespaces 4-FSK spectrum}}{63}{figure.caption.60}
+\contentsline {figure}{\numberline {5.4}{\ignorespaces PSD of 64-QAM signal at different stages}}{64}{figure.caption.61}
+\contentsline {figure}{\numberline {5.5}{\ignorespaces 64-QAM received constellation with $BER=0$}}{64}{figure.caption.62}
+\contentsline {figure}{\numberline {5.6}{\ignorespaces Screenshots of receiver and transmitter in M-QAM application}}{65}{figure.caption.63}
+\contentsline {figure}{\numberline {5.7}{\ignorespaces Plots of an OFDM transmission at a rate of 95.99 kbps.}}{67}{figure.caption.64}
+\contentsline {figure}{\numberline {5.8}{\ignorespaces PAPR for OFDM symbols when using and not using data scrambling.}}{68}{figure.caption.65}
+\contentsline {figure}{\numberline {5.9}{\ignorespaces Rate plot for OFDM.}}{68}{figure.caption.66}
+\contentsline {figure}{\numberline {5.10}{\ignorespaces Constellation and errors in transmission at 128kbps using OFDM.}}{69}{figure.caption.67}
+\contentsline {figure}{\numberline {5.11}{\ignorespaces Frequency-time and amplitude estimation for transmission at 128 kbps.}}{70}{figure.caption.68}
+\contentsline {figure}{\numberline {5.12}{\ignorespaces Complex Baseband Pulse Shaping}}{71}{figure.caption.69}
+\contentsline {figure}{\numberline {5.13}{\ignorespaces OFDM windowing}}{72}{figure.caption.70}
+\contentsline {figure}{\numberline {5.14}{\ignorespaces Performance of 256-QAM system in AWGN channel.}}{72}{figure.caption.71}
+\contentsline {figure}{\numberline {5.15}{\ignorespaces Histogram of the channel residual noise.}}{74}{figure.caption.74}
+\addvspace {10\p@ }

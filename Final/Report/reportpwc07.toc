@@ -1,0 +1,71 @@
+\select@language {english}
+\contentsline {chapter}{\numberline {1}Introduction}{10}{chapter.1}
+\contentsline {chapter}{\numberline {2}Background}{11}{chapter.2}
+\contentsline {section}{\numberline {2.1}Modulation Schemes}{11}{section.2.1}
+\contentsline {subsection}{\numberline {2.1.1}ASK}{11}{subsection.2.1.1}
+\contentsline {subsection}{\numberline {2.1.2}PSK}{12}{subsection.2.1.2}
+\contentsline {subsection}{\numberline {2.1.3}FSK}{13}{subsection.2.1.3}
+\contentsline {subsubsection}{Performance}{14}{section*.9}
+\contentsline {subsection}{\numberline {2.1.4}M-QAM}{16}{subsection.2.1.4}
+\contentsline {subsubsection}{QAM Symbol Mapping}{17}{section*.12}
+\contentsline {subsubsection}{M-QAM Impairments}{18}{section*.14}
+\contentsline {subsubsection}{Performance and Impact of Noise}{19}{section*.16}
+\contentsline {subsection}{\numberline {2.1.5}OFDM}{20}{subsection.2.1.5}
+\contentsline {subsubsection}{OFDM Impairments}{21}{section*.19}
+\contentsline {subsubsection}{OFDM Transceiver Architecture}{22}{section*.20}
+\contentsline {section}{\numberline {2.2}Pulse Shaping}{24}{section.2.2}
+\contentsline {section}{\numberline {2.3}Synchronisation}{26}{section.2.3}
+\contentsline {subsection}{\numberline {2.3.1}Synchronisation in MQAM Systems}{28}{subsection.2.3.1}
+\contentsline {subsection}{\numberline {2.3.2}Phase Rotation}{30}{subsection.2.3.2}
+\contentsline {section}{\numberline {2.4}Channel Equalisation}{30}{section.2.4}
+\contentsline {subsection}{\numberline {2.4.1}IIR Filters}{31}{subsection.2.4.1}
+\contentsline {subsection}{\numberline {2.4.2}FIR Filters}{32}{subsection.2.4.2}
+\contentsline {section}{\numberline {2.5}Channel Coding}{33}{section.2.5}
+\contentsline {subsection}{\numberline {2.5.1}Block Codes}{33}{subsection.2.5.1}
+\contentsline {subsection}{\numberline {2.5.2}Convolutional Codes}{34}{subsection.2.5.2}
+\contentsline {section}{\numberline {2.6}Channel Capacity}{35}{section.2.6}
+\contentsline {chapter}{\numberline {3}Android Prototype}{36}{chapter.3}
+\contentsline {section}{\numberline {3.1}Software and Hardware}{36}{section.3.1}
+\contentsline {section}{\numberline {3.2}Android FrameWork}{37}{section.3.2}
+\contentsline {section}{\numberline {3.3}Application Implementation}{38}{section.3.3}
+\contentsline {subsection}{\numberline {3.3.1}Transmitter}{40}{subsection.3.3.1}
+\contentsline {subsection}{\numberline {3.3.2}Receiver}{41}{subsection.3.3.2}
+\contentsline {subsection}{\numberline {3.3.3}Checksum}{41}{subsection.3.3.3}
+\contentsline {chapter}{\numberline {4}Method}{43}{chapter.4}
+\contentsline {section}{\numberline {4.1}M-FSK System}{43}{section.4.1}
+\contentsline {subsection}{\numberline {4.1.1}M-FSK Transmitter}{43}{subsection.4.1.1}
+\contentsline {subsection}{\numberline {4.1.2}M-FSK Receiver}{44}{subsection.4.1.2}
+\contentsline {subsubsection}{Goertzel Algorithm}{44}{section*.41}
+\contentsline {subsubsection}{Computational and Memory Complexities}{45}{section*.43}
+\contentsline {subsubsection}{Pseudo-code for Decoding Algorithm}{46}{section*.44}
+\contentsline {section}{\numberline {4.2}M-QAM System}{47}{section.4.2}
+\contentsline {subsection}{\numberline {4.2.1}M-QAM Transmitter}{48}{subsection.4.2.1}
+\contentsline {subsection}{\numberline {4.2.2}M-QAM Receiver}{50}{subsection.4.2.2}
+\contentsline {subsubsection}{Optimisation}{52}{section*.48}
+\contentsline {section}{\numberline {4.3}OFDM System}{52}{section.4.3}
+\contentsline {subsection}{\numberline {4.3.1}OFDM Transmitter}{53}{subsection.4.3.1}
+\contentsline {subsection}{\numberline {4.3.2}OFDM Receiver}{54}{subsection.4.3.2}
+\contentsline {section}{\numberline {4.4}Channel Coding}{56}{section.4.4}
+\contentsline {section}{\numberline {4.5}Channel Equalisation}{57}{section.4.5}
+\contentsline {section}{\numberline {4.6}Signal-to-Noise Ratio and Channel Capacity}{58}{section.4.6}
+\contentsline {chapter}{\numberline {5}Results and Discussion}{60}{chapter.5}
+\contentsline {section}{\numberline {5.1}Binary FSK}{60}{section.5.1}
+\contentsline {section}{\numberline {5.2}4-FSK}{61}{section.5.2}
+\contentsline {subsection}{\numberline {5.2.1}Off-line Tests}{61}{subsection.5.2.1}
+\contentsline {subsection}{\numberline {5.2.2}Real-time Implementation}{61}{subsection.5.2.2}
+\contentsline {section}{\numberline {5.3}4-FSK + FDM}{62}{section.5.3}
+\contentsline {section}{\numberline {5.4}M-QAM}{63}{section.5.4}
+\contentsline {subsection}{\numberline {5.4.1}Off-line Tests}{63}{subsection.5.4.1}
+\contentsline {subsection}{\numberline {5.4.2}Real-time Implementation}{65}{subsection.5.4.2}
+\contentsline {section}{\numberline {5.5}OFDM}{65}{section.5.5}
+\contentsline {subsection}{\numberline {5.5.1}Pushing to the limit}{68}{subsection.5.5.1}
+\contentsline {section}{\numberline {5.6}Pulse Shaping Importance}{71}{section.5.6}
+\contentsline {subsection}{\numberline {5.6.1}Real-time - M-QAM}{71}{subsection.5.6.1}
+\contentsline {subsection}{\numberline {5.6.2}Off-line - OFDM}{71}{subsection.5.6.2}
+\contentsline {section}{\numberline {5.7}Channel Coding}{72}{section.5.7}
+\contentsline {section}{\numberline {5.8}Signal-to-Noise Ratio Measurements}{73}{section.5.8}
+\contentsline {section}{\numberline {5.9}Summary of Results}{74}{section.5.9}
+\contentsline {chapter}{\numberline {6}Conclusions}{75}{chapter.6}
+\contentsline {section}{\numberline {6.1}Transceiver Overview}{75}{section.6.1}
+\contentsline {section}{\numberline {6.2}Channel Properties}{75}{section.6.2}
+\contentsline {section}{\numberline {6.3}Further Improvements}{76}{section.6.3}

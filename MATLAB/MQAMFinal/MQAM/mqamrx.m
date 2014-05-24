@@ -86,13 +86,21 @@ for(k_fc=1:length(fc))
                             Vnx=Vnx(1:n_sym*(length(data)/(2*levels)+ts_length+20));
                             Vny=Vny(1:n_sym*(length(data)/(2*levels)+ts_length+20));
                         else
-                            Vnx=[];
-                            Vny=[];
+                            %                             Vnx=[];
+                            %                             Vny=[];
+                            Vnx = zeros(n_sym*floor(length(data) / (2*levels)+ts_length+100),1);
+                            Vny = zeros(n_sym*floor(length(data) / (2*levels)+ts_length+100),1);
                             v=0:2*pi/fs:2*pi*(n_sym/fs-1/fs); %vector containing data for 1 period.
                             % Demodulation of received signal
+                            position = 0;
                             for(k=1:(length(data))/(2*levels)+ts_length+100)
-                                Vnx=[Vnx r((k-1)*n_sym+1:k*n_sym).*cos(f1*v)];
-                                Vny=[Vny r((k-1)*n_sym+1:k*n_sym).*-1.*sin(f1*v)];
+                                auxx = r((k-1)*n_sym+1:k*n_sym).*cos(f1*v);
+                                auxy = r((k-1)*n_sym+1:k*n_sym).*-1.*sin(f1*v);
+                                Vnx(position+1:position+n_sym)=auxx;
+                                Vny(position+1:position+n_sym)=auxy;
+                                position = position + n_sym;
+                                %                                 Vnx=[Vnx r((k-1)*n_sym+1:k*n_sym).*cos(f1*v)];
+                                %                                 Vny=[Vny r((k-1)*n_sym+1:k*n_sym).*-1.*sin(f1*v)];
                             end
                         end
                         
@@ -145,11 +153,11 @@ for(k_fc=1:length(fc))
                         
                         
                         batch_length=floor(t_block(k_t)/Ts); % block length to correct frequency offset
-                        mdem=[];
+%                         mdem=[];
                         mconstdem=[];
                         ref2=1; % variable to keep track of variations in the amplitude
-                        
-                        variance=0;
+                        mdem = zeros(length(mconst)*2*levels,1);
+                        variance=0; position = 0;
                         for(k=1:floor(length(mconst)/batch_length))
                             mconst_phi = real(mconst((k-1)*batch_length+1:k*batch_length) * exp(-1i*phihat)) / (ref*ref2) + 1i*imag(mconst((k-1)*batch_length+1:k*batch_length) * exp(-1i*phihat)) / (ref*ref2);
                             mconstdem =[mconstdem mconst_phi];
@@ -184,13 +192,16 @@ for(k_fc=1:length(fc))
                                     th_y = th_y + A*i_y*(2^(levels-n));
                                     th_x =  th_x + A*i_x*(2^(levels-n));
                                 end
-                                mdem=[mdem fliplr(sym)];
+                              %  mdem=[mdem fliplr(sym)];
+                                
+                                mdem(position+1:position+2*levels) = fliplr(sym);
+                                position = position + 2*levels;
                                 aux=demod(fliplr(sym),levels,A);
                                 aux=(Hx(m)-real(aux)).^2+(Hy(m)-imag(aux)).^2;
                                 variance=variance+aux;
                             end
                             
-                            if(mod(length(mdem),batch_length)==0)
+                            if(mod(position,batch_length)==0)
                                 demconst=demod(mdem((k-1)*batch_length*2*levels+1:k*batch_length*2*levels),levels,A);
                                 [theta ref2]=offset_estimation(mconst_phi,demconst); % estimate frequency offset
                                 phihat=phihat+theta; % update phase estimation
@@ -231,15 +242,16 @@ for(k_fc=1:length(fc))
                                 th_y = th_y + A*i_y*(2^(levels-n));
                                 th_x =  th_x + A*i_x*(2^(levels-n));
                             end
-                            
-                            mdem=[mdem fliplr(sym)];
+                            mdem(position+1:position+2*levels) = fliplr(sym);
+                            position = position + 2*levels;
+%                             mdem=[mdem fliplr(sym)];
                             aux=demod(fliplr(sym),levels,A);
                             aux=(Hx(m)-real(aux)).^2+(Hy(m)-imag(aux)).^2;
                             variance=variance+aux;
                         end
                         
                         test =[ts; data];
-                        decoded=mdem;
+                        decoded=mdem';
                         
                         
                         %process bits. compare with transmitted. see if
@@ -259,7 +271,7 @@ for(k_fc=1:length(fc))
                                     best_fc=fc(k_fc);
                                     best_gain=eq_g(k_eq);
                                     best_o=order(k_o);
-                                   % retrieve_coeffs(Hd);
+                                    % retrieve_coeffs(Hd);
                                     best_t = t_block(k_t);
                                     best_alfa = alfa(k_alfa);
                                     best_variance = variance;

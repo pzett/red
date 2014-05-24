@@ -118,6 +118,7 @@ public class StudentCode extends StudentCodeBase {
     private static double[][] ts_mod_const;
     private static double[] window;
     
+    int[] sc;
     public int side=-1;
     private static double[] ts_modQAM;
     
@@ -226,7 +227,9 @@ public class StudentCode extends StudentCodeBase {
            
            // Specify type of window function, 0 -> Rect window, 1 -> Hanning window 
            window =create_window(1);
-                     
+           
+           // Initialize scrambler
+           sc = read_scrambler();
            // Modulate the training sequence
            ts_modQAM = modulateQAM_ts(ts_length,f1,levels); 
 
@@ -285,6 +288,7 @@ public class StudentCode extends StudentCodeBase {
     	// Convert file to be sent into a binary stream stored in bit_buffer
     	case GETDATA:
     		bit_buffer = data_buffer_bits();
+    		bit_buffer = scrambler(bit_buffer);
     		
     		// If the file is too big start again
     		if (error == true){
@@ -794,6 +798,7 @@ public int[] data_buffer_bits(){
 				sizeofFile [8*k+k1]=(sizeofFile_b[k] >> (7-k1) & 1);
 			}
 		}
+		sizeofFile = scrambler(sizeofFile);
 
 		// Store name and extension, d_filename, in int[] of bits
 		byte[] titleofFile_b = (d_filename.getBytes());	
@@ -804,6 +809,7 @@ public int[] data_buffer_bits(){
 				titleofFile [8*k+k1]=(titleofFile_b[k] >> (7-k1) & 1);
 			}
 		}
+		titleofFile = scrambler(titleofFile);
 		
 		// Store checksum in int[] of bits
 		byte[] checksumofFile_b = (checksumofFile_s.getBytes());	
@@ -814,6 +820,8 @@ public int[] data_buffer_bits(){
 				checksumofFile [8*k+k1]=(checksumofFile_b[k] >> (7-k1) & 1);
 			}
 		}
+		checksumofFile = scrambler(checksumofFile);
+		
 
 		// Convert the data in file to bits
 		the_file_contents_bb=ByteBuffer.wrap(the_file_contents); // Wrapper to easier access content.
@@ -852,7 +860,9 @@ public String retrieveData(int[] received){
 
 	byte[] data_buffer_received = new byte[received.length/8];
 	int receivedBitstemp[] = new int [8];
-
+	
+	received = descramble(received);
+	
 	state_two=FIRST;
 
 	//Convert bits to bytes, note: LITTLE_ENDIAN
@@ -952,7 +962,7 @@ public String retrieveData(int[] received){
         // If the checksums are not equal, transmit again
         
 		if (checksum_rx!=C_sum_rx){
-        	add_output_text_line("File was received with errors. Please try again. Checksum fails !");
+        	add_output_text_line("File was received with errors. Please try again.");
         	error = true;
         	return null;
         }
@@ -1496,6 +1506,70 @@ long checksum(byte[] buf, int length) {
     }
 
     return (~((sum & 0xFFFF)+(sum >> 16)))&0xFFFF;
+}
+
+int [] scrambler(int [] data)
+{
+	int [] scd = new int [data.length];
+	for(int k=0;k<scd.length;k++){
+		scd[k] = xor(data[k],sc[k%sc.length]);
+	}
+	
+	return scd;
+}
+
+public static int xor(int x, int y) {
+	if(x != y)
+		return 1;
+	else return 0;
+    
+}
+
+public int [] read_scrambler(){
+	SimpleInputFile in = new SimpleInputFile();
+
+	in.open("/Redfiles/scrambler.txt"); 
+	int length = in.readInt();
+
+	int [] s = new int[length];
+
+
+	// Read file from sdcard
+	for(int i=0; i<length; i++){
+		s[i]=in.readInt(); 
+	};
+
+	in.close();
+	return s;
+}
+
+int [] descramble(int [] data)
+{
+	
+	int [] scd = new int [data.length];
+	int pos = 0;
+	for (int k=0; k < length_titleFile; k++ ){
+		scd[pos] = xor(data[pos],sc[k]);
+		pos++;
+	}
+	for (int k=0; k < length_sizeFile; k++ ){
+		scd[pos] = xor(data[pos],sc[k]);
+		pos++;
+	}
+	for (int k=0; k < length_checksum; k++ ){
+		scd[pos] = xor(data[pos],sc[k]);
+		pos++;
+	}
+	
+	int length_oh = pos;
+	
+	for (int k=0; k < data.length - length_oh ; k++){
+		scd[pos] = xor(data[pos],sc[k%sc.length]);
+		pos++;
+	}
+	
+
+	return scd;
 }
 
 }

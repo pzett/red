@@ -21,8 +21,12 @@ fs=44100; %Sampling frequency
 %Set up determining variables
 
 levels = 3; % size of constellation
-Nb=10000*8; %Number of bits to transmit
+Nb=46000*8; %Number of bits to transmit
 f1=fs/4; % carrier frequency
+
+iv = 0;
+
+
 
 n_sym=8; % number of samples per symbol
 Ts=n_sym/fs; % symbol period
@@ -42,10 +46,13 @@ continuous=0;
 win=gausswin(n_sym,alfa)';
 %win=ones(n_sym,1)';
 
+file = create_menu(1);
+
 %Generate random data
-ts = randint(ts_length*2*levels,1,2);
-gb = randint(gb_length*2*levels,1,2);
-data = randint(Nb,1,2);
+% ts = randint(ts_length*2*levels,1,2);
+% gb = randint(gb_length*2*levels,1,2);
+% data = randint(Nb,1,2);
+[gb,gb_end,ts,data,Nb] = generate_data(gb_length,ts_length,Nb,levels,file,iv);
 %save_to_file(gb,ts,data,levels);
 
 left = rem(Nb+(ts_length+gb_length)*2*levels,2*levels);
@@ -55,14 +62,12 @@ L=length(bit_stream);
 
 %Generate auxiliar variables to compute tx_signal with window and RRC
 symbol=ones(1,n_sym);
-symbol2=ones(1,1);
-mx=[]; my=[];
-mx2=[]; my2=[];
-
+%mx=[]; my=[];
+mx = zeros(L/(2*levels)*n_sym,1);
+my = zeros(L/(2*levels)*n_sym,1);
 x=0;
 y=0;
-x2=0;
-y2=0;
+position = 0;
 for n=0:2*levels:L-2*levels
     bit=[];
     xi=0;
@@ -87,21 +92,23 @@ for n=0:2*levels:L-2*levels
     
     x=xi*symbol;
     y=yi*symbol;
-    x2=xi*symbol2;
-    y2=yi*symbol2;
-    
-    mx=[mx x];
-    my=[my y];
-    mx2=[mx2 x2];
-    my2=[my2 y2];
+       
+    mx(position+1:position+n_sym)=x;
+    my(position+1:position+n_sym)=y;
+    position = position + n_sym;
+        
 end
 
-mconst = mx + my*1i; %Constellation of sent data
+mconst = transpose(mx + my*1i); %Constellation of sent data
 if(continuous==0) % how will the time vector be created?
     v=0:2*pi/fs:2*pi*(n_sym/fs-1/fs); %vector containing data for 1 period.
-    qam=[];
+    qam=zeros(length(bit_stream)/(2*levels)*n_sym,1)';
+    position = 0;
     for(k=1:length(bit_stream)/(2*levels))
-        qam=[qam win.*(real(mconst((k-1)*n_sym+1:k*n_sym)).*cos(f1*v)-imag(mconst((k-1)*n_sym+1:k*n_sym)).*sin(f1*v))];
+        aux = win.*(real(mconst((k-1)*n_sym+1:k*n_sym)).*cos(f1*v)-imag(mconst((k-1)*n_sym+1:k*n_sym)).*sin(f1*v));
+       % qam=[qam win.*(real(mconst((k-1)*n_sym+1:k*n_sym)).*cos(f1*v)-imag(mconst((k-1)*n_sym+1:k*n_sym)).*sin(f1*v))];
+        qam(position+1:position+n_sym) = aux;
+        position = position + n_sym; 
     end
 else
     t=0:1/fs:length(mconst)/fs-1/fs;

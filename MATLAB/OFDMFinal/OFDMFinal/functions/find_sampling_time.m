@@ -1,4 +1,4 @@
-function [ t_samp ] = find_sampling_time(asym,ts_length,margin,ro,fs,fc,FS,S,P,Nc,high,mconst_ts,t_end,t_samp);
+function [ t_samp ] = find_sampling_time(asym,ts_length,margin,ro,fs,fc,FS,S,P,Nc,high,mconst_ts,t_end,t_samp,window);
 % Author : Red Group - Francisco Rosario (frosario@kth.se)
 % Find best sampling time by correlating with symbols. Suboptimal
 % algorithm. May lead to errors if prefixes are too large. This errors are
@@ -18,7 +18,7 @@ for(k=-margin:1:margin)% test different sampling times and find peak of crosscor
     end
     
     if(asym)
-        decoded = demodulate_OFDM_asym(r,FS,S,P,Nc,high);
+        decoded = demodulate_OFDM_asym(r,FS,S,P,Nc,high,window);
     else
         decoded = demodulate_OFDM(r,FS,S,P,Nc);
     end

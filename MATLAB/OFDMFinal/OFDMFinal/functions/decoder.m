@@ -26,6 +26,7 @@ mdem = [];
 if(pilot); trigger_pilots = 0;  pilot_index=1; end;
 
 phi_mat = zeros(ceil(length(mconst)/Nc),Nc); ind = 1; %matrix to accomodate changes in time of the channel
+position = 0;
 for(k=1:floor(length(mconst)/batch_length))
     
     mconst_phi=zeros(1,batch_length); %initialize vector
@@ -65,9 +66,11 @@ for(k=1:floor(length(mconst)/batch_length))
             th_y = th_y + A*i_y*(2^(levels-n));
             th_x =  th_x + A*i_x*(2^(levels-n));
         end
-        mdem=[mdem fliplr(sym)];
+        %  mdem=[mdem fliplr(sym)];
         
-    end
+        mdem(position+1:position+2*levels) = fliplr(sym);
+        position = position + 2*levels;
+      end
     
     %assume they are correct, and verify which ones were transmitted
     demconst=demodulate(mdem((k-1)*batch_length*2*levels+1:k*batch_length*2*levels),levels,A);

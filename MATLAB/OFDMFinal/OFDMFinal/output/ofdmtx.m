@@ -39,7 +39,7 @@ pilot_int = 12*Nc*2*levels; %(in bits) how many bits should be sent before pilot
 ts_pilot_length = 6*Nc; %(in symbols) pilot length to reestimate the channel
 
 %Channel Coding usage
-code = 0; %do you want to use channel coding?
+code = 1; %do you want to use channel coding?
 rate = 9/10; %rate usage of the code
 
 
@@ -88,6 +88,6 @@ up_signal = real(transpose(data_OFDM).*exp(1i*2*pi*fc*t)); % samples must be rea
 %normalize signals to amplitude, save and plot
 mod_signal=up_signal/(max(abs(up_signal)+0.001));
 [ ts_mod ] = save_and_plot(FS,S,P,up_signal,mod_signal,fs,Nc,gb_length,ts_length,Nb,gb_end_length,levels);
-save('OFDM.mat','Nb','levels','fc','data_sent','gb_length','A','mod_signal','P','S','Nc','FS','high','file','rate','code','data_encoded','asym','intlv','window');
+save('OFDM.mat','Nb','levels','fc','data_sent','gb_length','A','mod_signal','P','S','Nc','FS','high','file','rate','code','data_encoded','asym','intlv');
 save('ts_mod.mat','ts_mod','mconst_ts','ts','ts_pilot','ts_length','pilot','pilot_int','ts_pilot_length' );
 

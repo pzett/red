@@ -1563,7 +1563,7 @@ int [] descramble(int [] data)
 	
 	int length_oh = pos;
 	
-	for (int k=0; k < data.length - length_oh ; k++){
+	for (int k=0; k < data.length - length_oh; k++){
 		scd[pos] = xor(data[pos],sc[k%sc.length]);
 		pos++;
 	}

@@ -1325,7 +1325,7 @@ public class FrameWork extends Activity implements OnRecordPositionUpdateListene
 	    }
 	    if(requestCode==CHOOSE_FILE_REQUESTCODE && resultCode == RESULT_CANCELED)
 	    {
-	    	studentCode.stringFromBrowseForFile(null);
+	    	studentCode.stringFromBrowseForFile(null,null);
 	    }
 	    super.onActivityResult(requestCode, resultCode, data);
 

@@ -8,12 +8,13 @@ if(mod(L,2*levels) ~= 0)
     bit_stream = [bit_stream zeros(1,2*levels-mod(L,2*levels))];
     L = length(bit_stream);
 end
-
-symbol2=ones(1,1);
-mx2=[]; my2=[];
-x2=0;
-y2=0;
-for n=0:2*levels:L-2*levels %algorithm explained in the report. It uses thresholds for mapping.
+symbol=ones(1,1);
+mx = zeros(L/(2*levels),1);
+my = zeros(L/(2*levels),1);
+x=0;
+y=0;
+position = 0;
+for n=0:2*levels:L-2*levels
     bit=[];
     xi=0;
     yi=0;
@@ -35,14 +36,16 @@ for n=0:2*levels:L-2*levels %algorithm explained in the report. It uses threshol
         end
     end
     
-    x2=xi*symbol2;
-    y2=yi*symbol2;
-    mx2=[mx2 x2];
-    my2=[my2 y2];
-    
+    x=xi*symbol;
+    y=yi*symbol;
+       
+    mx(position+1)=x;
+    my(position+1)=y;
+    position = position + 1;
+        
 end
 
-mconst = mx2 + 1i*my2; %resulting constellation
+mconst = transpose(mx + my*1i); %Constellation of sent data
 
 if(mod(length(mconst),Nc) ~= 0)
     fprintf('Added %g symbols to the constellation to fill OFDM symbol.\n',Nc-mod(length(mconst),Nc));

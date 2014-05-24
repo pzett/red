@@ -23,7 +23,7 @@ else
 end
 
 %system('adb devices')
-ro = retrieve_data('4df789074129bfb5');
+ro = retrieve_data('4df7721fd73fbfaf');
 
 tic % start timer
 for(k_eq=1:length(g_eq))
@@ -40,8 +40,8 @@ for(k_eq=1:length(g_eq))
     [t_samp_o, t_end]=synch(r,ts_mod,fs,mod_signal);
     
     r=r';
-    margin = 0;
-    t_samp = find_sampling_time(asym,ts_length,margin,r,fs,fc,FS,S,P,Nc,high,mconst_ts,t_end,t_samp_o);
+    margin = 5;
+    t_samp = find_sampling_time(asym,ts_length,margin,r,fs,fc,FS,S,P,Nc,high,mconst_ts,t_end,t_samp_o,window);
     
     r=r(t_samp:t_end);
     
@@ -54,7 +54,7 @@ for(k_eq=1:length(g_eq))
     subplot(414) % finish plotting of spectrums 
     pwelch(real(r),[],[],[],fs); title('PSD of received signal after (x) with complex exponential')
         
-    decoded = dem_OFDM(r,FS,S,P,Nc,high,fs,asym);
+    decoded = dem_OFDM(r,FS,S,P,Nc,high,fs,asym,window);
       
     if(pilot == 1) %if pilots are being used, they must be removed and the gain and phases estimated.
         [pilots, decoded] = remove_pilots(decoded,pilot_int/(2*levels),ts_pilot_length,ts_length);

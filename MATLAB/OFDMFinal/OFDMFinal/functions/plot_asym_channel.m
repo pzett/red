@@ -10,7 +10,7 @@ ff = [f_v1 f_v2]/1000;
 phases = [phihat(high+1:end); phihat(1:high)];
 if(sum(diff(phases)>0.2))
         disp('There is a discontinuosity in the phase estimation. \n');
-        disp('Sampling time might have slight offset. Consider restransmiting.');
+        disp('Sampling time might have slight offset. Consider retransmission.');
     end
 references = [ref(high+1:end); ref(1:high)];
 figure(2)

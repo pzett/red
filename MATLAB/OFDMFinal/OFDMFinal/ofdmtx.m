@@ -46,7 +46,7 @@ rate = 9/10; %rate usage of the code
 use_menu = 1;
 %% Random or file Transmission ?
 file = create_menu(use_menu,pilot,code,intlv);
-Nb =100000*8 ; %random transmission size (in bits)
+Nb =256000*8 ; %random transmission size (in bits)
 
 %% Generate data, training sequence and guard band
 [gb,gb_end,ts,data_sent,data_encoded,Nb] = generate_data(gb_length,gb_end_length,ts_length,Nb,levels,Nc,file,code,rate,intlv);

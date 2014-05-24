@@ -23,7 +23,7 @@ else
 end
 
 %system('adb devices')
-ro = retrieve_data('4df754560850cfe9');
+ro = retrieve_data('4df789074129bfb5');
 
 tic % start timer
 for(k_eq=1:length(g_eq))
@@ -40,7 +40,7 @@ for(k_eq=1:length(g_eq))
     [t_samp_o, t_end]=synch(r,ts_mod,fs,mod_signal);
     
     r=r';
-    margin = 5;
+    margin = 0;
     t_samp = find_sampling_time(asym,ts_length,margin,r,fs,fc,FS,S,P,Nc,high,mconst_ts,t_end,t_samp_o);
     
     r=r(t_samp:t_end);

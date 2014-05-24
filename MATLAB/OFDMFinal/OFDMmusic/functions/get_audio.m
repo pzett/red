@@ -20,7 +20,7 @@ ynew = ynew' / max(abs(ynew));
 yhigh = audioplayer(ynew,44.1e3);
 play(yhigh)
 ynew = ynew(1:L);
-subplot(212)
+subplot(222)
 pwelch(ynew,[],[],[],fs);
 end
 

@@ -138,7 +138,7 @@ up_signal = real(transpose(data_OFDM).*exp(1i*2*pi*fc*t)); % samples must be rea
 % segment = up_signal(200:400); tt = 0 : 1/fs : (length(segment)-1)/fs;
 % plot(tt,segment); title('Segment of transmitted signal (OFDM) in time'); xlabel('time'); ylabel('Amplitude');
 figure(1)
-subplot(211)
+subplot(221)
 pwelch(up_signal,[],[],[],fs); title('PSD of transmitted signal (OFDM)')
 hold on
 %normalize signals to amplitude 1
@@ -150,13 +150,13 @@ audio_signal = get_audio('gottheme.wav',length(mod_signal));
 
 total = mod_signal + audio_signal;
 total = total / max(abs(total));
-figure
+subplot(2,2,[3,4])
 pwelch(total,[],[],[],fs)
 mod_signal = total;
 
 
 if(mod(gb_length,Nc) || mod(ts_length,Nc)); disp('gb or ts length must be divisable by Nc!!!'); end
-%wavwrite(mod_signal, fs, 'mod_signal.wav');
+wavwrite(total, fs, 'total.wav');
 create_file_of_shorts('test_signal.dat',total*(2^15-1));
 copy_file_to_all('test_signal.dat');
 %copy_file_from_working_directory_to_sdcard( 'test_signal.dat' );

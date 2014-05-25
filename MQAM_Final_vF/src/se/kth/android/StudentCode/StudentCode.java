@@ -860,8 +860,14 @@ public String retrieveData(int[] received){
 
 	byte[] data_buffer_received = new byte[received.length/8];
 	int receivedBitstemp[] = new int [8];
-	
+	try{
 	received = descramble(received);
+	}
+	catch (ArrayIndexOutOfBoundsException e) {
+		add_output_text_line("Could not descramble file. Please try again.");
+		error = true;
+		return null; 
+	 }	
 	
 	state_two=FIRST;
 

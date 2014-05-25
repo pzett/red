@@ -14,7 +14,7 @@ if(file) %pick a file from the computer and convert to bits
     end
     fprintf('The file has %g bytes\n',length(data_sent)/8);
     Nb = length(data_sent);
-   
+    
 else
     %Number of bits to be transmitted
     data_sent = randint(Nb,1,2); % generate random data
@@ -29,6 +29,11 @@ if(iv)
     data_sent = scramble(data_sent);
 end
 data_sent = reshape(data_sent,length(data_sent),1);
+if(mod(length(data_sent),2*levels) ~= 0 )
+    fprintf('Added %g bits to fill constellation symbol\n', 2*levels-mod(length(data_sent),2*levels));
+    data_sent = [data_sent ; zeros(2*levels-mod(length(data_sent),2*levels),1)];
+    
+end
 
 end
 

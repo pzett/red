@@ -19,19 +19,20 @@ fclose('all');
 fs=44100; %Sampling frequency
 
 %Set up determining variables
+pilot = 1;
+pilot_int = 5500; % (in symbols)
+pilot_len = 12;
 
 levels = 3; % size of constellation
-Nb=46000*8; %Number of bits to transmit
+Nb=60000*8; %Number of bits to transmit
 f1=fs/4; % carrier frequency
 
-iv = 0;
-
-
+iv = 1;
 
 n_sym=8; % number of samples per symbol
 Ts=n_sym/fs; % symbol period
 
-ts_length=200; %in number of symbols
+ts_length=220; %in number of symbols
 gb_length=540; %in number of symbols
 
 alfa = 2.5; % gaussian window parameter
@@ -54,12 +55,18 @@ file = create_menu(1);
 % data = randint(Nb,1,2);
 [gb,gb_end,ts,data,Nb] = generate_data(gb_length,ts_length,Nb,levels,file,iv);
 %save_to_file(gb,ts,data,levels);
+data_sent = data;
+[data,ts_pilot] = generate_pilots(data,pilot_int,pilot_len,Nb,pilot,levels);
 
 left = rem(Nb+(ts_length+gb_length)*2*levels,2*levels);
-bit_stream = [gb' ts' data' (zeros(2*levels-left,1))' gb']; %merge bits
+bit_stream = [gb' ts' data' gb']; %merge bits
+
+if(mod(length(bit_stream),2*levels) ~= 0 )
+    fprintf('Added %g bits to fill constellation symbol\n', 2*levels-mod(length(bit_stream),2*levels));
+    bit_stream = [bit_stream  zeros(1,2*levels-mod(length(bit_stream),2*levels))];
+    
+end
 L=length(bit_stream);
-
-
 %Generate auxiliar variables to compute tx_signal with window and RRC
 symbol=ones(1,n_sym);
 %mx=[]; my=[];
@@ -120,7 +127,7 @@ end
 
 mconst_ts=mconst(gb_length*n_sym+1:n_sym:n_sym*(gb_length+ts_length));
 ts_mod=qam((gb_length*n_sym+1:(gb_length+ts_length)*n_sym));%retrieve modulated training sequence
-
+pilot_const = demod(ts_pilot,levels,A); 
 
 figure(3)
 pwelch(qam,[],[],[],fs);
@@ -136,7 +143,7 @@ ts_mod=ts_mod/(max(abs(ts_mod)+0.001));
 wavwrite(mod_signal, fs, 'mod_signal.wav');
 create_file_of_shorts('test_signal.dat',mod_signal*2^14)
 copy_file_from_working_directory_to_sdcard( 'test_signal.dat' );
-save('MQAM.mat','Nb','levels','f1','data','ts_length','gb_length','A','n_sym','mod_signal','continuous','qam');
+save('MQAM.mat','Nb','levels','f1','data','ts_length','gb_length','A','n_sym','mod_signal','continuous','qam','pilot_const','pilot_int','pilot_len','pilot','data_sent');
 save('ts_mod.mat','ts_mod','mconst_ts','ts')
 mod_signal_length = length(mod_signal)/fs; % Length of modulated signal in seconds
 fprintf('Modulated signal: %g seconds long \n',mod_signal_length)

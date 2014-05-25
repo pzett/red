@@ -1,24 +1,24 @@
-function [vec_name,vec_size] = bytestobitsnew(str,filename)
+function [vec_name,vec_size] = bytestobitsnew(str,filename,L)
 %UNTITLED2 Summary of this function goes here
 %   Detailed explanation goes here
 length_size = 56;
 length_name = 512;
 
-fid = fopen(str);
+% fid = fopen(str);
+% 
+% vec3 = fread(fid);
+% 
+% [M,N] = size(vec3);
+% 
+% x = dec2bin(vec3,8);
+% 
+% 
+% vec = empty(1,size(x,1)*8);
+% for i = 1:size(x,1)
+%     vec =[vec x(i,:)];
+% end
 
-vec3 = fread(fid);
-
-[M,N] = size(vec3);
-
-x = dec2bin(vec3,8);
-
-
-vec =[];
-for i = 1:size(x,1)
-    vec =[vec x(i,:)];
-end
-
-vec_size_i=size(vec,2);
+vec_size_i=L;
 
 aux=dec2bin(vec_size_i);
 temp1=[];
@@ -28,13 +28,13 @@ end
 
 vec_size = [zeros(1,length_size-length(temp1)) temp1 ];
 
-vec =[];
-for i = 1:size(x,1)
-    for(k=1:8)
-        aux = str2num(x(i,k));
-        vec =[vec aux];
-    end    
-end
+% vec =[];
+% for i = 1:size(x,1)
+%     for(k=1:8)
+%         aux = str2num(x(i,k));
+%         vec =[vec aux];
+%     end    
+% end
 
 
 % binranges = 0:255;

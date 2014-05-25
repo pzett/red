@@ -46,7 +46,6 @@ ro=extract_sound_from_log_data(log_data); %extract sound from log data.
 no_iterations = length(fc)*length(order)*length(eq_g)*length(alfa)*length(t_block)*length(fchard);
 min_var=1e6;
 
-
 tic
 for(k_fc=1:length(fc))
     for(k_o=1:length(order))
@@ -146,6 +145,12 @@ for(k_fc=1:length(fc))
                             Haux = Hx(m) + Hy(m)*1i;
                             mconst = [mconst Haux];
                         end
+                       
+                        if(pilot)
+                        [mconst, pilot_sym] = remove_pilots(mconst,pilot_int,pilot_len,ts_length);
+                        [phi_pil,refs] = estimate_pilot_phases(pilot_sym,pilot_const);
+                        end
+                        
                         
                         if(plotting) scatterplot(mconst),grid,xlabel('I'),ylabel('Q'),title('Received Constellation'); end
                         
@@ -158,6 +163,9 @@ for(k_fc=1:length(fc))
                         ref2=1; % variable to keep track of variations in the amplitude
                         mdem = zeros(length(mconst)*2*levels,1);
                         variance=0; position = 0;
+                        mconst=reshape(mconst,1,length(mconst));
+                        trigger_pilots = 0;
+                        pilot_index = 1;
                         for(k=1:floor(length(mconst)/batch_length))
                             mconst_phi = real(mconst((k-1)*batch_length+1:k*batch_length) * exp(-1i*phihat)) / (ref*ref2) + 1i*imag(mconst((k-1)*batch_length+1:k*batch_length) * exp(-1i*phihat)) / (ref*ref2);
                             mconstdem =[mconstdem mconst_phi];
@@ -192,7 +200,7 @@ for(k_fc=1:length(fc))
                                     th_y = th_y + A*i_y*(2^(levels-n));
                                     th_x =  th_x + A*i_x*(2^(levels-n));
                                 end
-                              %  mdem=[mdem fliplr(sym)];
+                                %  mdem=[mdem fliplr(sym)];
                                 
                                 mdem(position+1:position+2*levels) = fliplr(sym);
                                 position = position + 2*levels;
@@ -207,6 +215,22 @@ for(k_fc=1:length(fc))
                                 phihat=phihat+theta; % update phase estimation
                                 ref2=1; % channel is time invariant in amplitude
                             end
+                            
+                            if(pilot) %if pilots are being used
+                                if(length(mconstdem) == ts_length); trigger_pilots = 1; end
+                                
+                                if(mod(length(mconstdem) - ts_length, pilot_int )==0 && trigger_pilots && ((length(mconstdem)-ts_length) ~= 0) )
+                                    if(pilot_index < length(phi_pil))
+                                        
+                                        phihat = phi_pil(pilot_index); %new phase estimation
+                                        ref = refs(pilot_index);      %new amplitude estimation
+                                        pilot_index=pilot_index+1
+                                    end
+                                end
+                            end
+                            
+                            
+                            
                         end
                         
                         %compute last batch
@@ -244,13 +268,13 @@ for(k_fc=1:length(fc))
                             end
                             mdem(position+1:position+2*levels) = fliplr(sym);
                             position = position + 2*levels;
-%                             mdem=[mdem fliplr(sym)];
+%                           mdem=[mdem fliplr(sym)];
                             aux=demod(fliplr(sym),levels,A);
                             aux=(Hx(m)-real(aux)).^2+(Hy(m)-imag(aux)).^2;
                             variance=variance+aux;
                         end
                         
-                        test =[ts; data];
+                        test =[ts; data_sent];
                         decoded=mdem';
                         
                         
@@ -263,9 +287,10 @@ for(k_fc=1:length(fc))
                             if(plotting) stem(test' ~= decoded); end
                             errors = sum(test(length(ts)+1:end)' ~= decoded(length(ts)+1:end));
                             BER = errors / length(test(length(ts)+1:end)) * 100
+                            scatterplot(mconstdem(ts_length+1:length(test)/(2*levels))); grid on ; xlabel('I'); ylabel('Q'),title('Received Constellation after Rotation and Offset Correction');
                             if(BER==0)
                                 if(variance/length(test(length(ts)+1:end))<min_var)
-                                    scatterplot(mconstdem(ts_length+1:length(test)/(2*levels))); grid on ; xlabel('I'); ylabel('Q'),title('Received Constellation after Rotation and Offset Correction');
+                                    %scatterplot(mconstdem(ts_length+1:length(test)/(2*levels))); grid on ; xlabel('I'); ylabel('Q'),title('Received Constellation after Rotation and Offset Correction');
                                     min_var=variance/length(test(length(ts)+1:end));
                                     
                                     best_fc=fc(k_fc);

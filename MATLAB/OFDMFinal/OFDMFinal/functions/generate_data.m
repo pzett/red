@@ -5,8 +5,8 @@ if(file) %pick a file from the computer and convert to bits
     [filename,pathname,filterindex] = uigetfile('*.*','Pick a file');
     if(filterindex==0); error('You must choose a file !'); end;
     str =[pathname,filename];
-    data_sent = bytestobits(str);
-    [vec_name,vec_size] = bytestobitsnew(str,filename);
+    [data_sent,Le] = bytestobits(str);
+    [vec_name,vec_size] = bytestobitsnew(str,filename,Le);
     data_sent = [vec_name vec_size data_sent]; %merge encoded name and size with data.
     if(mod(length(data_sent),2*levels) ~= 0 )
         data_sent = [data_sent  zeros(1,2*levels-mod(length(data_sent),2*levels))];

@@ -85,3 +85,4 @@ T = toc;
 fprintf('Elapsed decoding time: %g seconds. \n',T);
 
 plot_graphs_rx
+fclose('all');

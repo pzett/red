@@ -222,7 +222,7 @@ public class StudentCode extends StudentCodeBase {
            bufferInt = new byte[SAMPLE_BUFFER_SIZE * BYTES_PER_SAMPLE];
            
            // Variable that governs maximum file transfer size
-           int length_rxb =no_samp_period*2000*50;
+           int length_rxb =no_samp_period*2000*70;
            rx_buffer = new short[length_rxb];
            
            // Specify type of window function, 0 -> Rect window, 1 -> Hanning window 
@@ -288,6 +288,8 @@ public class StudentCode extends StudentCodeBase {
     	// Convert file to be sent into a binary stream stored in bit_buffer
     	case GETDATA:
     		bit_buffer = data_buffer_bits();
+    		save_i_to_file("bit_buffer.txt",bit_buffer,bit_buffer.length);
+    		//add_output_text_line("bit_buffer length = "+bit_buffer.length);
     		bit_buffer = scrambler(bit_buffer);
     		
     		// If the file is too big start again
@@ -726,7 +728,7 @@ public void save_c_to_file(String filename,Complex[] data,int length){
 	
 	SimpleOutputFile out = new SimpleOutputFile();
 	out.open(filename);
-	out.writeInt(length);
+	out.writeInt(2*length);
 	for(int i=0; i<length; i++){
       out.writeDouble(data[i].re());
       out.writeDouble(data[i].im());
@@ -862,6 +864,7 @@ public String retrieveData(int[] received){
 	int receivedBitstemp[] = new int [8];
 	try{
 	received = descramble(received);
+	save_i_to_file("received.txt",received,received.length);
 	}
 	catch (ArrayIndexOutOfBoundsException e) {
 		add_output_text_line("Could not descramble file. Please try again.");
@@ -1170,6 +1173,7 @@ public  double[] MQAMmod(int f, int[] bits){
 	int L;
 	if(bits.length%(2*levels) != 0){
 		L=bits.length+2*levels-(bits.length%(2*levels));}
+	
 	else{
 		L=bits.length;
 	}
@@ -1248,7 +1252,6 @@ public int[] MQAMreceiver(int f,int n_sym,double[] r){
 		current_position++;
 	}
 
-	// Phase estimation
 	Complex mconst[] = phase_estimation(Arrays.copyOfRange(Hxs, 0, current_position),Arrays.copyOfRange(Hys, 0, current_position),ts_mod_const,current_position);
 	
 	Complex[] demconst = new Complex[mconst.length];
@@ -1260,7 +1263,7 @@ public int[] MQAMreceiver(int f,int n_sym,double[] r){
 	current_position = 0;
 
 	
-	for(int k = 0 ; k < (int) Math.floor((double) mconst.length/(double) batch_length); k++){
+	for(int k = 0 ; k < (int) Math.floor((double) mconst.length/ (double) batch_length); k++){
 		Complex[] mconst_phi =new Complex[batch_length];
 		Complex complex_exp =new Complex(Math.cos(-phihat), Math.sin(-phihat));
 		for(int q=(k*batch_length);q<(k+1)*batch_length;q++){
@@ -1296,7 +1299,7 @@ public int[] MQAMreceiver(int f,int n_sym,double[] r){
 	System.arraycopy(decision_aux, 0, decision, current_position, decision_aux.length);
 	
 	// Current_position = current_position + decision_aux.length;
-	//save_c_to_file("demconst.txt",demconst,demconst.length);
+	save_c_to_file("demconst.txt",demconst,demconst.length);
 	
 	//	int decision[] = demod_const(mconst,levels);
 	return Arrays.copyOfRange(decision, ts_length*2*levels, decision.length);

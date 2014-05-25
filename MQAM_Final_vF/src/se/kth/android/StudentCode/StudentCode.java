@@ -1238,7 +1238,7 @@ public int[] MQAMreceiver(int f,int n_sym,double[] r){
 	
 	int n_samp = synchronize(Arrays.copyOfRange(Hx,0,block_length),Arrays.copyOfRange(Hy,0,block_length),
 							 ts_mod_const,no_samp_period);
-	
+	n_samp = n_samp +1;
 	double Hxs[] = new double[Hx.length];
 	double Hys[] = new double[Hy.length];
 	int current_position = 0;

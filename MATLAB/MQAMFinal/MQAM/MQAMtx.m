@@ -19,12 +19,12 @@ fclose('all');
 fs=44100; %Sampling frequency
 
 %Set up determining variables
-pilot = 1;
+pilot = 0;
 pilot_int = 5500; % (in symbols)
 pilot_len = 12;
 
 levels = 3; % size of constellation
-Nb=60000*8; %Number of bits to transmit
+Nb=100000*8; %Number of bits to transmit
 f1=fs/4; % carrier frequency
 
 iv = 1;
@@ -63,8 +63,7 @@ bit_stream = [gb' ts' data' gb']; %merge bits
 
 if(mod(length(bit_stream),2*levels) ~= 0 )
     fprintf('Added %g bits to fill constellation symbol\n', 2*levels-mod(length(bit_stream),2*levels));
-    bit_stream = [bit_stream  zeros(1,2*levels-mod(length(bit_stream),2*levels))];
-    
+    bit_stream = [bit_stream  zeros(1,2*levels-mod(length(bit_stream),2*levels))];    
 end
 L=length(bit_stream);
 %Generate auxiliar variables to compute tx_signal with window and RRC

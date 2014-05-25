@@ -21,6 +21,6 @@ yhigh = audioplayer(ynew,44.1e3);
 play(yhigh)
 ynew = ynew(1:L);
 subplot(222)
-pwelch(ynew,[],[],[],fs);
+pwelch(ynew,[],[],[],fs); title('Spectrum of LPFd music')
 end
 

@@ -12,7 +12,7 @@ clear;
 load('OFDM.mat')
 load('ts_mod.mat')
 fs=44100; %sampling rate
-use_eq = 0; 
+use_eq = 0;
 use_hpf = 0;
 loops=1; %apply loops ?
 plotting=1; % plot output of functions ?
@@ -23,7 +23,7 @@ else
 end
 
 %system('adb devices')
-ro = retrieve_data('4df7721fd73fbfaf');
+ro = retrieve_data('4df754560850cfe9');
 
 tic % start timer
 for(k_eq=1:length(g_eq))
@@ -51,32 +51,32 @@ for(k_eq=1:length(g_eq))
     t = 0: 1/fs : (length(r) - 1) / fs; % generate time vector.
     r=exp(-1i*2*pi*fc*t).*r; % multiply with the exponential
     
-    subplot(414) % finish plotting of spectrums 
+    subplot(414) % finish plotting of spectrums
     pwelch(real(r),[],[],[],fs); title('PSD of received signal after (x) with complex exponential')
-        
+    
     decoded = dem_OFDM(r,FS,S,P,Nc,high,fs,asym,window);
-      
+    
     if(pilot == 1) %if pilots are being used, they must be removed and the gain and phases estimated.
         [pilots, decoded] = remove_pilots(decoded,pilot_int/(2*levels),ts_pilot_length,ts_length);
         ts_const = demodulate(ts_pilot,levels,A);
         [pilot_phase, pilot_ref] = estimate_pilot_phases(pilots,ts_const,Nc);
     end
-
+    
     [phihat,ref] = estimate_channel(decoded,Nc,ts_length,asym,FS,fc,mconst_ts,fs,high);
- 
+    
     batch_length = 10; % block length to update phase offset
     
     [ mdem,mconstdem,phi_mat] = decoder(levels,asym, batch_length,high,phihat,ref,decoded,pilot,ts_length,Nc,A );
     
     process_bits
-   
+    
 end
 
 mod_signal_length = length(mod_signal)/fs;
 
-plot_surf 
+plot_surf
 
-R = ((ts_length+2*gb_length)*2*levels + Nb) / mod_signal_length
+%R = ((ts_length+2*gb_length)*2*levels + Nb) / mod_signal_length
 effective_rate = Nb / mod_signal_length
 
 fprintf('Transmitted: %g bytes in %g seconds\n',Nb/8,mod_signal_length);

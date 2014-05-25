@@ -87,12 +87,12 @@ for(k_fc=1:length(fc))
                         else
                             %                             Vnx=[];
                             %                             Vny=[];
-                            Vnx = zeros(n_sym*floor(length(data) / (2*levels)+ts_length+100),1);
-                            Vny = zeros(n_sym*floor(length(data) / (2*levels)+ts_length+100),1);
+                            Vnx = zeros(n_sym*floor(length(data) / (2*levels)+ts_length+300),1);
+                            Vny = zeros(n_sym*floor(length(data) / (2*levels)+ts_length+300),1);
                             v=0:2*pi/fs:2*pi*(n_sym/fs-1/fs); %vector containing data for 1 period.
                             % Demodulation of received signal
                             position = 0;
-                            for(k=1:(length(data))/(2*levels)+ts_length+100)
+                            for(k=1:(length(data))/(2*levels)+ts_length+300)
                                 auxx = r((k-1)*n_sym+1:k*n_sym).*cos(f1*v);
                                 auxy = r((k-1)*n_sym+1:k*n_sym).*-1.*sin(f1*v);
                                 Vnx(position+1:position+n_sym)=auxx;
@@ -130,7 +130,7 @@ for(k_fc=1:length(fc))
                         
                         
                         
-                        margin=100; % margin to find symbol wise sampling time
+                        margin=200; % margin to find symbol wise sampling time
                         r_filt=[];
                         for(k=1:n_sym*(ts_length+2*margin))
                             r_aux= Hx(k) + Hy(k)*1i; %map into constellation
@@ -138,7 +138,7 @@ for(k_fc=1:length(fc))
                         end
                         
                         n_samp = synch2(r_filt(1:(ts_length+2*margin)*n_sym),mconst_ts,n_sym); % find symbol wise best samplig time
-                        
+                        n_samp = n_samp + 1;
                         mconst=[];
                         
                         for m=n_samp:n_sym:ML %upsample !
@@ -146,7 +146,7 @@ for(k_fc=1:length(fc))
                             mconst = [mconst Haux];
                         end
                        
-                        if(pilot)
+                        if(pilot )
                         [mconst, pilot_sym] = remove_pilots(mconst,pilot_int,pilot_len,ts_length);
                         [phi_pil,refs] = estimate_pilot_phases(pilot_sym,pilot_const);
                         end

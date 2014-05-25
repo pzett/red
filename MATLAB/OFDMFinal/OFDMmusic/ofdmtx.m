@@ -151,7 +151,7 @@ audio_signal = get_audio('gottheme.wav',length(mod_signal));
 total = mod_signal + audio_signal;
 total = total / max(abs(total));
 subplot(2,2,[3,4])
-pwelch(total,[],[],[],fs)
+pwelch(total,[],[],[],fs); title('Spectrum of the total signal')
 mod_signal = total;
 
 

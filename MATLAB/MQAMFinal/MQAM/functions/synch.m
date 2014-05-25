@@ -1,6 +1,6 @@
 function [t_samp ref]= synch(r, mod_ts,n_sym,plotting)
 
-threshold=50; %define amplitude threshold to start  -> change accordingly.
+threshold=100; %define amplitude threshold to start  -> change accordingly.
 
 % Loop to identify sample where received sequence is initialized
 for(k=1:length(r))
@@ -10,7 +10,7 @@ for(k=1:length(r))
     end
 end
 
-margin=1000;
+margin=4000;
 [r_yts t]=xcorr(r(k_index:k_index+length(mod_ts)+n_sym*margin),mod_ts);
 
 [peak,offset]=max(abs(r_yts)); %find peak of cross correlation

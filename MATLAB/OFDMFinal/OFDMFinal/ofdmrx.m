@@ -23,7 +23,7 @@ else
 end
 
 %system('adb devices')
-ro = retrieve_data('4df754560850cfe9');
+ro = retrieve_data();
 
 tic % start timer
 for(k_eq=1:length(g_eq))
@@ -64,7 +64,7 @@ for(k_eq=1:length(g_eq))
     
     [phihat,ref] = estimate_channel(decoded,Nc,ts_length,asym,FS,fc,mconst_ts,fs,high);
     
-    batch_length = 10; % block length to update phase offset
+    batch_length = 16; % block length to update phase offset
     
     [ mdem,mconstdem,phi_mat] = decoder(levels,asym, batch_length,high,phihat,ref,decoded,pilot,ts_length,Nc,A );
     

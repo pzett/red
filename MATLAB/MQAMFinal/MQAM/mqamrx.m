@@ -93,6 +93,7 @@ for(k_fc=1:length(fc))
                             % Demodulation of received signal
                             position = 0;
                             for(k=1:(length(data))/(2*levels)+ts_length+300)
+                                
                                 auxx = r((k-1)*n_sym+1:k*n_sym).*cos(f1*v);
                                 auxy = r((k-1)*n_sym+1:k*n_sym).*-1.*sin(f1*v);
                                 Vnx(position+1:position+n_sym)=auxx;
@@ -110,9 +111,9 @@ for(k_fc=1:length(fc))
                         Hx=2.*filter(Hd,Vnx); %LPF
                         Hy=2.*filter(Hd,Vny); %LPF
                         %second, higher order LPF
-%                         Hd=lpfhard(fchard(k_fchard));
-%                         Hx=2.*filter(Hd,Hx);
-%                         Hy=2.*filter(Hd,Hy);
+                        %                         Hd=lpfhard(fchard(k_fchard));
+                        %                         Hx=2.*filter(Hd,Hx);
+                        %                         Hy=2.*filter(Hd,Hy);
                         
                         ML = length (Hx);
                         
@@ -137,18 +138,23 @@ for(k_fc=1:length(fc))
                             r_filt = [r_filt r_aux];
                         end
                         
-                        n_samp = synch2(r_filt(1:(ts_length+2*margin)*n_sym),mconst_ts,n_sym); % find symbol wise best samplig time
-                        n_samp = n_samp + 1;
+                        
+                        n_samp = synch2(r_filt(1:(ts_length+2*margin)*n_sym),mconst_ts,n_sym); % find symbol wise best sampling time
+                        
+                        %aux = Hx(n_samp:end) + Hy(n_samp:end)*1i;
+                        %n_samps = synch_pilot(aux,pilot_const,pilot_int,n_sym,pilot_len,ts_length);
+                        %n_samp = n_samp + 1;
+                        
                         mconst=[];
                         
                         for m=n_samp:n_sym:ML %upsample !
                             Haux = Hx(m) + Hy(m)*1i;
                             mconst = [mconst Haux];
                         end
-                       
-                        if(pilot )
-                        [mconst, pilot_sym] = remove_pilots(mconst,pilot_int,pilot_len,ts_length);
-                        [phi_pil,refs] = estimate_pilot_phases(pilot_sym,pilot_const);
+                        
+                        if(pilot)
+                            [mconst, pilot_sym] = remove_pilots(mconst,pilot_int,pilot_len,ts_length);
+                            [phi_pil,refs] = estimate_pilot_phases(pilot_sym,pilot_const);
                         end
                         
                         
@@ -158,7 +164,8 @@ for(k_fc=1:length(fc))
                         
                         
                         batch_length=floor(t_block(k_t)/Ts); % block length to correct frequency offset
-%                         mdem=[];
+                        
+                        %                         mdem=[];
                         mconstdem=[];
                         ref2=1; % variable to keep track of variations in the amplitude
                         mdem = zeros(length(mconst)*2*levels,1);
@@ -211,20 +218,22 @@ for(k_fc=1:length(fc))
                             
                             if(mod(position,batch_length)==0)
                                 demconst=demod(mdem((k-1)*batch_length*2*levels+1:k*batch_length*2*levels),levels,A);
-                                [theta ref2]=offset_estimation(mconst_phi,demconst); % estimate frequency offset
+                                [theta ref2]=offset_estimation(mconst_phi,demconst) % estimate frequency offset
                                 phihat=phihat+theta; % update phase estimation
                                 ref2=1; % channel is time invariant in amplitude
                             end
                             
+                            
+                            
                             if(pilot) %if pilots are being used
                                 if(length(mconstdem) == ts_length); trigger_pilots = 1; end
                                 
-                                if(mod(length(mconstdem) - ts_length, pilot_int )==0 && trigger_pilots && ((length(mconstdem)-ts_length) ~= 0) )
+                                if(mod(length(mconstdem) - ts_length, pilot_int )==0 && trigger_pilots && ((length(mconstdem)- ts_length) ~= 0) )
                                     if(pilot_index < length(phi_pil))
                                         
                                         phihat = phi_pil(pilot_index); %new phase estimation
                                         ref = refs(pilot_index);      %new amplitude estimation
-                                        pilot_index=pilot_index+1
+                                        pilot_index=pilot_index+1;
                                     end
                                 end
                             end
@@ -268,7 +277,7 @@ for(k_fc=1:length(fc))
                             end
                             mdem(position+1:position+2*levels) = fliplr(sym);
                             position = position + 2*levels;
-%                           mdem=[mdem fliplr(sym)];
+                            %                           mdem=[mdem fliplr(sym)];
                             aux=demod(fliplr(sym),levels,A);
                             aux=(Hx(m)-real(aux)).^2+(Hy(m)-imag(aux)).^2;
                             variance=variance+aux;
@@ -282,6 +291,8 @@ for(k_fc=1:length(fc))
                         %the parameters were better than previous. scatter
                         %constellation
                         scatterplot(mconstdem(ts_length+1:length(test)/(2*levels))); grid on ; xlabel('I'); ylabel('Q'),title('Received Constellation after Rotation and Offset Correction');
+                        
+                        %dynamic_plot
                         if(length(decoded)>=length(test))
                             decoded=decoded(1:length(test));
                             if(plotting) stem(test' ~= decoded); end
@@ -314,7 +325,7 @@ for(k_fc=1:length(fc))
         end
     end
 end
-R = 2 * levels / Ts
+R = 2 * levels / Ts % raw data rate
 %uncomment to disply best parameters
 % best_fc = best_fc
 % best_o = best_o

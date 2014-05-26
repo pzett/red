@@ -25,7 +25,7 @@ fs = 44100; %Sampling frequency
 intlv = 1; % use scrambler ?
 %Constellation 
 levels = 3; %numbers of levels in constellation /1->4,2->16,3->64-QAM) 
-window = 0;
+window = 1;
 
 asym = 1; % use asymmetric number of active carriers around carrier frequency
 high = 460; % Parameter used in asymmetric OFDM
@@ -46,7 +46,7 @@ rate = 9/10; %rate usage of the code
 use_menu = 1;
 %% Random or file Transmission ?
 file = create_menu(use_menu,pilot,code,intlv);
-Nb =50000*8 ; %random transmission size (in bits)
+Nb =50000*8; %random transmission size (in bits)
 
 %% Generate data, training sequence and guard band
 [gb,gb_end,ts,data_sent,data_encoded,Nb] = generate_data(gb_length,gb_end_length,ts_length,Nb,levels,Nc,file,code,rate,intlv);

@@ -20,7 +20,31 @@ function [ mconst_outML ] = comp()
 % end
 % 
 % stem(bits~=decision(1:length(bits)))
+system('adb devices')
+
+filename = 'demconst.txt';
+copy_file_from_sdcard(filename,'4df7721fd73fbfaf')
 close all
+
+
+fileID = fopen('demconst.txt','r');
+formatSpec = '%f';
+data = fscanf(fileID,formatSpec);
+L=data(1);
+mconst=zeros(L,1);
+for(k=2:L+1)
+    mconst(k-1) = data(k);
+end
+
+mreal=mconst(1:2:end-1);
+mimag=mconst(2:2:end);
+mconst=mreal+1i*mimag;
+
+scatterplot(mconst); grid on
+
+
+
+
 fileID = fopen('bit_buffer.txt','r');
 formatSpec = '%f';
 data = fscanf(fileID,formatSpec);
@@ -38,26 +62,11 @@ rx=zeros(L,1);
 for(k=2:L+1)
     rx(k-1) = data(k);
 end
-stem(rx(3*768+1:3*768+length(sent))~=sent)
+figure
+stem(rx(3*768+1:3*768+length(sent))~=sent);
 
-
-fileID = fopen('demconst.txt','r');
-formatSpec = '%f';
-data = fscanf(fileID,formatSpec);
-L=data(1);
-mconst=zeros(L,1);
-for(k=2:L+1)
-    mconst(k-1) = data(k);
-end
-
-
-mreal=mconst(1:2:end-1);
-mimag=mconst(2:2:end);
-mconst=mreal+1i*mimag;
-
-scatterplot(mconst); grid on
-Hx=real(mconst)
-Hy = imag(mconst)
+Hx=real(mconst);
+Hy = imag(mconst);
 levels = 3; A=1;
 mdem=[];
     for m=1:length(mconst)

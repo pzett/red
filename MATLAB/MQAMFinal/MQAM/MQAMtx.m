@@ -19,12 +19,12 @@ fclose('all');
 fs=44100; %Sampling frequency
 
 %Set up determining variables
-pilot = 0;
+pilot = 1;
 pilot_int = 5500; % (in symbols)
-pilot_len = 12;
+pilot_len = 5;
 
 levels = 3; % size of constellation
-Nb=100000*8; %Number of bits to transmit
+Nb=80000*8; %Number of bits to transmit
 f1=fs/4; % carrier frequency
 
 iv = 1;
@@ -35,7 +35,7 @@ Ts=n_sym/fs; % symbol period
 ts_length=220; %in number of symbols
 gb_length=540; %in number of symbols
 
-alfa = 2.5; % gaussian window parameter
+alfa = 1.9; % gaussian window parameter
 A=1; %amplitude to control distance between points in const -> does not work
 
 continuous=0;

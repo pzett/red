@@ -31,7 +31,7 @@ if(loops)
 else
     fc=2491; % cutoff frequency of LPF
     order=12; % order of the LPF filter
-    eq_g=5.2; % equalizer gain
+    eq_g=7; % equalizer gain
     alfa =2.5; % % gaussian window parameters
     t_block = 0.02; % block in which frequency offset does not make difference
     fchard = 11000; % cut off frequency for second low pass filter
@@ -110,9 +110,9 @@ for(k_fc=1:length(fc))
                         Hx=2.*filter(Hd,Vnx); %LPF
                         Hy=2.*filter(Hd,Vny); %LPF
                         %second, higher order LPF
-                        %Hd=lpfhard(fchard(k_fchard));
-                        %Hx=2.*filter(Hd,Hx);
-                        %Hy=2.*filter(Hd,Hy);
+%                         Hd=lpfhard(fchard(k_fchard));
+%                         Hx=2.*filter(Hd,Hx);
+%                         Hy=2.*filter(Hd,Hy);
                         
                         ML = length (Hx);
                         

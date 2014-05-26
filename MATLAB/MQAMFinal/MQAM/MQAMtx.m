@@ -32,9 +32,9 @@ iv = 1;
 n_sym=8; % number of samples per symbol
 Ts=n_sym/fs; % symbol period
 
-ts_length=220; %in number of symbols
-gb_length=540; %in number of symbols
-
+ts_length=110; %in number of symbols
+gb_length=700; %in number of symbols
+gb_end_l = 540;
 alfa = 2.5; % gaussian window parameter
 A=1; %amplitude to control distance between points in const -> does not work
 
@@ -137,7 +137,7 @@ scatterplot(mconst),grid,xlabel('I'),ylabel('Q'),title('Constellation before sen
 mod_signal=qam/(max(abs(qam)+0.001));
 ts_mod=ts_mod/(max(abs(ts_mod)+0.001));
 
-
+plot_rate
 
 wavwrite(mod_signal, fs, 'mod_signal.wav');
 create_file_of_shorts('test_signal.dat',mod_signal*2^14)

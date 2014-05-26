@@ -288,7 +288,7 @@ public class StudentCode extends StudentCodeBase {
     	// Convert file to be sent into a binary stream stored in bit_buffer
     	case GETDATA:
     		bit_buffer = data_buffer_bits();
-    		save_i_to_file("bit_buffer.txt",bit_buffer,bit_buffer.length);
+    		//save_i_to_file("bit_buffer.txt",bit_buffer,bit_buffer.length);
     		//add_output_text_line("bit_buffer length = "+bit_buffer.length);
     		bit_buffer = scrambler(bit_buffer);
     		
@@ -394,7 +394,6 @@ public class StudentCode extends StudentCodeBase {
     			}
     			if(continue_listening==1){
     				rx_buffer=send_to_buffer(rx_buffer,length,samples);
-
     				// Buffer of only noise, transmission done
     			}else{ 
     				trigger=2;
@@ -438,7 +437,7 @@ public class StudentCode extends StudentCodeBase {
     		// Display file chosen for sending
     		add_output_text_line("You chose "+d_filename+" for sending.");
     	}else{
-    		add_output_text_line("You canceled. Please try again by choosing a file.");
+    		add_output_text_line("You cancelled. Please try again by choosing a file.");
 		}
 	}
 	
@@ -646,7 +645,9 @@ public class StudentCode extends StudentCodeBase {
 	//float data_rate = ( ((float)(bit_buffer.length)/1024) / (float)(endTime - startTime))*1000;
 	float data_rate = ( ((float)(bit_buffer.length+sizeofFile.length+titleofFile.length+checksumofFile.length)/1024) / (float)(endTime - startTime))*1000;
 	//float data_rate = ( ((float)(bit_buffer.length+sizeofFile.length+titleofFile.length+checksumofFile.length)/1024) / tx_signal.length*mysampleRate);
-	add_output_text_line("Done with transmission, data rate achieved ="+data_rate+" kbps");
+	
+	String sdata_rate = String.format("%.2f", data_rate);
+	add_output_text_line("Done with transmission.\nData rate achieved ="+sdata_rate+" kbps");
 	state=-1;
 	}
 	 catch(OutOfMemoryError E){
@@ -1259,6 +1260,7 @@ public int[] MQAMreceiver(int f,int n_sym,double[] r){
 	
 	double Ts = (double) no_samp_period / (double) mysampleRate;
 	int batch_length = (int) Math.floor(0.02/Ts);
+	
     int[] decision = new int[mconst.length*2*levels];
 	current_position = 0;
 

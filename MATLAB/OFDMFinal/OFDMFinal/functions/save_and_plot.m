@@ -48,21 +48,22 @@ xlabel('Size of transmission (kB)'); ylabel('Achieved Rate (kbps)');
 leg = [[num2str(2.^(2*levels_p(1))),('-QAM ')] ; [num2str(2.^(2*levels_p(2))),('-QAM')]];
 legend(leg,'Location','Best');
 
+line([0 max(N) / 8000],[128 128],'LineWidth',3.2,'Color',[0 100 0]/256,'LineStyle','--',...
+    'Tag','128 kbps');
 
 rate_point = (Nb)/((P+S+FS)/Nc*(gb_length+ts_length+gb_end_l+(Nb)/(2*levels))/fs);
 plot(Nb/8000,rate_point/1000,'ro')
 str = sprintf('(%.1f kB,%.1f kbps)',Nb/8000,rate_point/1000);
 text(Nb/8000,rate_point/1000,str,'VerticalAlignment','top', ...
-    'HorizontalAlignment','left','BackgroundColor',[.7 .9 .7]);
+    'HorizontalAlignment','left','BackgroundColor',[.7 .9 .7],'FontSize',20);
 
 rate_point = (Nb)/((P+S+FS)/Nc*(gb_length+ts_length+gb_end_l+(Nb)/(2*(levels+1)))/fs);
 plot(Nb/8000,rate_point/1000,'ro')
 str = sprintf('(%.1f kB,%.1f kbps)',Nb/8000,rate_point/1000);
 text(Nb/8000,rate_point/1000,str,'VerticalAlignment','top', ...
-    'HorizontalAlignment','left','BackgroundColor',[255 127 80]/256);
+    'HorizontalAlignment','left','BackgroundColor',[255 127 80]/256,'FontSize',20);
 
-line([0 max(N) / 8000],[128 128],'LineWidth',3.2,'Color',[0 100 0]/256,'LineStyle','--',...
-    'Tag','128 kbps');
+
 
 
 

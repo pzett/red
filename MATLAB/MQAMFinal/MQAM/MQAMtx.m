@@ -23,7 +23,7 @@ pilot = 0;
 pilot_int = 2*5500; % (in symbols)
 pilot_len = 30;
 
-levels = 3; % size of constellation
+levels = 1; % size of constellation
 Nb= 30000*8; %Number of bits to transmit
 f1=fs/4; % carrier frequency
 
@@ -32,9 +32,9 @@ iv = 1;
 n_sym=8; % number of samples per symbol
 Ts=n_sym/fs; % symbol period
 
-ts_length=110; %in number of symbols
-gb_length=700; %in number of symbols
-gb_end_l = 540;
+ts_length=200; %in number of symbols
+gb_length=520; %in number of symbols
+gb_end_l = 520;
 alfa = 2.5; % gaussian window parameter
 A=1; %amplitude to control distance between points in const -> does not work
 
@@ -128,10 +128,11 @@ mconst_ts=mconst(gb_length*n_sym+1:n_sym:n_sym*(gb_length+ts_length));
 ts_mod=qam((gb_length*n_sym+1:(gb_length+ts_length)*n_sym));%retrieve modulated training sequence
 pilot_const = demod(ts_pilot,levels,A); 
 
-figure(3)
+figure
 pwelch(qam,[],[],[],fs);
 
-scatterplot(mconst),grid,xlabel('I'),ylabel('Q'),title('Constellation before sending');
+figure
+plot(real(mconst),imag(mconst),'.','MarkerSize',20),grid,xlabel('I'),ylabel('Q'),title('Constellation before sending');
 
 
 mod_signal=qam/(max(abs(qam)+0.001));

@@ -67,8 +67,8 @@ public class StudentCodeBase implements OnPlaybackPositionUpdateListener  {
 	
 	public boolean userInputString=false;
 	public String userInputStringMenuItem="Input String";
-	public String userInputStringTitle="Input String,";
-	public String userInputStringMessage="Input a message and it will be stored as a text file on the phone.";
+	public String userInputStringTitle="Input String";
+	public String userInputStringMessage="Input a message and it will be stored as a text file on the phone to be sent.";
 
 	
 	public boolean logSound=true;

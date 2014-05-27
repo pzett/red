@@ -141,6 +141,8 @@ public class StudentCode extends StudentCodeBase {
 	long C_sum_tx;
 	long C_sum_rx;
 	
+	public int volume;
+	
 	final int sizeofFileLimit= 50000;
 	
 	// Variables used in the switch cases
@@ -643,7 +645,7 @@ public class StudentCode extends StudentCodeBase {
 	add_output_text_line("Transmission time: "+(float)(endTime - startTime)/1000+"s");
 	 // Calculate data rate
 	//float data_rate = ( ((float)(bit_buffer.length)/1024) / (float)(endTime - startTime))*1000;
-	float data_rate = ( ((float)(bit_buffer.length+sizeofFile.length+titleofFile.length+checksumofFile.length)/1024) / (float)(endTime - startTime))*1000;
+	float data_rate = ( ((float)(bit_buffer.length+sizeofFile.length+titleofFile.length+checksumofFile.length)/1000) / (float)(endTime - startTime))*1000;
 	//float data_rate = ( ((float)(bit_buffer.length+sizeofFile.length+titleofFile.length+checksumofFile.length)/1024) / tx_signal.length*mysampleRate);
 	
 	String sdata_rate = String.format("%.2f", data_rate);
@@ -865,7 +867,7 @@ public String retrieveData(int[] received){
 	int receivedBitstemp[] = new int [8];
 	try{
 	received = descramble(received);
-	save_i_to_file("received.txt",received,received.length);
+	//save_i_to_file("received.txt",received,received.length);
 	}
 	catch (ArrayIndexOutOfBoundsException e) {
 		add_output_text_line("Could not descramble file. Please try again.");
@@ -1301,7 +1303,7 @@ public int[] MQAMreceiver(int f,int n_sym,double[] r){
 	System.arraycopy(decision_aux, 0, decision, current_position, decision_aux.length);
 	
 	// Current_position = current_position + decision_aux.length;
-	save_c_to_file("demconst.txt",demconst,demconst.length);
+	//save_c_to_file("demconst.txt",demconst,demconst.length);
 	
 	//	int decision[] = demod_const(mconst,levels);
 	return Arrays.copyOfRange(decision, ts_length*2*levels, decision.length);

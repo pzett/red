@@ -7,13 +7,15 @@ vec3 = fread(fid);
 
 [M,N] = size(vec3);
 
-x = dec2bin(vec3,8);
+%x = dec2bin(vec3,8) ;
+x = dec2bin(vec3,8) - '0';
 vec = zeros(1,size(x,1)*8);
 pos = 1;
 for i = 1:size(x,1)
     for(k=1:8)
         %aux = str2num(x(i,k));
-        vec(pos) = str2double(x(i,k));
+        %vec(pos) = str2double(x(i,k));
+        vec(pos) = x(i,k);
         pos = pos + 1;
     end    
 end

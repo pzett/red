@@ -142,6 +142,7 @@ public class FrameWork extends Activity implements OnRecordPositionUpdateListene
         AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
 		    int max_value =am.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
 		    int volume_level= am.getStreamVolume(AudioManager.STREAM_MUSIC);
+		    studentCode.volume = volume_level;
 		    am.setStreamVolume(AudioManager.STREAM_MUSIC,(int) Math.floor(max_value)-4, 0);
 		    boolean meow = am.isWiredHeadsetOn();
 		    if(meow == false){
@@ -711,6 +712,11 @@ public class FrameWork extends Activity implements OnRecordPositionUpdateListene
 			}
 		}return true;
 		case 2:{
+			
+			 AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
+			 am.setStreamVolume(AudioManager.STREAM_MUSIC,(int) studentCode.volume, 0);
+			
+			
         	System.exit(0);
         	break;}
         case 3:

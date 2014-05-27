@@ -25,7 +25,7 @@ fs = 44100; %Sampling frequency
 intlv = 1; % use scrambler ?
 %Constellation 
 levels = 3; %numbers of levels in constellation /1->4,2->16,3->64-QAM) 
-window = 1;
+window = 0;
 
 asym = 1; % use asymmetric number of active carriers around carrier frequency
 high = 460; % Parameter used in asymmetric OFDM

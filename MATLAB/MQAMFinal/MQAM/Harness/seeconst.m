@@ -1,7 +1,7 @@
 system('adb devices')
 
 filename = 'demconst.txt';
-copy_file_from_sdcard(filename,'4df7721fd73fbfaf')
+copy_file_from_sdcard(filename,'4df789074129bfb5')
 close all
 
 
@@ -18,7 +18,7 @@ mreal=mconst(1:2:end-1);
 mimag=mconst(2:2:end);
 mconst=mreal+1i*mimag;
 
-scatterplot(mconst); grid on
+scatterplot(mconst(1:end-2000)); grid on
 
 % fileID = fopen('rx_signal.txt','r');
 % formatSpec = '%f';

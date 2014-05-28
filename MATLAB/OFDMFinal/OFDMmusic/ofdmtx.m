@@ -32,7 +32,7 @@ pilot_int = 12*Nc*2*levels; %(in bits) how many bits should be sent before pilot
 ts_pilot_length = 6*Nc; %(in symbols) pilot length to reestimate the channel
 
 ts_length=12*Nc; % (in symbols) length of training sequence
-gb_length=4*Nc; % (in symbols) length of guard band
+gb_length=6*Nc; % (in symbols) length of guard band
 
 if(mod(ts_pilot_length,2*levels) ~= 0 ); disp('Choose a pilot length multiple of 2*levels'); pause; end
 
@@ -47,7 +47,7 @@ if(file)
     end
     Nb = length(data_sent);
 else
-    Nb=50*FS;        %Number of bits to be transmitted
+    Nb=30*FS;        %Number of bits to be transmitted
     data_sent = randint(Nb,1,2); % generate random data
 end
 

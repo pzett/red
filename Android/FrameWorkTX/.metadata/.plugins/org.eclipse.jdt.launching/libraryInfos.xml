@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<libraryInfos>
+<libraryInfo home="C:\Users\Daniel\Skola" version="1.8.0">
+<bootpath>
+<entry path="C:\Users\Daniel\Skola\lib\resources.jar"/>
+<entry path="C:\Users\Daniel\Skola\lib\rt.jar"/>
+<entry path="C:\Users\Daniel\Skola\lib\sunrsasign.jar"/>
+<entry path="C:\Users\Daniel\Skola\lib\jsse.jar"/>
+<entry path="C:\Users\Daniel\Skola\lib\jce.jar"/>
+<entry path="C:\Users\Daniel\Skola\lib\charsets.jar"/>
+<entry path="C:\Users\Daniel\Skola\lib\jfr.jar"/>
+<entry path="C:\Users\Daniel\Skola\classes"/>
+</bootpath>
+<extensionDirs>
+<entry path="C:\Users\Daniel\Skola\lib\ext"/>
+<entry path="C:\WINDOWS\Sun\Java\lib\ext"/>
+</extensionDirs>
+<endorsedDirs>
+<entry path="C:\Users\Daniel\Skola\lib\endorsed"/>
+</endorsedDirs>
+</libraryInfo>
+</libraryInfos>

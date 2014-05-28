@@ -23,7 +23,7 @@ pilot = 0;
 pilot_int = 2*5500; % (in symbols)
 pilot_len = 30;
 
-levels = 1; % size of constellation
+levels = 3; % size of constellation
 Nb= 30000*8; %Number of bits to transmit
 f1=fs/4; % carrier frequency
 
@@ -132,7 +132,7 @@ figure
 pwelch(qam,[],[],[],fs);
 
 figure
-plot(real(mconst),imag(mconst),'.','MarkerSize',20),grid,xlabel('I'),ylabel('Q'),title('Constellation before sending');
+plot(real(mconst),imag(mconst),'r.','MarkerSize',40),grid,xlabel('I'),ylabel('Q'),title('Constellation before sending'); 
 
 
 mod_signal=qam/(max(abs(qam)+0.001));

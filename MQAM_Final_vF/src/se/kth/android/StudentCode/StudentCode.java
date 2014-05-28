@@ -290,8 +290,11 @@ public class StudentCode extends StudentCodeBase {
     	// Convert file to be sent into a binary stream stored in bit_buffer
     	case GETDATA:
     		bit_buffer = data_buffer_bits();
+    		
     		//save_i_to_file("bit_buffer.txt",bit_buffer,bit_buffer.length);
     		//add_output_text_line("bit_buffer length = "+bit_buffer.length);
+    		
+    		// Apply the scrambler to the bit stream
     		bit_buffer = scrambler(bit_buffer);
     		
     		// If the file is too big start again
@@ -643,7 +646,8 @@ public class StudentCode extends StudentCodeBase {
 	}
 	long endTime = System.currentTimeMillis();
 	add_output_text_line("Transmission time: "+(float)(endTime - startTime)/1000+"s");
-	 // Calculate data rate
+	 
+	// Calculate data rate
 	//float data_rate = ( ((float)(bit_buffer.length)/1024) / (float)(endTime - startTime))*1000;
 	float data_rate = ( ((float)(bit_buffer.length+sizeofFile.length+titleofFile.length+checksumofFile.length)/1000) / (float)(endTime - startTime))*1000;
 	//float data_rate = ( ((float)(bit_buffer.length+sizeofFile.length+titleofFile.length+checksumofFile.length)/1024) / tx_signal.length*mysampleRate);
@@ -653,15 +657,11 @@ public class StudentCode extends StudentCodeBase {
 	state=-1;
 	}
 	 catch(OutOfMemoryError E){
-			add_output_text_line("The file is too big (over 36kB). Please press stop and send a smaller file.");
+			add_output_text_line("The file is too big (over 100kB). Please press stop and send a smaller file.");
 			error = true;
 			state=-1;
 			return;
 		}
-	 
-	
-	
-	
 
 }
 
